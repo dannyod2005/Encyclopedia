@@ -50,11 +50,11 @@ interface ProviderPlan {
 
 // 3 of the 8 provider names used across the #109 course set, chosen to
 // cover all three catalogue categories (Business, Leadership,
-// Technical) and to give a meaningful number of courses to each ("Keystone
+// Technical) and to give a meaningful number of courses to each ("Encyclopedia
 // Business School" and "Global Leadership Institute" are the two
 // largest groups in seed-courses.ts). The other 5 provider-name groups
-// (Anthropic Academy, Dept. of Data Science, Keystone DevOps Guild,
-// Keystone Security Lab, Keystone Growth Academy) are left unlinked —
+// (Anthropic Academy, Dept. of Data Science, Encyclopedia DevOps Guild,
+// Encyclopedia Security Lab, Encyclopedia Growth Academy) are left unlinked —
 // #146 only asks for "a handful" (2-3), not full coverage.
 //
 // Of the 5 trainers seeded in #145: 3 own a provider, 1 is a plain
@@ -63,7 +63,7 @@ interface ProviderPlan {
 // "at least one trainer with no provider" requirement.
 const PROVIDER_PLAN: ProviderPlan[] = [
   {
-    name: 'Keystone Business School',
+    name: 'Encyclopedia Business School',
     ownerEmail: 'huy.dang@keystone.example', // Đặng Quốc Huy
     memberEmails: ['ngoc.hoang@keystone.example'], // Hoàng Thị Ngọc
   },
@@ -73,7 +73,7 @@ const PROVIDER_PLAN: ProviderPlan[] = [
     memberEmails: [],
   },
   {
-    name: 'Keystone Web Guild',
+    name: 'Encyclopedia Web Guild',
     ownerEmail: 'duc.ngo@keystone.example', // Ngô Minh Đức
     memberEmails: [],
   },

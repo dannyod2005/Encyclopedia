@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { KeystoneMark } from "../common/Primitives";
+import { EncyclopediaMark } from "../common/Primitives";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 // #105 — same "always mounted, sometimes null" shape as CourseDetailModal:
@@ -166,22 +166,22 @@ export function AuthModal({ mode, onClose, onSubmit }) {
   const errorText = { fontSize: 11.5, color: "var(--coral)", marginTop: 5 };
 
   return (
-    <div onClick={onClose} className={`ks-modal-backdrop ${closing ? "ks-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
+    <div onClick={onClose} className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
       <div
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
-        className={`ks-card ks-modal-card ${closing ? "ks-modal-closing" : ""}`}
+        className={`enc-card enc-modal-card ${closing ? "enc-modal-closing" : ""}`}
         style={{ width: "100%", maxWidth: 400, padding: 0, overflow: "hidden" }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ks-auth-modal-title"
+        aria-labelledby="enc-auth-modal-title"
         tabIndex={-1}
       >
         <div style={{ padding: "24px 28px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <KeystoneMark variant="light" size={19} />
-              <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>Keystone</span>
+              <EncyclopediaMark variant="light" size={19} />
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>Encyclopedia</span>
             </div>
             {/* #258 — real button (was a bare clickable icon). */}
             <button
@@ -206,7 +206,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
                 type="button"
                 role="tab"
                 aria-selected={tab === "login"}
-                className={`ks-tab ${tab === "login" ? "active" : ""}`}
+                className={`enc-tab ${tab === "login" ? "active" : ""}`}
                 onClick={() => switchTab("login")}
                 style={{ background: "none", border: "none", font: "inherit" }}
               >
@@ -216,7 +216,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
                 type="button"
                 role="tab"
                 aria-selected={tab === "signup"}
-                className={`ks-tab ${tab === "signup" ? "active" : ""}`}
+                className={`enc-tab ${tab === "signup" ? "active" : ""}`}
                 onClick={() => switchTab("signup")}
                 style={{ background: "none", border: "none", font: "inherit" }}
               >
@@ -227,7 +227,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
         </div>
 
         <form onSubmit={handleSubmit} style={{ padding: "22px 28px 26px" }}>
-          <div id="ks-auth-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 19, marginBottom: 4 }}>
+          <div id="enc-auth-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 19, marginBottom: 4 }}>
             {tab === "login" ? "Welcome back" : tab === "signup" ? "Start learning free" : "Reset your password"}
           </div>
           <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 20 }}>
@@ -240,10 +240,10 @@ export function AuthModal({ mode, onClose, onSubmit }) {
 
           {tab === "signup" && (
             <div style={field}>
-              <label style={label} htmlFor="ks-name">Full name</label>
+              <label style={label} htmlFor="enc-name">Full name</label>
               <div style={inputWrap}>
                 <User size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
-                <input id="ks-name" className="ks-input" placeholder="Jordan Lee" autoComplete="name"
+                <input id="enc-name" className="enc-input" placeholder="Jordan Lee" autoComplete="name"
                   value={values.name} onChange={(e) => update("name", e.target.value)} />
               </div>
               {touched && !nameValid && <div style={errorText}>Enter your name.</div>}
@@ -272,10 +272,10 @@ export function AuthModal({ mode, onClose, onSubmit }) {
           )}
 
           <div style={field}>
-            <label style={label} htmlFor="ks-email">Email address</label>
+            <label style={label} htmlFor="enc-email">Email address</label>
             <div style={inputWrap}>
               <Mail size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
-              <input id="ks-email" type="email" className="ks-input" placeholder="you@company.com" autoComplete="email"
+              <input id="enc-email" type="email" className="enc-input" placeholder="you@company.com" autoComplete="email"
                 value={values.email} onChange={(e) => update("email", e.target.value)} />
             </div>
             {touched && !emailValid && <div style={errorText}>Enter a valid email address.</div>}
@@ -284,7 +284,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
           {tab !== "forgot" && (
             <div style={{ ...field, marginBottom: 6 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label style={label} htmlFor="ks-pw">Password</label>
+                <label style={label} htmlFor="enc-pw">Password</label>
                 {/* #360 — was <span onClick>: not a real link/button. */}
                 {tab === "login" && (
                   <button
@@ -298,7 +298,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
               </div>
               <div style={inputWrap}>
                 <Lock size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
-                <input id="ks-pw" type={showPw ? "text" : "password"} className="ks-input" style={{ paddingRight: 40 }}
+                <input id="enc-pw" type={showPw ? "text" : "password"} className="enc-input" style={{ paddingRight: 40 }}
                   placeholder={tab === "signup" ? "At least 8 characters" : "Your password"}
                   autoComplete={tab === "signup" ? "new-password" : "current-password"}
                   value={values.password} onChange={(e) => update("password", e.target.value)} />
@@ -328,7 +328,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
             <div style={{ fontSize: 12.5, color: "var(--success)", marginBottom: 12 }}>{resetMessage}</div>
           )}
 
-          <button type="submit" className="ks-btn ks-btn-gold" style={{ width: "100%", justifyContent: "center", padding: "12px 0", fontSize: 15, marginTop: 10, opacity: submitting ? 0.7 : 1 }}>
+          <button type="submit" className="enc-btn enc-btn-gold" style={{ width: "100%", justifyContent: "center", padding: "12px 0", fontSize: 15, marginTop: 10, opacity: submitting ? 0.7 : 1 }}>
             {submitting
               ? "Please wait…"
               : tab === "login" ? "Log in" : tab === "signup" ? "Create free account" : "Send reset link"}
@@ -342,9 +342,9 @@ export function AuthModal({ mode, onClose, onSubmit }) {
           {tab !== "forgot" && (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
-                <hr className="ks-hairline" style={{ flex: 1 }} /><span style={{ fontSize: 11.5, color: "var(--slate-light)" }}>OR</span><hr className="ks-hairline" style={{ flex: 1 }} />
+                <hr className="enc-hairline" style={{ flex: 1 }} /><span style={{ fontSize: 11.5, color: "var(--slate-light)" }}>OR</span><hr className="enc-hairline" style={{ flex: 1 }} />
               </div>
-              <button type="button" className="ks-btn ks-btn-ghost" style={{ width: "100%", justifyContent: "center", padding: "10px 0" }}
+              <button type="button" className="enc-btn enc-btn-ghost" style={{ width: "100%", justifyContent: "center", padding: "10px 0" }}
                 onClick={handleGoogleSignIn}>
                 <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.58 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
                 Continue with Google

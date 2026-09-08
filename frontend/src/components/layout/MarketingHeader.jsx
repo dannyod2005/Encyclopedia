@@ -1,5 +1,5 @@
 import { LogIn } from "lucide-react";
-import { KeystoneMark } from "../common/Primitives";
+import { EncyclopediaMark } from "../common/Primitives";
 
 export function MarketingHeader({ onGo, onAuth }) {
   return (
@@ -9,8 +9,8 @@ export function MarketingHeader({ onGo, onAuth }) {
             unreachable by keyboard. */}
         <div style={{ display: "flex", alignItems: "center", gap: 34 }}>
           <button type="button" onClick={() => onGo("home")} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-            <KeystoneMark variant="light" size={22} />
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 19 }}>Keystone</span>
+            <EncyclopediaMark variant="light" size={22} />
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 19 }}>Encyclopedia</span>
           </button>
           <nav style={{ display: "flex", gap: 24 }}>
             <button type="button" onClick={() => onGo("home")} style={{ font: "inherit", fontSize: 14, fontWeight: 500, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>Discover</button>
@@ -18,8 +18,8 @@ export function MarketingHeader({ onGo, onAuth }) {
           </nav>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="ks-btn ks-btn-ghost" onClick={() => onAuth("login")}><LogIn size={15} /> Log in</button>
-          <button className="ks-btn ks-btn-gold" onClick={() => onAuth("signup")}>Join for free</button>
+          <button className="enc-btn enc-btn-ghost" onClick={() => onAuth("login")}><LogIn size={15} /> Log in</button>
+          <button className="enc-btn enc-btn-gold" onClick={() => onAuth("signup")}>Join for free</button>
         </div>
       </div>
     </header>

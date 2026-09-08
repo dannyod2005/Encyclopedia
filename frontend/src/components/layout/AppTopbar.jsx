@@ -101,7 +101,7 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           </button>
 
           {open && (
-            <div className="ks-card" style={{ position: "absolute", top: 42, right: 0, width: 320, maxHeight: 420, overflowY: "auto", padding: 0, zIndex: 40 }}>
+            <div className="enc-card" style={{ position: "absolute", top: 42, right: 0, width: 320, maxHeight: 420, overflowY: "auto", padding: 0, zIndex: 40 }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", fontSize: 13, fontWeight: 600 }}>
                 Notifications
               </div>

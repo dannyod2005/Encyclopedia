@@ -1,0 +1,18 @@
+# #367 — Lighthouse's SEO audit flagged robots.txt as invalid: there was no
+# real file here, so a request to /robots.txt fell through to the SPA's
+# catch-all (serve -s / Vercel's rewrite for client-side routing) and
+# returned index.html's markup instead, which Lighthouse then tried to
+# parse as robots.txt directives ("Syntax not understood" x11). CRA copies
+# everything under public/ into the build root untouched, so this file now
+# resolves for real instead of falling through.
+#
+# Only the routes that don't require login are worth a crawler's time —
+# everything else in App.jsx's <Routes> sits behind RequireAuth and would
+# just bounce a crawler to the logged-out home page anyway.
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /leaderboard
+Disallow: /settings
+Disallow: /trainer
+Disallow: /learning/

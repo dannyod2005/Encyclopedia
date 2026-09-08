@@ -1,6 +1,6 @@
 import { BookOpen, LayoutGrid, Home as HomeIcon, Pencil, LogOut, X, Trophy, Settings as SettingsIcon } from "lucide-react";
 import { getDisplayName, getInitials } from "../../lib/userDisplay";
-import { KeystoneMark } from "../common/Primitives";
+import { EncyclopediaMark } from "../common/Primitives";
 
 /* ---------- Logged-in app shell ---------- */
 
@@ -54,8 +54,8 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "0 10px 22px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <KeystoneMark variant="dark" size={20} />
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 17, color: "var(--paper)" }}>Keystone</span>
+            <EncyclopediaMark variant="dark" size={20} />
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 17, color: "var(--paper)" }}>Encyclopedia</span>
           </div>
           {/* #258 — real button (not a bare clickable icon) so this is
               keyboard-reachable and announces as "Close menu" to screen
@@ -86,7 +86,7 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
           // semantics for free. fontFamily/textAlign/width/border/background
           // are all set explicitly because browsers don't inherit typical
           // typography onto form controls by default (the old div did,
-          // implicitly, via .ks-root) — every property here exists to make
+          // implicitly, via .enc-root) — every property here exists to make
           // the button visually identical to the div it replaces, not to
           // change the look.
           return (

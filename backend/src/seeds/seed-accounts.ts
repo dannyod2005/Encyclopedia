@@ -242,7 +242,7 @@ async function main() {
     'seed-credentials.local.txt',
   );
   const lines = [
-    '#145 — Keystone demo account credentials',
+    '#145 — Encyclopedia demo account credentials',
     'Generated: ' + new Date().toISOString(),
     'This file is gitignored — do not commit it or paste it anywhere persistent.',
     'Hand it off separately to whoever needs it for the demo, then delete it.',

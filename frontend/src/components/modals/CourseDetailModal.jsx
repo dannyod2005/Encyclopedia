@@ -72,15 +72,15 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
   const credits = visibleCourse.credits || [];
 
   return (
-    <div onClick={onClose} className={`ks-modal-backdrop ${closing ? "ks-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
+    <div onClick={onClose} className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
       <div
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
-        className={`ks-card ks-modal-card ${closing ? "ks-modal-closing" : ""}`}
+        className={`enc-card enc-modal-card ${closing ? "enc-modal-closing" : ""}`}
         style={{ width: "100%", maxWidth: 620, maxHeight: "86vh", overflowY: "auto", padding: 0 }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ks-course-modal-title"
+        aria-labelledby="enc-course-modal-title"
         tabIndex={-1}
       >
         <div style={{ padding: "24px 28px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -89,7 +89,7 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
               <CategoryDot color={visibleCourse.color} />
               <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{visibleCourse.category} · {visibleCourse.level}</span>
             </div>
-            <h2 id="ks-course-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0 }}>{visibleCourse.title}</h2>
+            <h2 id="enc-course-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0 }}>{visibleCourse.title}</h2>
             <div style={{ fontSize: 13, color: "var(--slate-light)", marginTop: 4 }}>{visibleCourse.provider}</div>
           </div>
           {/* #258 — real button (was a bare clickable icon). */}
@@ -198,7 +198,7 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
             credits content above it is (#75). Own background + top
             border so scrolled content doesn't show through underneath it. */}
         <div style={{ position: "sticky", bottom: 0, background: "var(--paper-2)", borderTop: "1px solid var(--line)", padding: "16px 28px" }}>
-          <button className="ks-btn ks-btn-gold"
+          <button className="enc-btn enc-btn-gold"
             style={{ width: "100%", justifyContent: "center", padding: "12px 0", fontSize: 15, opacity: enrolling ? 0.6 : 1, cursor: enrolling ? "default" : "pointer" }}
             disabled={enrolling}
             onClick={() => (isEnrolled ? onGoToDashboard() : onEnrol(visibleCourse))}>

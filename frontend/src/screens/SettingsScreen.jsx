@@ -136,27 +136,27 @@ export function SettingsScreen({
   const savedText = { fontSize: 12, color: "var(--success)", marginTop: 6 };
 
   return (
-    // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+    // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth, so this form grows (modestly, from its own 640 base) at
     // the same large breakpoint as the rest of the app.
-    <div className="ks-page-enter ks-page-scaled" style={{ padding: "22px 32px", "--ks-page-base": "640px" }}>
+    <div className="enc-page-enter enc-page-scaled" style={{ padding: "22px 32px", "--enc-page-base": "640px" }}>
       {/* #364 — was <PageHeader title="Account settings" />: AppTopbar
           already shows that same text as this route's h1, so this was a
           plain duplicate. */}
-      <div className="ks-card" style={{ padding: "18px 22px", marginBottom: 16 }}>
+      <div className="enc-card" style={{ padding: "18px 22px", marginBottom: 16 }}>
         <div style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 4 }}>Profile</div>
         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 12 }}>
           Your name appears on your own greeting, plus any forum posts or course reviews you leave.
         </div>
         <form onSubmit={handleSaveName}>
           <div style={field}>
-            <label style={label} htmlFor="ks-settings-name">Name</label>
+            <label style={label} htmlFor="enc-settings-name">Name</label>
             <div style={inputWrap}>
               <User size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
               <input
-                id="ks-settings-name"
+                id="enc-settings-name"
                 type="text"
-                className="ks-input"
+                className="enc-input"
                 style={{ paddingLeft: 38 }}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -173,26 +173,26 @@ export function SettingsScreen({
               {nameSaved && <div style={savedText}>Saved.</div>}
             </div>
           </div>
-          <button type="submit" className="ks-btn ks-btn-gold" disabled={savingName || !name.trim()} style={{ opacity: savingName ? 0.7 : 1 }}>
+          <button type="submit" className="enc-btn enc-btn-gold" disabled={savingName || !name.trim()} style={{ opacity: savingName ? 0.7 : 1 }}>
             {savingName ? "Saving…" : "Save name"}
           </button>
         </form>
       </div>
 
-      <div className="ks-card" style={{ padding: "18px 22px", marginBottom: 16 }}>
+      <div className="enc-card" style={{ padding: "18px 22px", marginBottom: 16 }}>
         <div style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 4 }}>Password</div>
         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 12 }}>
           Choose a new password for your account.
         </div>
         <form onSubmit={handleSavePassword}>
           <div style={field}>
-            <label style={label} htmlFor="ks-settings-pw">New password</label>
+            <label style={label} htmlFor="enc-settings-pw">New password</label>
             <div style={inputWrap}>
               <Lock size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
               <input
-                id="ks-settings-pw"
+                id="enc-settings-pw"
                 type={showPw ? "text" : "password"}
-                className="ks-input"
+                className="enc-input"
                 style={{ paddingLeft: 38, paddingRight: 40 }}
                 placeholder="At least 8 characters"
                 autoComplete="new-password"
@@ -218,13 +218,13 @@ export function SettingsScreen({
             {pwTouched && !pwValid && <div style={errorText}>Password must be at least 8 characters.</div>}
           </div>
           <div style={field}>
-            <label style={label} htmlFor="ks-settings-pw-confirm">Confirm password</label>
+            <label style={label} htmlFor="enc-settings-pw-confirm">Confirm password</label>
             <div style={inputWrap}>
               <Lock size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
               <input
-                id="ks-settings-pw-confirm"
+                id="enc-settings-pw-confirm"
                 type={showPw ? "text" : "password"}
-                className="ks-input"
+                className="enc-input"
                 style={{ paddingLeft: 38 }}
                 placeholder="Re-enter your new password"
                 autoComplete="new-password"
@@ -240,13 +240,13 @@ export function SettingsScreen({
             {pwError && <div style={errorText}>{pwError}</div>}
             {pwSaved && <div style={savedText}>Password updated.</div>}
           </div>
-          <button type="submit" className="ks-btn ks-btn-gold" disabled={savingPw} style={{ opacity: savingPw ? 0.7 : 1 }}>
+          <button type="submit" className="enc-btn enc-btn-gold" disabled={savingPw} style={{ opacity: savingPw ? 0.7 : 1 }}>
             {savingPw ? "Saving…" : "Update password"}
           </button>
         </form>
       </div>
 
-      <div className="ks-card" style={{ padding: "18px 22px" }}>
+      <div className="enc-card" style={{ padding: "18px 22px" }}>
         <div style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 12 }}>Preferences</div>
 
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate)", marginBottom: 6 }}>Daily goal</div>
@@ -275,7 +275,7 @@ export function SettingsScreen({
           ))}
         </div>
 
-        <hr className="ks-hairline" style={{ margin: "14px 0" }} />
+        <hr className="enc-hairline" style={{ margin: "14px 0" }} />
 
         {/* #258 — was two separate divs (label + switch) each with their own
             onClick calling the same handler; neither had a role, checked
