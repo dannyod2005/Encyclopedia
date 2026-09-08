@@ -63,18 +63,18 @@ export function GoalOnboardingModal({ open, onSelect, onSkip }) {
   }
 
   return (
-    <div className={`ks-modal-backdrop ${closing ? "ks-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
+    <div className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
       <div
         ref={dialogRef}
-        className={`ks-card ks-modal-card ${closing ? "ks-modal-closing" : ""}`}
+        className={`enc-card enc-modal-card ${closing ? "enc-modal-closing" : ""}`}
         style={{ width: "100%", maxWidth: 440, padding: "28px 28px 24px" }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ks-goal-modal-title"
+        aria-labelledby="enc-goal-modal-title"
         tabIndex={-1}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-          <div id="ks-goal-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>What brings you here?</div>
+          <div id="enc-goal-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>What brings you here?</div>
           {/* #258 — real button (was a bare clickable icon). */}
           <button
             type="button"

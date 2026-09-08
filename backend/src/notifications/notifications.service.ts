@@ -159,7 +159,7 @@ export class NotificationsService {
       read: n.read,
       createdAt: n.createdAt,
       type: n.type,
-      actorName: n.actor?.name || 'Keystone Learner',
+      actorName: n.actor?.name || 'Encyclopedia Learner',
     };
   }
 

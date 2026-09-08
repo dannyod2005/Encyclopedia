@@ -78,10 +78,10 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
   const rowInput = { fontFamily: "var(--font-body)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13, width: "100%", background: "var(--paper-2)" };
 
   return (
-    // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+    // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="ks-page-enter ks-page-scaled" style={{ padding: "28px 32px 60px", "--ks-page-base": "760px" }}>
+    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "760px" }}>
       {/* #360 — was <div onClick>: not a real link/button. */}
       <button type="button" onClick={onCancel} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
@@ -90,7 +90,7 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
         {path ? "Edit learning path" : "New learning path"}
       </div>
 
-      <div className="ks-card" style={{ padding: 20, marginBottom: 16 }}>
+      <div className="enc-card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>Path details</div>
         <div style={field}>
           <label style={label}>Title</label>
@@ -102,7 +102,7 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
         </div>
       </div>
 
-      <div className="ks-card" style={{ padding: 20, marginBottom: 20 }}>
+      <div className="enc-card" style={{ padding: 20, marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
           <Milestone size={14} color="var(--slate-light)" />
           <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Courses, in order</span>
@@ -163,17 +163,17 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
               <option key={c.id} value={c.id}>{c.title}</option>
             ))}
           </select>
-          <button className="ks-btn ks-btn-ghost" style={{ flexShrink: 0 }} disabled={!pickerCourseId} onClick={addCourse}>
+          <button className="enc-btn enc-btn-ghost" style={{ flexShrink: 0 }} disabled={!pickerCourseId} onClick={addCourse}>
             <Plus size={13} /> Add
           </button>
         </div>
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
-        <button className="ks-btn ks-btn-gold" style={{ opacity: canSave && !saving ? 1 : 0.5 }} disabled={!canSave || saving} onClick={handleSave}>
+        <button className="enc-btn enc-btn-gold" style={{ opacity: canSave && !saving ? 1 : 0.5 }} disabled={!canSave || saving} onClick={handleSave}>
           <Save size={15} /> {saving ? "Saving…" : "Save path"}
         </button>
-        <button className="ks-btn ks-btn-ghost" onClick={onCancel} disabled={saving}>Cancel</button>
+        <button className="enc-btn enc-btn-ghost" onClick={onCancel} disabled={saving}>Cancel</button>
       </div>
       {!canSave && <div style={{ fontSize: 12, color: "var(--slate-light)", marginTop: 8 }}>Add a title and at least 2 courses to save.</div>}
       {saveError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginTop: 8 }}>{saveError}</div>}

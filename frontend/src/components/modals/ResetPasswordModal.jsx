@@ -77,17 +77,17 @@ export function ResetPasswordModal({ open, onSubmit, onClose }) {
   const errorText = { fontSize: 11.5, color: "var(--coral)", marginTop: 5 };
 
   return (
-    <div className={`ks-modal-backdrop ${closing ? "ks-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
+    <div className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
       <div
         ref={dialogRef}
-        className={`ks-card ks-modal-card ${closing ? "ks-modal-closing" : ""}`}
+        className={`enc-card enc-modal-card ${closing ? "enc-modal-closing" : ""}`}
         style={{ width: "100%", maxWidth: 400, padding: "28px 28px 24px" }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ks-reset-pw-modal-title"
+        aria-labelledby="enc-reset-pw-modal-title"
         tabIndex={-1}
       >
-        <div id="ks-reset-pw-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, marginBottom: 6 }}>
+        <div id="enc-reset-pw-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, marginBottom: 6 }}>
           Set a new password
         </div>
         <div style={{ fontSize: 13.5, color: "var(--slate)", marginBottom: 20 }}>
@@ -96,10 +96,10 @@ export function ResetPasswordModal({ open, onSubmit, onClose }) {
 
         <form onSubmit={handleSubmit}>
           <div style={field}>
-            <label style={label} htmlFor="ks-new-pw">New password</label>
+            <label style={label} htmlFor="enc-new-pw">New password</label>
             <div style={inputWrap}>
               <Lock size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
-              <input id="ks-new-pw" type={showPw ? "text" : "password"} className="ks-input" style={{ paddingRight: 40 }}
+              <input id="enc-new-pw" type={showPw ? "text" : "password"} className="enc-input" style={{ paddingRight: 40 }}
                 placeholder="At least 8 characters" autoComplete="new-password"
                 value={password} onChange={(e) => setPassword(e.target.value)} />
               {/* #258 — real button, aria-label flips with toggle state. */}
@@ -118,10 +118,10 @@ export function ResetPasswordModal({ open, onSubmit, onClose }) {
           </div>
 
           <div style={{ ...field, marginBottom: 6 }}>
-            <label style={label} htmlFor="ks-confirm-pw">Confirm password</label>
+            <label style={label} htmlFor="enc-confirm-pw">Confirm password</label>
             <div style={inputWrap}>
               <Lock size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
-              <input id="ks-confirm-pw" type={showPw ? "text" : "password"} className="ks-input"
+              <input id="enc-confirm-pw" type={showPw ? "text" : "password"} className="enc-input"
                 placeholder="Re-enter your new password" autoComplete="new-password"
                 value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </div>
@@ -130,7 +130,7 @@ export function ResetPasswordModal({ open, onSubmit, onClose }) {
 
           {error && <div style={{ ...errorText, marginBottom: 12 }}>{error}</div>}
 
-          <button type="submit" className="ks-btn ks-btn-gold" style={{ width: "100%", justifyContent: "center", padding: "12px 0", fontSize: 15, marginTop: 10, opacity: submitting ? 0.7 : 1 }}>
+          <button type="submit" className="enc-btn enc-btn-gold" style={{ width: "100%", justifyContent: "center", padding: "12px 0", fontSize: 15, marginTop: 10, opacity: submitting ? 0.7 : 1 }}>
             {submitting ? "Please wait…" : "Set new password"}
           </button>
 

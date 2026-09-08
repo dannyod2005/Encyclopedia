@@ -1,4 +1,4 @@
-# Keystone
+# Encyclopedia
 
 Clickable LMS prototype — React (CRA) frontend, NestJS/TypeORM backend, Supabase (Postgres + Auth), deployed on Vercel (frontend) and GCP Cloud Run (backend).
 
@@ -16,7 +16,7 @@ This README doubles as the feature clarification document required by [#45](http
 
 | Brief item | Status | Notes |
 |---|---|---|
-| Logo | Partial | A placeholder Keystone "arch" mark (inline SVG) stands in for a real logo — deferred per instruction, not an oversight. |
+| Logo | Partial | A placeholder Encyclopedia "arch" mark (inline SVG) stands in for a real logo — deferred per instruction, not an oversight. |
 | Login | Done | "Log in" / "Join for free" in the top nav open the auth modal. |
 | Header Banner | Done | Hero section under the nav (headline, CTA, key stats). |
 | Search | Partial | Fully working (title/provider search with debounce-free live filtering), but it lives on the Course Catalogue page, not the Homepage itself. |

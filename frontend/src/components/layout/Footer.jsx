@@ -1,4 +1,4 @@
-import { KeystoneMark } from "../common/Primitives";
+import { EncyclopediaMark } from "../common/Primitives";
 
 // #337 — single site-wide footer, rendered once from AppShell so every
 // routed page (Dashboard, Catalogue, Learning, Leaderboard, Trainer
@@ -25,9 +25,9 @@ export function Footer({ onGo }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <KeystoneMark size={16} />
+          <EncyclopediaMark size={16} />
           <span style={{ fontSize: 12.5, color: "var(--slate-light)" }}>
-            &copy; {new Date().getFullYear()} Keystone Learning &middot; Singapore
+            &copy; {new Date().getFullYear()} Encyclopedia Learning &middot; Singapore
           </span>
         </div>
         <div style={{ display: "flex", gap: 20 }}>

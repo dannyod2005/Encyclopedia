@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
 /* ---------- small pieces ---------- */
 
-// #103 — Keystone brand mark: a "K" built from a bar + two keystone-wedge
+// #103 — Encyclopedia brand mark: a "K" built from a bar + two keystone-wedge
 // triangles (fixed gold accent — same idea as an architectural keystone
 // wedge, doubling as the K's diagonal strokes). Unlike the old single-fill
 // house/doorway glyph it replaces, this one is deliberately two-tone and
@@ -9,7 +9,7 @@ import { Star } from "lucide-react";
 // "dark" for use on ink/dark surfaces (bar renders in paper), "light" for
 // use on paper/light surfaces (bar renders in ink). The gold wedges stay
 // gold in both cases, matching the app's ink-background/gold-accent scheme.
-export function KeystoneMark({ variant = "light", size = 22 }) {
+export function EncyclopediaMark({ variant = "light", size = 22 }) {
   const barColor = variant === "dark" ? "var(--paper)" : "var(--ink)";
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
@@ -30,7 +30,7 @@ export function Stars({ rating }) {
   );
 }
 
-export function KeystoneArch({ progress = 0, size = 44 }) {
+export function EncyclopediaArch({ progress = 0, size = 44 }) {
   // 5 voussoir segments forming a simple arch; fills gold left-to-right by progress
   const segs = 5;
   const filled = Math.round(progress * segs);

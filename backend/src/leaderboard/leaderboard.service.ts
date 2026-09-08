@@ -33,7 +33,7 @@ export class LeaderboardService {
     const ranked = optedIn
       .map((p) => ({
         id: p.id,
-        name: p.name || 'Keystone Learner',
+        name: p.name || 'Encyclopedia Learner',
         weeklyPoints: pointsByUser.get(p.id) ?? 0,
       }))
       .sort(
