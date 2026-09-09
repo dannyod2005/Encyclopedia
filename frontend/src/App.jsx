@@ -881,9 +881,25 @@ function EncyclopediaPrototype() {
       // entries below use, same as before this change.
       home: "Encyclopedia",
       catalogue: "Catalogue — Encyclopedia",
-      dashboard: "My Learning — Encyclopedia",
+      // #404 — casing aligned to shellTitle's "My learning"/"Trainer
+      // studio" below (was "My Learning"/"Trainer Studio" here) — the two
+      // titles were drifting apart even where both already existed; the
+      // 4 new entries below reuse shellTitle's names verbatim from the
+      // start so this doesn't happen again for those.
+      dashboard: "My learning — Encyclopedia",
       learning: learningCourse ? `${learningCourse.title} — Encyclopedia` : "Encyclopedia",
-      trainer: "Trainer Studio — Encyclopedia",
+      trainer: "Trainer studio — Encyclopedia",
+      // #404 — leaderboard/settings/privacy/about had no entry here at
+      // all, so they fell through to the bare "Encyclopedia" default
+      // below regardless of which of the 4 pages was open — indistinguishable
+      // from each other and from a page that hasn't loaded yet. Names
+      // match shellTitle (lines ~1775-1784) exactly, same reasoning as
+      // #247 used for "home"/"Discover": the tab title and the topbar/
+      // sidebar title should always say the same thing for a given page.
+      leaderboard: "Leaderboard — Encyclopedia",
+      settings: "Account settings — Encyclopedia",
+      privacy: "Privacy & GDPR — Encyclopedia",
+      about: "About us — Encyclopedia",
     };
     document.title = titles[screen] || "Encyclopedia";
   }, [screen, location.pathname, coursesForLearners]);
