@@ -212,12 +212,19 @@ export function HomeScreen({
           </div>
         ) : (
           <div>
+            {/* #386 — client-supplied homepage copy refresh (Home Page
+                Copy.pdf): hero heading/subtext, stat labels. Badge and
+                CTA button copy were unchanged in the client's mockup, so
+                left as-is. .enc-badge already uppercases via CSS (see
+                global.css), which is why "For growing teams" here
+                matches the mockup's all-caps "FOR GROWING TEAMS" without
+                needing the string itself changed. */}
             <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>For growing teams</span>
             <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 46, lineHeight: 1.08, margin: "18px 0 16px" }}>
-              Skills your team can point to, not just talk about.
+              Skills in-demand, not just talked about
             </h1>
             <p style={{ fontSize: 16, color: "var(--slate)", lineHeight: 1.6, maxWidth: 460 }}>
-              Short, project-based courses in AI, data, and leadership — built so a busy person can actually finish them.
+              Short, practical extra-curricular course – In entrepreneurship, AI, coding, trading and more…
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 26 }}>
               <button className="enc-btn enc-btn-gold" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onAuth("signup")}>Get started free</button>
@@ -226,7 +233,7 @@ export function HomeScreen({
               </button>
             </div>
             <div style={{ display: "flex", gap: 26, marginTop: 34 }}>
-              {[["40,000+", "learners"], ["120+", "courses"], ["4.8", "avg. rating"]].map(([n, l]) => (
+              {[["40,000+", "learners"], ["120+", "courses"], ["4.8", "avg rating"]].map(([n, l]) => (
                 <div key={l}>
                   <div style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 20 }}>{n}</div>
                   <div style={{ fontSize: 12, color: "var(--slate-light)" }}>{l}</div>

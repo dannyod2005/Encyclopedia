@@ -5,8 +5,17 @@ export const ENROLLED_DEFAULT = [
   { courseId: "c6", progress: 1, status: "complete", lastAccessed: "1 week ago" },
 ];
 
+// #386 — client-supplied homepage copy refresh (Home Page Copy.pdf):
+// quote/role swapped to the client's new testimonials. Names and star
+// ratings were unchanged between the old placeholder copy and the new
+// mockup (same 3 people, same 5/5/4 split), so only quote+role differ
+// here. "role" now holds the learner's school (CCHS/HCJC) rather than a
+// job title — the new copy frames this as an extra-curricular platform
+// for students, not a corporate L&D tool, matching the hero rewrite in
+// HomeScreen.jsx. "Well- designed." keeps the client's own spacing/
+// hyphenation verbatim rather than silently correcting it.
 export const TESTIMONIALS = [
-  { name: "Priya N.", role: "Product Manager", quote: "Finished the AI Engineering path in six weeks and shipped an internal tool the same month.", rating: 5 },
-  { name: "Marcus T.", role: "Data Analyst", quote: "The Python path finally made data structures click. Clear pacing, real practice.", rating: 5 },
-  { name: "Elena R.", role: "Team Lead", quote: "Short enough to finish between meetings, deep enough to actually change how I run 1:1s.", rating: 4 },
+  { name: "Priya N.", role: "CCHS", quote: "The content was practical, well-structured, and provided useful insights into starting and growing a business.", rating: 5 },
+  { name: "Marcus T.", role: "HCJC", quote: "Well- designed. The real-world examples and practical exercises made the concepts easy to understand and apply.", rating: 5 },
+  { name: "Elena R.", role: "HCJC", quote: "A valuable learning experience. The course was engaging and relevant.", rating: 4 },
 ];
