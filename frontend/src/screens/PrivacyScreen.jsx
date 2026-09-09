@@ -39,7 +39,7 @@ const SECTIONS = [
   },
   {
     title: "Contact",
-    body: "For any data request, question, or concern about this policy, contact us at privacy@keystonelearning.example.",
+    body: "For any data request, question, or concern about this policy, contact us at privacy@encyclopedialearning.example.",
   },
 ];
 

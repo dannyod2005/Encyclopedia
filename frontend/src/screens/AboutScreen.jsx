@@ -23,7 +23,7 @@ const SECTIONS = [
   },
   {
     title: "Get in touch",
-    body: "Questions about the product, a course, or a partnership? Reach us at hello@keystonelearning.example.",
+    body: "Questions about the product, a course, or a partnership? Reach us at hello@encyclopedialearning.example.",
   },
 ];
 
