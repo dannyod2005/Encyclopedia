@@ -747,6 +747,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                         onClick={() => handleSubmitRating(n)}
                         style={{ background: "none", border: "none", padding: 0, cursor: ratingSubmitting ? "default" : "pointer", display: "inline-flex", lineHeight: 0 }}
                       >
+                        {/* #385 — reverted to var(--gold) (was briefly
+                            var(--star)): see the Primitives.jsx Stars
+                            component comment for why the split was undone. */}
                         <Star size={26} fill={n <= ratingHover ? "var(--gold)" : "none"} color="var(--gold)" />
                       </button>
                     ))}
@@ -1148,7 +1151,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
         <div
           onClick={() => !unenrolling && setConfirmingUnenroll(false)}
           className="enc-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={unenrollDialogRef}

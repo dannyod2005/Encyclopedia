@@ -65,9 +65,13 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
       ) : (
         <>
           <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
+            {/* #385 — Enrolled switched to --blue-tint/--blue-dark: a
+                lower-traffic, trainer-only page, so a good spot to trial
+                a bit more blue without touching the main learner
+                Dashboard's own stat row (which stays gold). */}
             <div className="enc-card" style={stat}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--gold-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                <Users size={15} color="var(--gold-dark)" />
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--blue-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                <Users size={15} color="var(--blue-dark)" />
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 500 }}>{analytics.enrollmentCount}</div>
               <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Enrolled</div>

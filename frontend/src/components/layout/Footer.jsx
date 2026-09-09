@@ -1,5 +1,3 @@
-import { EncyclopediaMark } from "../common/Primitives";
-
 // #337 — single site-wide footer, rendered once from AppShell so every
 // routed page (Dashboard, Catalogue, Learning, Leaderboard, Trainer
 // Studio, Settings, Home) gets it for free instead of each screen
@@ -25,7 +23,16 @@ export function Footer({ onGo }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <EncyclopediaMark size={16} />
+          {/* #385 — real logo icon (decorative; copyright text already
+              names the brand, so alt is empty rather than repeating it).
+              #385 (perf follow-up) — logo-icon-web.png, a pre-scaled copy
+              of the 332x285 master sized for this element's actual 16px
+              render height (with headroom for 3x retina); see
+              MarketingHeader.jsx's comment for the full reasoning behind
+              why this matters for the "feels laggier" report. width= set
+              explicitly (replacing "auto") so the browser doesn't wait on
+              the image to know the footer row's layout. */}
+          <img src="/logo-icon-web.png" alt="" width={19} height={16} style={{ height: 16, width: 19, display: "block" }} />
           <span style={{ fontSize: 12.5, color: "var(--slate-light)" }}>
             &copy; {new Date().getFullYear()} Encyclopedia Learning &middot; Singapore
           </span>

@@ -1033,7 +1033,7 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         <div
           onClick={() => setRemovingModuleIndex(null)}
           className="enc-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={removeModuleDialogRef}

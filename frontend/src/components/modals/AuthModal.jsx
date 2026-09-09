@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { EncyclopediaMark } from "../common/Primitives";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 // #105 — same "always mounted, sometimes null" shape as CourseDetailModal:
@@ -166,7 +165,7 @@ export function AuthModal({ mode, onClose, onSubmit }) {
   const errorText = { fontSize: 11.5, color: "var(--coral)", marginTop: 5 };
 
   return (
-    <div onClick={onClose} className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
+    <div onClick={onClose} className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
       <div
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
@@ -179,9 +178,14 @@ export function AuthModal({ mode, onClose, onSubmit }) {
       >
         <div style={{ padding: "24px 28px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <EncyclopediaMark variant="light" size={19} />
-              <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>Encyclopedia</span>
+            {/* #385 — real logo (wordmark is baked into the image).
+                #385 (perf follow-up) — logo-full-web.png, a pre-scaled/
+                quantized copy of the 1581x285 master sized for how small
+                this ever renders (22px here); see MarketingHeader.jsx's
+                comment for the full reasoning. width= alongside height=
+                so the modal doesn't reflow once the image decodes. */}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <img src="/logo-full-web.png" alt="Encyclopedia" width={122} height={22} style={{ height: 22, width: 122, display: "block" }} />
             </div>
             {/* #258 — real button (was a bare clickable icon). */}
             <button

@@ -71,6 +71,47 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           <Menu size={22} color="var(--ink)" />
         </button>
       )}
+      {/* #385 — the logo moved here from AppSidebar so the sidebar could
+          go back to a dark background for structure (see AppSidebar.jsx
+          and the global.css :root comment) without reintroducing the
+          "navy logo has no contrast on a navy sidebar" problem that
+          forced the outline treatment earlier — the topbar is (and
+          always was) white, same surface the logo already sits on in
+          MarketingHeader/AuthModal, so no new contrast work is needed
+          here.
+          Height 24, measured rather than eyeballed: logo-full.png's
+          canvas has ~12/10px of built-in top/bottom padding around the
+          actual icon+wordmark (out of 285px total height, ~92% content
+          fill), so displaying it at a raw height of N only renders
+          about 0.92*N of visible ink. The title's actual rendered
+          height at fontSize 22/Poppins 600 (checked via canvas
+          text-metrics + a live DOM rect: ~22-24px ink-to-ink for "My
+          learning", including the 'g'/'y' descenders) needs the logo
+          displayed at ~24px so its own visible content (24 * 0.92 ≈
+          22px) lines up with the title's, rather than the two numbers
+          matching but the actual glyphs/artwork not lining up. This
+          held after the #385 font swap from Fraunces to Poppins too —
+          re-measured post-swap and the two fonts' ink heights at this
+          size land within a pixel of each other, so no height change
+          was needed. The thin divider gives the brand mark its own
+          visual "slot" separate from the page title rather than the
+          two running together — bumped to match the new logo height. */}
+      {/* #385 (perf follow-up) — logo-full-web.png, a pre-scaled/
+          quantized copy of the 1581x285 master (197KB) sized for how
+          small this ever renders (24px here, 22-26px at the other 2
+          usage sites) — see MarketingHeader.jsx's comment for the full
+          reasoning; this was the concrete cause behind "the app feels
+          laggier" once the SVG mark was replaced with a raster one.
+          width= set alongside height= so the topbar row doesn't reflow
+          once the image decodes. */}
+      <img src="/logo-full-web.png" alt="Encyclopedia" width={133} height={24} style={{ height: 24, width: 133, display: "block", flexShrink: 0 }} />
+      {/* #385 — reverted to plain --line: the blue tint tried here read
+          as a washed-out gray rather than a deliberate blue (a 1px hairline
+          is too thin/translucent to carry visible hue against white), and
+          it was adding to a "the more blue touches, the colder it looks"
+          effect the client flagged — see AppSidebar.jsx's radial-glow
+          comment for where that blue touch moved to instead. */}
+      <div style={{ width: 1, height: 24, background: "var(--line)", flexShrink: 0 }} aria-hidden="true" />
       <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: 0, flex: 1 }}>{title}</h1>
 
       {onOpenNotification && (
@@ -101,8 +142,29 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           </button>
 
           {open && (
-            <div className="enc-card" style={{ position: "absolute", top: 42, right: 0, width: 320, maxHeight: 420, overflowY: "auto", padding: 0, zIndex: 40 }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", fontSize: 13, fontWeight: 600 }}>
+            // #385 — top was a flat 42px, measured against the bell
+            // button's own 34px box and not the topbar row around it, so
+            // it undershot: this container (containerRef) sits 18px down
+            // from the topbar's top edge (the topbar's own padding-top),
+            // and the topbar has another 18px of padding-bottom + a 1px
+            // border-bottom below the container's 34px-tall box before the
+            // page content actually starts — 19px of "topbar" the old
+            // value didn't account for, which is exactly the overlap that
+            // was reported. calc(100% + 27px) = 100% (container's own
+            // bottom, i.e. flush with the bell button) + 19px to actually
+            // clear the topbar's padding/border + an 8px visual gap so the
+            // panel reads as clearly separate rather than touching.
+            // Written relative to the container (100%) rather than a
+            // second flat number so it keeps tracking correctly if the
+            // button/row sizing ever changes.
+            <div className="enc-card" style={{ position: "absolute", top: "calc(100% + 27px)", right: 0, width: 320, maxHeight: 420, overflowY: "auto", padding: 0, zIndex: 40 }}>
+              {/* #385 — just this header strip bumped one shade below
+                  --paper-2 (#FDFBF6) to #F8F4E9, not the whole panel: it
+                  was blending into the panel body below it. Still lighter
+                  than the page's own --paper (#F5F0E3). Contrast checked
+                  on this exact shade: --ink 14.24:1 — comfortably past AA
+                  for the "Notifications" label. */}
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", fontSize: 13, fontWeight: 600, background: "#F8F4E9" }}>
                 Notifications
               </div>
               {notifications.length === 0 ? (
@@ -112,6 +174,21 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
               ) : (
                 notifications.map((n, i) => {
                   const Icon = TYPE_ICON[n.type] ?? MessageSquare;
+                  // #385 — was a full-width var(--gold-tint) fill on unread
+                  // rows; with the page's own background warmed up (see
+                  // global.css's :root history), that fill sat close enough
+                  // in weight to --gold-tint itself that an unread row read
+                  // as a bigger, stronger block of color than either the
+                  // panel's own "Notifications" header bar or the small
+                  // icon-chip badges inside each row — the two things that
+                  // should read as the prominent elements ended up the
+                  // quietest ones on the page. A 3px left accent bar (always
+                  // rendered, transparent when read) signals unread without
+                  // filling the row, so the header/icon-chip go back to
+                  // being the most visually "present" pieces. Kept as a
+                  // border rather than a background so read/unread rows
+                  // stay the same total width — no layout shift when a
+                  // notification gets marked read.
                   return (
                     <div
                       key={n.id}
@@ -119,11 +196,19 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
                       style={{
                         display: "flex", gap: 10, padding: "12px 16px", cursor: "pointer",
                         borderBottom: i < notifications.length - 1 ? "1px solid var(--line)" : "none",
-                        background: n.read ? "transparent" : "var(--gold-tint)",
+                        borderLeft: n.read ? "3px solid transparent" : "3px solid var(--gold)",
                       }}
                     >
+                      {/* #385 — icon color switched to --blue-dark: the
+                          unread-row background stays --gold-tint (that's
+                          a state signal — read vs unread — so it keeps
+                          the interactive-accent color), but the icon
+                          glyph itself is decorative and sits right below
+                          the topbar's own blue-tinted divider, so it's
+                          another small, contained spot to trial the
+                          logo's blue. */}
                       <div style={{ width: 26, height: 26, borderRadius: 7, background: "var(--paper-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <Icon size={13} color="var(--gold-dark)" />
+                        <Icon size={13} color="var(--blue-dark)" />
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         {n.type === "forum_reply" && (

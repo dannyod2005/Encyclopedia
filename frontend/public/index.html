@@ -2,13 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <!-- #103 — SVG favicon first for modern browsers (crisp at any size,
-         matches the in-app EncyclopediaMark exactly); favicon.ico stays as the
-         fallback for browsers that don't support SVG favicons (e.g. Safari). -->
-    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg" />
+    <!-- #385 — favicon.svg (previously a hand-drawn vector matching the
+         placeholder K-mark) is dropped: the real logo we now have is a
+         raster asset with no vector source, and wrapping raster data in an
+         .svg file for the sake of the type="image/svg+xml" hint gains
+         nothing over just serving the .ico directly.
+         #385 (follow-up) — the icon glyph itself (navy cap + light-blue
+         book) sits on a transparent PNG background, so on a dark browser
+         tab it lost its edges against the tab's own dark chrome. First
+         tried a white rounded-square card behind the glyph, but that read
+         as a background box rather than the logo itself; replaced with a
+         thin white outline that hugs the glyph's own silhouette instead
+         (dilate the alpha mask by ~1-2px at each favicon size, so the
+         stroke stays a few pixels wide regardless of theme) — no
+         backdrop shape, just a contour, so it still reads as "the logo"
+         while staying visible against dark tab chrome. Left
+         logo192.png/logo512.png (PWA/home-screen icons, not the browser
+         tab) and manifest.json untouched — this was scoped to the tab
+         icon only. -->
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#16233D" />
+    <!-- #385 — matches the new --ink token (logo's navy). -->
+    <meta name="theme-color" content="#013362" />
     <meta
       name="description"
       content="Encyclopedia — short, project-based courses in AI, data, and leadership."
@@ -29,10 +44,20 @@
          across every var(--font-display) usage in src/ shows only 600 and
          700 are ever actually applied — weight 500 was dead weight in the
          render-blocking font chain. Dropped it; Inter/IBM Plex Mono are
-         untouched since all their requested weights are in real use. -->
+         untouched since all their requested weights are in real use.
+         #385 — Fraunces (a serif) is swapped for Poppins (a geometric
+         sans) here: the real logo's "Encyclopedia" wordmark turned out to
+         be set in Poppins Bold (confirmed by rendering "Encyclopedia" in
+         both and overlaying them — same single-story 'a', same circular
+         'e'/'o'/'c'/'d'/'p', same straight-diagonal 'y', matching stroke
+         weight), and the client asked for the rest of the page's
+         typography to follow the logo's font rather than keep the
+         unrelated placeholder-era serif. Same two weights (600/700) the
+         Fraunces link already carried, since every var(--font-display)
+         usage in src/ only ever asks for one of those two. -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"
     />
     <!--
       manifest.json provides metadata used when your web app is installed on a

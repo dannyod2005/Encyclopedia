@@ -271,11 +271,20 @@ export function TrainerScreen({
           usable immediately regardless. */}
       {overview && (
         <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
+          {/* #385 — Team used to double up on --gold-tint/--gold-dark
+              (same pairing as Courses), which made two of the four cards
+              look identical. Now that --gold is reserved as the single
+              CTA/interactive accent, Team is a good small, contained spot
+              for the new --blue-tint/--blue-dark pair (sampled from the
+              logo, see the :root comment) — a stat-card icon chip, not a
+              button, so it stays a minimal nod to the logo rather than a
+              second competing accent. Also gives all four cards a
+              distinct color instead of two matching by coincidence. */}
           {[
             { label: "Courses", value: overview.totalCourses, icon: BookOpen, tint: "var(--gold-tint)", fg: "var(--gold-dark)" },
             { label: "Students", value: overview.totalStudents, icon: Users, tint: "var(--success-tint)", fg: "var(--success)" },
             { label: "Learning paths", value: overview.totalPaths, icon: Milestone, tint: "var(--coral-tint)", fg: "var(--coral)" },
-            { label: "Team", value: overview.teamSize, icon: UsersRound, tint: "var(--gold-tint)", fg: "var(--gold-dark)" },
+            { label: "Team", value: overview.teamSize, icon: UsersRound, tint: "var(--blue-tint)", fg: "var(--blue-dark)" },
           ].map((s) => (
             <div key={s.label} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: s.tint, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
@@ -473,7 +482,7 @@ export function TrainerScreen({
         <div
           onClick={() => !deleting && setDeletingCourse(null)}
           className="enc-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={deleteCourseDialogRef}
@@ -524,7 +533,7 @@ export function TrainerScreen({
         <div
           onClick={() => !deletingPathBusy && setDeletingPath(null)}
           className="enc-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={deletePathDialogRef}
