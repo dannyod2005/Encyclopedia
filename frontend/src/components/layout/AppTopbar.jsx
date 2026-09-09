@@ -112,7 +112,20 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           effect the client flagged — see AppSidebar.jsx's radial-glow
           comment for where that blue touch moved to instead. */}
       <div style={{ width: 1, height: 24, background: "var(--line)", flexShrink: 0 }} aria-hidden="true" />
-      <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: 0, flex: 1 }}>{title}</h1>
+      {/* #392 — flex items default to min-width:auto, which for text
+          content means "at least as wide as the longest unbreakable
+          word" — so a single long word like "Leaderboard" refused to
+          shrink at all below md, and instead pushed the bell/avatar
+          toward (and on narrow phones, off) the right edge. min-w-0
+          lets this shrink like a normal flex item; break-words then
+          lets a single long word itself wrap onto a 2nd line instead
+          of overflowing once it's actually too wide for the space
+          left after the bell. md:break-normal turns word-breaking back
+          off above that breakpoint, where there's always been enough
+          room for every current page title on one line — this is
+          deliberately a small-screen-only fix, not a lower ceiling for
+          titles in general. */}
+      <h1 className="min-w-0 break-words md:break-normal" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: 0, flex: 1 }}>{title}</h1>
 
       {onOpenNotification && (
         <div ref={containerRef} style={{ position: "relative" }}>

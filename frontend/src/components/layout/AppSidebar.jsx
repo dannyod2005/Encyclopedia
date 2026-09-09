@@ -81,7 +81,27 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
         // a solid navy base to blend rather than a flat fill; --blue's
         // raw RGB (21,163,225) is reused directly for consistency with
         // the token defined in global.css.
-        style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100vh" }}
+        //
+        // #418 — perf: a DevTools trace during a live resize (dragging
+        // back and forth across the md breakpoint, which flips this
+        // element's translateX and re-triggers transition-transform
+        // every time) showed the Main thread doing real Style/Layout/
+        // Paint work on every frame of that transition, not just cheap
+        // GPU compositing — the trace's "Animating: transform" entries
+        // on this exact <aside> lined up with dense purple/green blocks
+        // for the whole recording. A plain `transform` transition is
+        // normally compositor-only and near-free, but Chrome only
+        // promotes an element to its own layer for that if it has a
+        // reason to expect the animation — without one, a fixed,
+        // full-viewport-height element with a non-trivial background
+        // (the radial-gradient above) is more likely to fall back to
+        // repainting that background on the main thread each frame
+        // instead. will-change: transform gives Chrome that hint up
+        // front, so the layer is promoted before the animation starts
+        // and the gradient is painted once into it rather than repainted
+        // per frame — the transition itself is unchanged, only how
+        // cheaply the browser can run it.
+        style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100vh", willChange: "transform" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 10px 22px" }}>
           {/* #258 — real button (not a bare clickable icon) so this is

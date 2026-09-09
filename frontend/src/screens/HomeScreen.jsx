@@ -180,7 +180,14 @@ export function HomeScreen({
   return (
     <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 28px 40px", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 48, alignItems: "center" }}>
+      {/* #392 — was a fixed 2-column grid at every width, so the hero
+          text and the "Popular right now" card sat side by side even on
+          a phone screen, forcing horizontal scroll (the card's own
+          minimum content width alone exceeded most phone viewports).
+          Stacks to 1 column below md, same grid-cols-1 md:grid-cols-[...]
+          pattern already used by Dashboard/Learning for asymmetric
+          column splits. */}
+      <section className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]" style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 28px 40px", gap: 48, alignItems: "center" }}>
         {loggedIn ? (
           <div>
             <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>Welcome back</span>
@@ -431,7 +438,13 @@ export function HomeScreen({
               {/* #360 — was <span onClick>: not a real link/button. */}
               <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", fontSize: 13.5, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>View catalogue →</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
+            {/* #392 — fixed 3-column grid at every width squeezed 3 course
+                cards into a phone-width viewport; matches the
+                grid-cols-1 sm:grid-cols-2 md:grid-cols-3 pattern this
+                same renderCourseCard already uses elsewhere on this page
+                (logged-in Recommended/Trending sections) and in
+                CatalogueScreen. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
               {courses.slice(0, 3).map(renderCourseCard)}
             </div>
           </section>
@@ -439,7 +452,10 @@ export function HomeScreen({
           <section style={{ background: "var(--ink)", padding: "56px 28px" }}>
             <div style={{ maxWidth: 1160, margin: "0 auto" }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--paper)", marginBottom: 22 }}>What learners say</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
+              {/* #392 — same fixed-3-column issue as "Popular this month"
+                  above: 3 testimonial cards had no room to breathe (or
+                  even render without overlap) below ~900px wide. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
                 {TESTIMONIALS.map((t) => (
                   <div key={t.name} style={{ background: "#1E2C4A", border: "1px solid #2A3A5C", borderRadius: 14, padding: 20 }}>
                     <Stars rating={t.rating} />
