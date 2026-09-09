@@ -35,11 +35,24 @@ module.exports = {
         'success-tint': 'var(--success-tint)',
         coral: 'var(--coral)',
         'coral-tint': 'var(--coral-tint)',
+        // #392 — added during the #385 rebrand (logo-icon accent) but
+        // never mapped into Tailwind's color config until now, so
+        // bg-blue/text-blue-dark/etc. weren't usable as utility classes.
+        blue: 'var(--blue)',
+        'blue-dark': 'var(--blue-dark)',
+        'blue-tint': 'var(--blue-tint)',
       },
       fontFamily: {
-        display: ['Fraunces', 'serif'],
-        body: ['Inter', 'sans-serif'],
-        mono: ['IBM Plex Mono', 'monospace'],
+        // #392 — these previously hardcoded a font stack that duplicated
+        // (and, for `display`, drifted from) the actual values in
+        // global.css: `display` still said Fraunces here after #385
+        // swapped --font-display to Poppins. Referencing the CSS custom
+        // properties directly (same pattern as `colors` above) means
+        // this can't go stale again — global.css stays the single
+        // source of truth.
+        display: ['var(--font-display)'],
+        body: ['var(--font-body)'],
+        mono: ['var(--font-mono)'],
       },
     },
   },
