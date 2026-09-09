@@ -11,7 +11,8 @@ import { MarketingHeader } from "../components/layout/MarketingHeader";
 const SECTIONS = [
   {
     title: "What we do",
-    body: "Encyclopedia Learning is a workplace learning platform for growing teams — short, project-based courses in AI, data, and leadership, built so a busy person can actually finish them. Trainers author courses and guided learning paths; learners track progress, sit quizzes, and earn certificates as they go.",
+    // #403 — "Encyclopedia Learning" -> just "Encyclopedia".
+    body: "Encyclopedia is a workplace learning platform for growing teams — short, project-based courses in AI, data, and leadership, built so a busy person can actually finish them. Trainers author courses and guided learning paths; learners track progress, sit quizzes, and earn certificates as they go.",
   },
   {
     title: "Our approach",
@@ -19,11 +20,14 @@ const SECTIONS = [
   },
   {
     title: "Where we're based",
-    body: "Encyclopedia Learning is based in Singapore.",
+    // #403 — "Encyclopedia Learning" -> just "Encyclopedia".
+    body: "Encyclopedia is based in Singapore.",
   },
   {
     title: "Get in touch",
-    body: "Questions about the product, a course, or a partnership? Reach us at hello@encyclopedialearning.example.",
+    // #403 — hello@encyclopedialearning.example -> hello@encyclopedia.example,
+    // matching the wordmark simplification above.
+    body: "Questions about the product, a course, or a partnership? Reach us at hello@encyclopedia.example.",
   },
 ];
 

@@ -874,7 +874,12 @@ function EncyclopediaPrototype() {
     const learningCourse =
       screen === "learning" ? coursesForLearners.find((c) => `/learning/${c.id}` === location.pathname) : null;
     const titles = {
-      home: "Encyclopedia Learning",
+      // #403 — "Encyclopedia Learning" -> just "Encyclopedia" (client call
+      // to shorten the wordmark, settled on dropping the second word
+      // rather than swapping in another one). Kept as the Home tab's
+      // exception to the "<Page> — Encyclopedia" pattern the other
+      // entries below use, same as before this change.
+      home: "Encyclopedia",
       catalogue: "Catalogue — Encyclopedia",
       dashboard: "My Learning — Encyclopedia",
       learning: learningCourse ? `${learningCourse.title} — Encyclopedia` : "Encyclopedia",

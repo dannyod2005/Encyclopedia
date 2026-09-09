@@ -33,8 +33,9 @@ export function Footer({ onGo }) {
               explicitly (replacing "auto") so the browser doesn't wait on
               the image to know the footer row's layout. */}
           <img src="/logo-icon-web.png" alt="" width={19} height={16} style={{ height: 16, width: 19, display: "block" }} />
+          {/* #403 — "Encyclopedia Learning" -> just "Encyclopedia". */}
           <span style={{ fontSize: 12.5, color: "var(--slate-light)" }}>
-            &copy; {new Date().getFullYear()} Encyclopedia Learning &middot; Singapore
+            &copy; {new Date().getFullYear()} Encyclopedia &middot; Singapore
           </span>
         </div>
         <div style={{ display: "flex", gap: 20 }}>

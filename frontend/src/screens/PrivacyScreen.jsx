@@ -15,7 +15,8 @@ import { MarketingHeader } from "../components/layout/MarketingHeader";
 const SECTIONS = [
   {
     title: "Overview",
-    body: "This policy explains what personal data Encyclopedia Learning collects, why, and what control you have over it. It applies to every learner, trainer, and provider account on this platform.",
+    // #403 — "Encyclopedia Learning" -> just "Encyclopedia".
+    body: "This policy explains what personal data Encyclopedia collects, why, and what control you have over it. It applies to every learner, trainer, and provider account on this platform.",
   },
   {
     title: "Data we collect",
@@ -39,7 +40,9 @@ const SECTIONS = [
   },
   {
     title: "Contact",
-    body: "For any data request, question, or concern about this policy, contact us at privacy@encyclopedialearning.example.",
+    // #403 — privacy@encyclopedialearning.example -> privacy@encyclopedia.example,
+    // matching the wordmark simplification above.
+    body: "For any data request, question, or concern about this policy, contact us at privacy@encyclopedia.example.",
   },
 ];
 
