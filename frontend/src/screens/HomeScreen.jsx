@@ -449,7 +449,17 @@ export function HomeScreen({
             </div>
           </section>
 
-          <section style={{ background: "var(--ink)", padding: "56px 28px" }}>
+          {/* #406 — the AppSidebar radial-glow treatment, reused here per
+              client request: same rgba(21,163,225,...) blue, same 3-stop
+              falloff, but "circle at 50% 75%" instead of the sidebar's
+              "circle at 50% 100%" — centered in this section, low enough
+              to sit behind the testimonial cards rather than the heading
+              above them, fading outward in every direction rather than
+              anchored to one edge and fading upward. Position and
+              intensity (0.16/0.06 peak/mid alpha, down from an initial
+              0.28/0.10 pass that read as too strong) were both tuned
+              live against a running instance before landing here. */}
+          <section style={{ background: "radial-gradient(circle at 50% 75%, rgba(21,163,225,0.16) 0%, rgba(21,163,225,0.06) 40%, rgba(21,163,225,0) 70%), var(--ink)", padding: "56px 28px" }}>
             <div style={{ maxWidth: 1160, margin: "0 auto" }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--paper)", marginBottom: 22 }}>What learners say</h2>
               {/* #392 — same fixed-3-column issue as "Popular this month"

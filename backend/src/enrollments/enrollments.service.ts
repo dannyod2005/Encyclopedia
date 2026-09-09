@@ -646,7 +646,8 @@ export class EnrollmentsService {
     centerText(completedLine, height - 265, fontRegular, 14, slate);
     centerText(courseTitle, height - 300, fontBold, 20, gold);
     centerText(bottomLine, height - 350, fontRegular, 12, slate);
-    centerText('Encyclopedia Learning', height - 80, fontBold, 14, ink);
+    // #403 — "Encyclopedia Learning" -> just "Encyclopedia".
+    centerText('Encyclopedia', height - 80, fontBold, 14, ink);
 
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);
