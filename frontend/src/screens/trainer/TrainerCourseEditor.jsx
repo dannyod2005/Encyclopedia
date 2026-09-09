@@ -682,7 +682,12 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
 
       <div className="enc-card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>Catalogue details</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {/* #392 — fixed 2-column grid regardless of width: fine on
+            desktop, but the Provider field's helper text ("Couldn't
+            resolve your name or provider...") and Hours' estimate text
+            wrapped to several lines in a ~170px column on a phone.
+            Stacks to 1 column below md. */}
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           <div style={field}>
             <label style={label}>Title</label>
             <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="Course title" />
