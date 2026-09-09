@@ -1,0 +1,24 @@
+# Normalize all text files to LF in the repository, regardless of what
+# line endings a given checkout/editor/OS writes on disk. This repo has
+# repeatedly picked up CRLF corruption across many files at once (whole
+# working-tree diffs where every insertion is matched by an identical
+# deletion — a line-ending flip, not a real content change), most
+# recently ~212 files after a routine branch checkout. That's costly to
+# diagnose and risks a real edit getting lost in the noise. `text=auto`
+# lets git detect text vs binary; `eol=lf` pins the normalized form to
+# LF on checkout so every clone/checkout converges on the same bytes
+# instead of drifting per-environment.
+* text=auto eol=lf
+
+# Binary assets: never touched by line-ending normalization regardless
+# of extension-based auto-detection.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary

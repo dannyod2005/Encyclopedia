@@ -60,39 +60,39 @@ export const ACCOUNTS: SeedAccount[] = [
   // Learners
   {
     name: 'Nguyễn Thị Lan Anh',
-    email: 'lananh.nguyen@keystone.example',
+    email: 'lananh.nguyen@encyclopedia.example',
     role: 'learner',
   },
   {
     name: 'Trần Văn Minh',
-    email: 'minh.tran@keystone.example',
+    email: 'minh.tran@encyclopedia.example',
     role: 'learner',
   },
-  { name: 'Phạm Thị Mai', email: 'mai.pham@keystone.example', role: 'learner' },
-  { name: 'Lê Hoàng Nam', email: 'nam.le@keystone.example', role: 'learner' },
+  { name: 'Phạm Thị Mai', email: 'mai.pham@encyclopedia.example', role: 'learner' },
+  { name: 'Lê Hoàng Nam', email: 'nam.le@encyclopedia.example', role: 'learner' },
   {
     name: 'Vũ Thị Thu Hà',
-    email: 'thuha.vu@keystone.example',
+    email: 'thuha.vu@encyclopedia.example',
     role: 'learner',
   },
   // Trainers
   {
     name: 'Đặng Quốc Huy',
-    email: 'huy.dang@keystone.example',
+    email: 'huy.dang@encyclopedia.example',
     role: 'trainer',
   },
   {
     name: 'Hoàng Thị Ngọc',
-    email: 'ngoc.hoang@keystone.example',
+    email: 'ngoc.hoang@encyclopedia.example',
     role: 'trainer',
   },
-  { name: 'Bùi Văn Tuấn', email: 'tuan.bui@keystone.example', role: 'trainer' },
+  { name: 'Bùi Văn Tuấn', email: 'tuan.bui@encyclopedia.example', role: 'trainer' },
   {
     name: 'Đỗ Thị Phương',
-    email: 'phuong.do@keystone.example',
+    email: 'phuong.do@encyclopedia.example',
     role: 'trainer',
   },
-  { name: 'Ngô Minh Đức', email: 'duc.ngo@keystone.example', role: 'trainer' },
+  { name: 'Ngô Minh Đức', email: 'duc.ngo@encyclopedia.example', role: 'trainer' },
 ];
 
 interface AccountResult {

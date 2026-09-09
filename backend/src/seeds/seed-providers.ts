@@ -58,33 +58,33 @@ interface ProviderPlan {
 // #146 only asks for "a handful" (2-3), not full coverage.
 //
 // Of the 5 trainers seeded in #145: 3 own a provider, 1 is a plain
-// member (not owner) of one, and 1 (phuong.do@keystone.example — Đỗ
+// member (not owner) of one, and 1 (phuong.do@encyclopedia.example — Đỗ
 // Thị Phương) is deliberately left with no provider at all, per #146's
 // "at least one trainer with no provider" requirement.
 const PROVIDER_PLAN: ProviderPlan[] = [
   {
     name: 'Encyclopedia Business School',
-    ownerEmail: 'huy.dang@keystone.example', // Đặng Quốc Huy
-    memberEmails: ['ngoc.hoang@keystone.example'], // Hoàng Thị Ngọc
+    ownerEmail: 'huy.dang@encyclopedia.example', // Đặng Quốc Huy
+    memberEmails: ['ngoc.hoang@encyclopedia.example'], // Hoàng Thị Ngọc
   },
   {
     name: 'Global Leadership Institute',
-    ownerEmail: 'tuan.bui@keystone.example', // Bùi Văn Tuấn
+    ownerEmail: 'tuan.bui@encyclopedia.example', // Bùi Văn Tuấn
     memberEmails: [],
   },
   {
     name: 'Encyclopedia Web Guild',
-    ownerEmail: 'duc.ngo@keystone.example', // Ngô Minh Đức
+    ownerEmail: 'duc.ngo@encyclopedia.example', // Ngô Minh Đức
     memberEmails: [],
   },
 ];
 
-// phuong.do@keystone.example (Đỗ Thị Phương) — intentionally not
+// phuong.do@encyclopedia.example (Đỗ Thị Phương) — intentionally not
 // referenced in PROVIDER_PLAN above. Explicitly nulled out below
 // rather than just "never touched", so re-running this script after
 // any manual testing (e.g. someone joined her to a provider by hand)
 // puts her back in the "no provider" state #146 asks for.
-const UNLINKED_TRAINER_EMAILS = ['phuong.do@keystone.example'];
+const UNLINKED_TRAINER_EMAILS = ['phuong.do@encyclopedia.example'];
 
 async function listAllAuthUsers(
   supabaseAdmin: SupabaseClient,
