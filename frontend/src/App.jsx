@@ -1920,6 +1920,10 @@ function EncyclopediaPrototype() {
                   onToggleBookmark={toggleBookmark}
                   leaderboardOptIn={leaderboardOptIn}
                   onOpenLeaderboard={() => navigate("/leaderboard")}
+                  // #398 — same shape as HomeScreen's onGo just above: a
+                  // route key in, a navigate() call out. Lets the empty
+                  // "Continue learning" state link straight to Catalogue.
+                  onGo={(key) => navigate(key === "home" ? "/" : `/${key}`)}
                 />
               </AppShell>
             </RequireAuth>

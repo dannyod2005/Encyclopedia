@@ -11,7 +11,15 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 // SettingsScreen's DAILY_GOAL_PRESETS comment for why).
 const DEFAULT_ACTIVITY_SUMMARY = { streak: 0, pointsThisWeek: 0, dailyGoalPoints: 1500, goalHitDays: 0, week: [] };
 
-export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], bookmarks = [], onToggleBookmark, onOpenCourse, onStartLearning, courses, onViewCertificate, onRetake, user, goal = null, activitySummary = DEFAULT_ACTIVITY_SUMMARY, loading = false, error = false, onRetry, calendarWeekOffset = 0, onPrevWeek, onNextWeek, leaderboardOptIn = false, onOpenLeaderboard }) {
+// #398 — onGo added: Dashboard previously had no navigation callback at
+// all (HomeScreen's own onGo covers its logged-in "Continue" card, but
+// nothing here), so the empty "Continue learning" state below had no
+// way to send a learner to the Catalogue. Same prop name/shape as
+// HomeScreen's onGo (a single key -> route callback), wired the same
+// way from App.jsx, so any other section on this screen that turns out
+// to need navigation later can reuse it rather than inventing another
+// prop.
+export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], bookmarks = [], onToggleBookmark, onOpenCourse, onStartLearning, courses, onViewCertificate, onRetake, user, goal = null, activitySummary = DEFAULT_ACTIVITY_SUMMARY, loading = false, error = false, onRetry, calendarWeekOffset = 0, onPrevWeek, onNextWeek, leaderboardOptIn = false, onOpenLeaderboard, onGo }) {
   const firstName = getFirstName(getDisplayName(user));
   // #365 — was also shared with a plain Unenroll flow triggered from the
   // Not-started/Continue-learning cards below (kebab menu, then an
@@ -249,8 +257,19 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", margin: notStarted.length > 0 ? "24px 0 12px" : "0 0 12px" }}>Continue learning</div>
           {continuing.length === 0 ? (
+            // #398 — was a flat "Nothing in progress yet." with no way
+            // out. HomeScreen already solves this same empty state with
+            // an encouraging message + a direct Catalogue link (see its
+            // "Nothing in progress right now" card) — matching that copy
+            // here rather than HomeScreen's other branch ("you haven't
+            // started a course yet"), since that one would read as wrong
+            // for a learner who has Start-my-learning or Completed
+            // courses in the sections right above/below this one; this
+            // message is scoped to "nothing in progress" specifically,
+            // not "never touched this app."
             <div className="enc-card" style={{ padding: 16, marginBottom: 12, fontSize: 13, color: "var(--slate-light)" }}>
-              Nothing in progress yet.
+              Nothing in progress right now —{" "}
+              <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", color: "var(--gold-dark)", fontWeight: 600, background: "none", border: "none", padding: 0, cursor: "pointer" }}>browse the catalogue</button> to start something new.
             </div>
           ) : (
             continuing.map((e) => {
