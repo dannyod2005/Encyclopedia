@@ -15,7 +15,7 @@ import { MarketingHeader } from "../components/layout/MarketingHeader";
 const SECTIONS = [
   {
     title: "Overview",
-    body: "This policy explains what personal data Keystone Learning collects, why, and what control you have over it. It applies to every learner, trainer, and provider account on this platform.",
+    body: "This policy explains what personal data Encyclopedia Learning collects, why, and what control you have over it. It applies to every learner, trainer, and provider account on this platform.",
   },
   {
     title: "Data we collect",
@@ -39,13 +39,13 @@ const SECTIONS = [
   },
   {
     title: "Contact",
-    body: "For any data request, question, or concern about this policy, contact us at privacy@keystonelearning.example.",
+    body: "For any data request, question, or concern about this policy, contact us at privacy@encyclopedialearning.example.",
   },
 ];
 
 export function PrivacyScreen({ loggedIn, onGo, onAuth }) {
   return (
-    <div className="ks-page-enter">
+    <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
       {/* Narrower than most pages (760 base, same as the course/path
           editors) — this is a reading page, not a grid of cards, so a
@@ -58,7 +58,7 @@ export function PrivacyScreen({ loggedIn, onGo, onAuth }) {
           still won't always fit on shorter screens no matter how tight
           the spacing gets — that's fine; the goal here was closing the
           gap, not forcing it at the cost of cramming a legal page. */}
-      <div className="ks-page-scaled" style={{ "--ks-page-base": "760px", padding: "28px 28px 40px" }}>
+      <div className="enc-page-scaled" style={{ "--enc-page-base": "760px", padding: "28px 28px 40px" }}>
         {/* #364 — title only kept logged out (AppTopbar already shows
             "Privacy & GDPR" for logged-in visitors, but there's no
             topbar at all when logged out); subtitle stays either way. */}

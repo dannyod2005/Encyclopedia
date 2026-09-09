@@ -134,7 +134,7 @@ export class CourseAnalyticsService {
       return {
         enrollmentId: e.id,
         userId: e.user.id,
-        name: e.user.name || 'Keystone Learner',
+        name: e.user.name || 'Encyclopedia Learner',
         progressPct,
         status: e.status,
         lastAccessed: e.lastAccessed,

@@ -217,7 +217,7 @@ function LearningRoute({ courses, enrolled, coursesLoading, enrolledLoading, onS
   if (!course) {
     if (coursesLoading || enrolledLoading) {
       return (
-        <div className="ks-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
           Loading course…
         </div>
       );
@@ -249,7 +249,7 @@ function LearningRoute({ courses, enrolled, coursesLoading, enrolledLoading, onS
 }
 
 /* ---------- Root ---------- */
-function KeystonePrototype() {
+function EncyclopediaPrototype() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -874,13 +874,13 @@ function KeystonePrototype() {
     const learningCourse =
       screen === "learning" ? coursesForLearners.find((c) => `/learning/${c.id}` === location.pathname) : null;
     const titles = {
-      home: "Keystone Learning",
-      catalogue: "Catalogue — Keystone",
-      dashboard: "My Learning — Keystone",
-      learning: learningCourse ? `${learningCourse.title} — Keystone` : "Keystone",
-      trainer: "Trainer Studio — Keystone",
+      home: "Encyclopedia Learning",
+      catalogue: "Catalogue — Encyclopedia",
+      dashboard: "My Learning — Encyclopedia",
+      learning: learningCourse ? `${learningCourse.title} — Encyclopedia` : "Encyclopedia",
+      trainer: "Trainer Studio — Encyclopedia",
     };
-    document.title = titles[screen] || "Keystone";
+    document.title = titles[screen] || "Encyclopedia";
   }, [screen, location.pathname, coursesForLearners]);
 
   async function saveCourse(draft) {
@@ -1787,7 +1787,7 @@ function KeystonePrototype() {
   }
 
   return (
-    <div className="ks-root">
+    <div className="enc-root">
       {/* #367 — single Suspense boundary for every lazy-loaded route above;
           a route-level fallback (rather than one per-screen) since only one
           route is ever mounted at a time here. Kept visually consistent
@@ -1806,7 +1806,7 @@ function KeystonePrototype() {
             loggedIn ? (
               <AppShell loggedIn={loggedIn} role={role} onLogout={handleLogout} title={shellTitle} user={user} goal={learnerGoal} notifications={notifications} unreadCount={unreadCount} onOpenNotification={handleOpenNotification}>
                 {/* #247 — the logged-in-only discovery sections (Recommended/
-                    New on Keystone/Learning paths/Leaderboard teaser) reuse
+                    New on Encyclopedia/Learning paths/Leaderboard teaser) reuse
                     the exact same data + handlers already wired up for
                     Catalogue/Dashboard below, rather than fetching anything
                     new. The logged-out branch of HomeScreen (right below)
@@ -2111,7 +2111,7 @@ function KeystonePrototype() {
 export default function App() {
   return (
     <BrowserRouter>
-      <KeystonePrototype />
+      <EncyclopediaPrototype />
     </BrowserRouter>
   );
 }

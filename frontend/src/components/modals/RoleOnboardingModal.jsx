@@ -62,18 +62,18 @@ export function RoleOnboardingModal({ open, onSelect }) {
   }
 
   return (
-    <div className={`ks-modal-backdrop ${closing ? "ks-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
+    <div className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}>
       <div
         ref={dialogRef}
-        className={`ks-card ks-modal-card ${closing ? "ks-modal-closing" : ""}`}
+        className={`enc-card enc-modal-card ${closing ? "enc-modal-closing" : ""}`}
         style={{ width: "100%", maxWidth: 440, padding: "28px 28px 24px" }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="ks-role-modal-title"
+        aria-labelledby="enc-role-modal-title"
         tabIndex={-1}
       >
-        <div id="ks-role-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, marginBottom: 6 }}>
-          How will you use Keystone?
+        <div id="enc-role-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, marginBottom: 6 }}>
+          How will you use Encyclopedia?
         </div>
         <div style={{ fontSize: 13.5, color: "var(--slate)", marginBottom: 20 }}>
           One quick choice - this decides what you see next.

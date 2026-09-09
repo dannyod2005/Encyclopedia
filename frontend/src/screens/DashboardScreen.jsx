@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { PlayCircle, CheckCircle2, Award, ChevronLeft, ChevronRight, Flame, Medal, Bookmark, Trophy, X } from "lucide-react";
 
-import { KeystoneArch } from "../components/common/Primitives";
+import { EncyclopediaArch } from "../components/common/Primitives";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 /* ---------- Screen: Dashboard ---------- */
@@ -106,18 +106,18 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
   // nothing structural needed changing.
   //
   // #332 — the 1160 cap held even on very large monitors, leaving a big
-  // fixed gutter either side. Moved to the shared .ks-page-wide class
+  // fixed gutter either side. Moved to the shared .enc-page-wide class
   // (global.css) so >=1440px viewports get more usable width instead;
   // below that breakpoint this renders identically to before.
   return (
-    <div className="ks-page-enter ks-page-wide" style={{ padding: "28px 32px" }}>
+    <div className="enc-page-enter enc-page-wide" style={{ padding: "28px 32px" }}>
       {/* #364 — was <PageHeader title="My learning" />: AppTopbar already
           shows that exact text as this route's h1, so this was a plain
           duplicate rather than added context (unlike Catalogue's
           subtitle, say). Dropped entirely rather than kept as a bare
           wrapper — the greeting card right below already carries its
           own personalized context (name, goal, streak). */}
-      <div className="ks-card" style={{ padding: "20px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="enc-card" style={{ padding: "20px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 600 }}>Good morning, {firstName}</div>
           {/* #107 — goal is null until a learner picks one via the
@@ -151,7 +151,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             <div aria-hidden="true">
               <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="ks-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
+                  <div key={i} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--line)", marginBottom: 10 }} />
                     <div style={{ width: 28, height: 22, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
                     <div style={{ width: 70, height: 12, borderRadius: 4, background: "var(--line)" }} />
@@ -159,7 +159,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                 ))}
               </div>
               {[0, 1, 2].map((i) => (
-                <div key={i} className="ks-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                <div key={i} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
                   <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--line)", flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ width: "55%", height: 14.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
@@ -177,9 +177,9 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             // lands here instead: same card shape, but with an explicit
             // "something went wrong" message and a retry button rather
             // than silently showing nothing or requiring a full reload.
-            <div className="ks-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+            <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
               <div style={{ marginBottom: 14 }}>Couldn't load your learning — please try again.</div>
-              <button type="button" className="ks-btn ks-btn-gold" onClick={onRetry} style={{ cursor: "pointer" }}>
+              <button type="button" className="enc-btn enc-btn-gold" onClick={onRetry} style={{ cursor: "pointer" }}>
                 Try again
               </button>
             </div>
@@ -191,7 +191,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
               { label: "Completed", value: complete.length, icon: CheckCircle2, tint: "var(--success-tint)", fg: "var(--success)" },
               { label: "Certificates", value: complete.length, icon: Award, tint: "var(--coral-tint)", fg: "var(--coral)" },
             ].map((s) => (
-              <div key={s.label} className="ks-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
+              <div key={s.label} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: s.tint, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                   <s.icon size={15} color={s.fg} />
                 </div>
@@ -221,8 +221,8 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   // the natural place to leave it, matching how Udemy/
                   // Coursera keep it inside the course rather than on the
                   // list card).
-                  <div key={e.courseId} className="ks-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
-                    <KeystoneArch progress={0} size={44} />
+                  <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                    <EncyclopediaArch progress={0} size={44} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
                       <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
@@ -230,12 +230,12 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                       </div>
                     </div>
                     {/* #restyle-dashboard-start-button — dark ink fill,
-                        white text (ks-btn-primary), chosen after
+                        white text (enc-btn-primary), chosen after
                         comparing against gold-toned variants live on
                         this dashboard. Shared with the Resume button
                         below. */}
                     <button
-                      className="ks-btn ks-btn-primary"
+                      className="enc-btn enc-btn-primary"
                       style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
                       onClick={() => onStartLearning(c)}
                     >
@@ -249,7 +249,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", margin: notStarted.length > 0 ? "24px 0 12px" : "0 0 12px" }}>Continue learning</div>
           {continuing.length === 0 ? (
-            <div className="ks-card" style={{ padding: 16, marginBottom: 12, fontSize: 13, color: "var(--slate-light)" }}>
+            <div className="enc-card" style={{ padding: 16, marginBottom: 12, fontSize: 13, color: "var(--slate-light)" }}>
               Nothing in progress yet.
             </div>
           ) : (
@@ -259,8 +259,8 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
               return (
                 // #365 — same single-accent treatment as the Not-started
                 // row above.
-                <div key={e.courseId} className="ks-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
-                  <KeystoneArch progress={e.progress} size={44} />
+                <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                  <EncyclopediaArch progress={e.progress} size={44} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
                     <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
@@ -271,7 +271,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                     </div>
                   </div>
                   <button
-                    className="ks-btn ks-btn-primary"
+                    className="enc-btn enc-btn-primary"
                     style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
                     onClick={() => onStartLearning(c)}
                   >
@@ -287,7 +287,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             const c = courses.find((x) => x.id === e.courseId);
             if (!c) return null;
             return (
-              <div key={e.courseId} className="ks-card" style={{ padding: 16, marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+              <div key={e.courseId} className="enc-card" style={{ padding: 16, marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ width: 48, height: 30, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <CheckCircle2 size={22} color="var(--success)" />
                 </div>
@@ -295,7 +295,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
                   <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>Completed {e.lastAccessed} · certificate issued</div>
                 </div>
-                <button className="ks-btn ks-btn-ghost" onClick={() => handleViewCertificate(e.id)}>View certificate</button>
+                <button className="enc-btn enc-btn-ghost" onClick={() => handleViewCertificate(e.id)}>View certificate</button>
                 {/* #300 — was "Unenroll": a finished course's most likely
                     next action is doing it again, not leaving it, and
                     "unenroll" read oddly for something already completed.
@@ -304,7 +304,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                     worth a confirm, same as before. */}
                 {onRetake && (
                   <button
-                    className="ks-btn ks-btn-ghost"
+                    className="enc-btn enc-btn-ghost"
                     style={{ color: "var(--coral)" }}
                     onClick={() => { setRetakingCourse({ enrollmentId: e.id, title: c.title }); setRetakeError(null); }}
                   >
@@ -319,7 +319,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
         </div>
 
         <div>
-          <div className="ks-card" style={{ padding: 18, marginBottom: 16 }}>
+          <div className="enc-card" style={{ padding: 18, marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <span style={{ fontSize: 13.5, fontWeight: 600 }}>{monthLabel}</span>
               <div style={{ display: "flex", gap: 6 }}>
@@ -360,12 +360,19 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   <div key={day.date} style={{
                     fontSize: 12, padding: "5px 0", borderRadius: 6,
                     background: isToday ? "var(--gold)" : day.goalHit ? "var(--gold-tint)" : "transparent",
+                    // #385 — reverted to the original hardcoded #2B1E06 for
+                    // "today" alongside --gold's revert back to its warm
+                    // value (see the :root history note in global.css) —
+                    // this went var(--ink) -> white and back across the
+                    // accent's several changes this pass. Non-today cells
+                    // keep --ink, which holds comfortably on both
+                    // transparent and the restored --gold-tint.
                     color: isToday ? "#2B1E06" : "var(--ink)", fontWeight: isToday ? 700 : 400,
                   }}>{new Date(`${day.date}T00:00:00Z`).getUTCDate()}</div>
                 );
               })}
             </div>
-            <hr className="ks-hairline" style={{ margin: "16px 0" }} />
+            <hr className="enc-hairline" style={{ margin: "16px 0" }} />
             {/* #255 — used to be a click-to-edit pill picker right here;
                 editing now lives on the Account Settings screen (see
                 SettingsScreen's Preferences card), so this is just a
@@ -376,11 +383,11 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>{activitySummary.goalHitDays} of 7 days hit this week</div>
           </div>
 
-          <div className="ks-card" style={{ padding: 18 }}>
+          <div className="enc-card" style={{ padding: 18 }}>
             <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>This week</div>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 26, fontWeight: 500 }}>{activitySummary.pointsThisWeek}<span style={{ fontSize: 13, color: "var(--slate-light)" }}> pts</span></div>
             <div style={{ fontSize: 12, color: "var(--slate-light)" }}>learning points logged</div>
-            <hr className="ks-hairline" style={{ margin: "16px 0" }} />
+            <hr className="enc-hairline" style={{ margin: "16px 0" }} />
             <div style={{ fontSize: 12.5, color: "var(--slate)" }}>Enrolled in {enrolledCourseCount} course{enrolledCourseCount === 1 ? "" : "s"}</div>
 
             {/* #231/#255 — the opt-in toggle itself moved to Account
@@ -393,7 +400,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                 converted in Settings (#349). */}
             {leaderboardOptIn && onOpenLeaderboard && (
               <>
-                <hr className="ks-hairline" style={{ margin: "16px 0" }} />
+                <hr className="enc-hairline" style={{ margin: "16px 0" }} />
                 <button
                   type="button"
                   onClick={onOpenLeaderboard}
@@ -410,13 +417,19 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
               least one to show (no "no badges yet" placeholder — a
               learner with none looks exactly like before this feature). */}
           {badges.length > 0 && (
-            <div className="ks-card" style={{ padding: 18, marginTop: 16 }}>
+            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Badges</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* #385 — badge-icon chips switched to --blue-tint/--blue-dark:
+                    a standalone, non-interactive icon repeated in a list,
+                    away from the primary Dashboard stat row above (which
+                    stays gold) — a contained, low-traffic spot to trial a
+                    bit more of the logo's blue without thinning out gold
+                    where it matters most (see global.css's :root comment). */}
                 {badges.map((b) => (
                   <div key={b.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--gold-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Medal size={15} color="var(--gold-dark)" />
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--blue-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Medal size={15} color="var(--blue-dark)" />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{b.label}</div>
@@ -433,7 +446,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
           {/* #226 — same "hidden until non-empty" convention as the badges
               card above it. */}
           {skillsLearned.length > 0 && (
-            <div className="ks-card" style={{ padding: 18, marginTop: 16 }}>
+            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Skills</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {skillsLearned.map((s) => (
@@ -455,7 +468,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
               same as how the course progress bars in the left column
               never compute anything themselves either. */}
           {pathEnrollments.length > 0 && (
-            <div className="ks-card" style={{ padding: 18, marginTop: 16 }}>
+            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Learning paths</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {pathEnrollments.map((pe) => (
@@ -486,7 +499,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
               card is just another place that toggle is exposed, not a
               separate code path. */}
           {savedCourses.length > 0 && (
-            <div className="ks-card" style={{ padding: 18, marginTop: 16 }}>
+            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Saved</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {savedCourses.map((c) => (
@@ -535,7 +548,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
           learner who wants a clean slate has to redo each module's quiz
           individually.
           #301 — portaled to document.body: this screen's root div carries
-          ks-page-enter for the page-load animation, which leaves a
+          enc-page-enter for the page-load animation, which leaves a
           `transform` applied via animation-fill-mode: both even after the
           animation finishes. Any ancestor with a transform becomes a new
           containing block for a `position: fixed` descendant, so without
@@ -547,21 +560,21 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
       {retakingCourse && createPortal(
         <div
           onClick={() => !retaking && setRetakingCourse(null)}
-          className="ks-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          className="enc-modal-backdrop"
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={retakeDialogRef}
             onClick={(e) => e.stopPropagation()}
-            className="ks-card ks-modal-card"
+            className="enc-card enc-modal-card"
             style={{ width: "100%", maxWidth: 400, padding: "24px 26px" }}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="ks-retake-modal-title"
+            aria-labelledby="enc-retake-modal-title"
             tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-              <div id="ks-retake-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>
+              <div id="enc-retake-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>
                 Retake this course?
               </div>
               {/* #258 — real button (was a bare clickable icon). */}
@@ -582,9 +595,9 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
               <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{retakeError}</div>
             )}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="ks-btn ks-btn-ghost" disabled={retaking} onClick={() => setRetakingCourse(null)}>Cancel</button>
+              <button className="enc-btn enc-btn-ghost" disabled={retaking} onClick={() => setRetakingCourse(null)}>Cancel</button>
               <button
-                className="ks-btn"
+                className="enc-btn"
                 style={{ background: "var(--coral)", color: "#fff", opacity: retaking ? 0.7 : 1 }}
                 disabled={retaking}
                 onClick={handleConfirmRetake}

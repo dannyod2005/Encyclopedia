@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ChevronRight, BookOpen, Sparkles, TrendingUp, Milestone, Trophy } from "lucide-react";
 
 import { TESTIMONIALS } from "../data/courses";
-import { Stars, KeystoneArch, CategoryDot, PageHeader } from "../components/common/Primitives";
+import { Stars, EncyclopediaArch, CategoryDot, PageHeader } from "../components/common/Primitives";
 import { MarketingHeader } from "../components/layout/MarketingHeader";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
 
@@ -61,12 +61,12 @@ export function HomeScreen({
         .slice(0, RECOMMENDED_LIMIT);
   const recommendedIds = new Set(recommended.map((c) => c.id));
 
-  // #247 — "New on Keystone": not limited to the learner's goal category
+  // #247 — "New on Encyclopedia": not limited to the learner's goal category
   // (or shown at all for a learner/trainer with no goal set) — a
   // logged-out-style "what's out there" strip, minus anything already
   // surfaced above or already enrolled in.
   // #308 — sorts by createdAt descending, not rating: this section is
-  // titled "New on Keystone" (trending-arrow icon), but was reusing
+  // titled "New on Encyclopedia" (trending-arrow icon), but was reusing
   // "Recommended for you"'s rating sort, which has nothing to do with
   // recency. In practice that meant an old, highly-rated course sat here
   // indefinitely while genuinely new courses (no ratings yet) never
@@ -140,7 +140,7 @@ export function HomeScreen({
   // is enough.
   function renderCourseCard(c) {
     return (
-      <button key={c.id} type="button" className="ks-card" onClick={() => (onOpenCourse ? onOpenCourse(c) : onGo("catalogue"))} style={{ padding: 18, width: "100%", textAlign: "left", font: "inherit", cursor: "pointer" }}>
+      <button key={c.id} type="button" className="enc-card" onClick={() => (onOpenCourse ? onOpenCourse(c) : onGo("catalogue"))} style={{ padding: 18, width: "100%", textAlign: "left", font: "inherit", cursor: "pointer" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
           <CategoryDot color={c.color} />
           <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{c.category}</span>
@@ -161,7 +161,7 @@ export function HomeScreen({
   // screen readers don't announce empty placeholder text.
   function renderCourseCardSkeleton(i) {
     return (
-      <div key={i} className="ks-card" aria-hidden="true" style={{ padding: 18 }}>
+      <div key={i} className="enc-card" aria-hidden="true" style={{ padding: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--line)" }} />
           <div style={{ width: 64, height: 11, borderRadius: 4, background: "var(--line)" }} />
@@ -178,12 +178,12 @@ export function HomeScreen({
   }
 
   return (
-    <div className="ks-page-enter">
+    <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 28px 40px", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 48, alignItems: "center" }}>
         {loggedIn ? (
           <div>
-            <span className="ks-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>Welcome back</span>
+            <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>Welcome back</span>
             {/* #213 — was a 46px hero h1, noticeably larger than
                 Catalogue's 30px title or Dashboard's (formerly
                 nonexistent) one. PageHeader brings it down to the same
@@ -196,8 +196,8 @@ export function HomeScreen({
               />
             </div>
             <div style={{ display: "flex", gap: 12, marginTop: 26 }}>
-              <button className="ks-btn ks-btn-gold" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onGo("dashboard")}>Go to my learning</button>
-              <button className="ks-btn ks-btn-ghost" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onGo("catalogue")}>
+              <button className="enc-btn enc-btn-gold" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onGo("dashboard")}>Go to my learning</button>
+              <button className="enc-btn enc-btn-ghost" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onGo("catalogue")}>
                 Browse catalogue <ArrowRight size={15} />
               </button>
             </div>
@@ -212,21 +212,28 @@ export function HomeScreen({
           </div>
         ) : (
           <div>
-            <span className="ks-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>For growing teams</span>
+            {/* #386 — client-supplied homepage copy refresh (Home Page
+                Copy.pdf): hero heading/subtext, stat labels. Badge and
+                CTA button copy were unchanged in the client's mockup, so
+                left as-is. .enc-badge already uppercases via CSS (see
+                global.css), which is why "For growing teams" here
+                matches the mockup's all-caps "FOR GROWING TEAMS" without
+                needing the string itself changed. */}
+            <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>For growing teams</span>
             <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 46, lineHeight: 1.08, margin: "18px 0 16px" }}>
-              Skills your team can point to, not just talk about.
+              Skills in-demand, not just talked about
             </h1>
             <p style={{ fontSize: 16, color: "var(--slate)", lineHeight: 1.6, maxWidth: 460 }}>
-              Short, project-based courses in AI, data, and leadership — built so a busy person can actually finish them.
+              Short, practical extra-curricular course – In entrepreneurship, AI, coding, trading and more…
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 26 }}>
-              <button className="ks-btn ks-btn-gold" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onAuth("signup")}>Get started free</button>
-              <button className="ks-btn ks-btn-ghost" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onGo("catalogue")}>
+              <button className="enc-btn enc-btn-gold" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onAuth("signup")}>Get started free</button>
+              <button className="enc-btn enc-btn-ghost" style={{ padding: "12px 22px", fontSize: 15 }} onClick={() => onGo("catalogue")}>
                 Browse catalogue <ArrowRight size={15} />
               </button>
             </div>
             <div style={{ display: "flex", gap: 26, marginTop: 34 }}>
-              {[["40,000+", "learners"], ["120+", "courses"], ["4.8", "avg. rating"]].map(([n, l]) => (
+              {[["40,000+", "learners"], ["120+", "courses"], ["4.8", "avg rating"]].map(([n, l]) => (
                 <div key={l}>
                   <div style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 20 }}>{n}</div>
                   <div style={{ fontSize: 12, color: "var(--slate-light)" }}>{l}</div>
@@ -235,7 +242,7 @@ export function HomeScreen({
             </div>
           </div>
         )}
-        <div className="ks-card" style={{ padding: 22, position: "relative" }}>
+        <div className="enc-card" style={{ padding: 22, position: "relative" }}>
           {/* #323 — this heading used to always read "Continue where you
               left off", even for logged-out guests. The body below already
               swaps to a neutral "browse this course" list for guests (see
@@ -251,7 +258,7 @@ export function HomeScreen({
               // interactive elements, so a plain <button> is enough.
               inProgress.slice(0, 3).map((e) => (
                 <button key={e.id} type="button" onClick={() => onGo(`learning/${e.courseId}`)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderRadius: 10, width: "100%", textAlign: "left", font: "inherit", background: "none", border: "none", cursor: "pointer" }}>
-                  <KeystoneArch progress={e.progress} size={40} />
+                  <EncyclopediaArch progress={e.progress} size={40} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 600 }}>{e.course?.title ?? "Untitled course"}</div>
                     <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
@@ -308,11 +315,11 @@ export function HomeScreen({
           un-enrolled paths, not opted into the leaderboard) just sees
           fewer sections, never an empty placeholder. */}
       {loggedIn && (
-        // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+        // #336 — shared .enc-page-scaled primitive instead of a hardcoded
         // maxWidth, so this logged-in discovery section grows at the same
         // large breakpoint as the rest of the app. The shared marketing
         // hero above and the logged-out sections below are unaffected.
-        <section className="ks-page-scaled" style={{ "--ks-page-base": "1160px", padding: "20px 28px 56px" }}>
+        <section className="enc-page-scaled" style={{ "--enc-page-base": "1160px", padding: "20px 28px 56px" }}>
           {/* #367 — goal is known synchronously (part of the already-loaded
               profile), so a skeleton here only shows for a learner who's
               actually going to get a real "Recommended for you" section
@@ -335,8 +342,17 @@ export function HomeScreen({
             <div style={{ marginBottom: 32 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <TrendingUp size={16} color="var(--gold-dark)" />
-                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>New on Keystone</span>
+                  {/* #385 — one small accent touch: this section's heading
+                      icon uses the new --blue-dark (sampled from the logo,
+                      see global.css) instead of --gold-dark, so it reads as
+                      a distinct visual note from the Sparkles/Milestone
+                      icons on the sections above/below rather than all
+                      three looking identical. "View catalogue" stays gold
+                      since it's the interactive/clickable element here —
+                      --gold remains the one color reserved for anything
+                      CTA-shaped; --blue is only ever a static glyph. */}
+                  <TrendingUp size={16} color="var(--blue-dark)" />
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>New on Encyclopedia</span>
                 </div>
                 {/* #360 — was <span onClick>: not a real link/button. */}
                 <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", fontSize: 13.5, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>View catalogue →</button>
@@ -360,7 +376,7 @@ export function HomeScreen({
                   <button
                     key={p.id}
                     type="button"
-                    className="ks-card"
+                    className="enc-card"
                     onClick={() => onOpenPath && onOpenPath(p)}
                     disabled={!onOpenPath}
                     style={{ padding: 18, width: "100%", textAlign: "left", font: "inherit", cursor: onOpenPath ? "pointer" : "default" }}
@@ -379,7 +395,7 @@ export function HomeScreen({
           )}
 
           {myRank && (
-            <div className="ks-card" style={{ padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div className="enc-card" style={{ padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Trophy size={16} color="var(--gold-dark)" />
                 <span style={{ fontSize: 13.5 }}>

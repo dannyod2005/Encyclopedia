@@ -50,41 +50,41 @@ interface ProviderPlan {
 
 // 3 of the 8 provider names used across the #109 course set, chosen to
 // cover all three catalogue categories (Business, Leadership,
-// Technical) and to give a meaningful number of courses to each ("Keystone
+// Technical) and to give a meaningful number of courses to each ("Encyclopedia
 // Business School" and "Global Leadership Institute" are the two
 // largest groups in seed-courses.ts). The other 5 provider-name groups
-// (Anthropic Academy, Dept. of Data Science, Keystone DevOps Guild,
-// Keystone Security Lab, Keystone Growth Academy) are left unlinked —
+// (Anthropic Academy, Dept. of Data Science, Encyclopedia DevOps Guild,
+// Encyclopedia Security Lab, Encyclopedia Growth Academy) are left unlinked —
 // #146 only asks for "a handful" (2-3), not full coverage.
 //
 // Of the 5 trainers seeded in #145: 3 own a provider, 1 is a plain
-// member (not owner) of one, and 1 (phuong.do@keystone.example — Đỗ
+// member (not owner) of one, and 1 (phuong.do@encyclopedia.example — Đỗ
 // Thị Phương) is deliberately left with no provider at all, per #146's
 // "at least one trainer with no provider" requirement.
 const PROVIDER_PLAN: ProviderPlan[] = [
   {
-    name: 'Keystone Business School',
-    ownerEmail: 'huy.dang@keystone.example', // Đặng Quốc Huy
-    memberEmails: ['ngoc.hoang@keystone.example'], // Hoàng Thị Ngọc
+    name: 'Encyclopedia Business School',
+    ownerEmail: 'huy.dang@encyclopedia.example', // Đặng Quốc Huy
+    memberEmails: ['ngoc.hoang@encyclopedia.example'], // Hoàng Thị Ngọc
   },
   {
     name: 'Global Leadership Institute',
-    ownerEmail: 'tuan.bui@keystone.example', // Bùi Văn Tuấn
+    ownerEmail: 'tuan.bui@encyclopedia.example', // Bùi Văn Tuấn
     memberEmails: [],
   },
   {
-    name: 'Keystone Web Guild',
-    ownerEmail: 'duc.ngo@keystone.example', // Ngô Minh Đức
+    name: 'Encyclopedia Web Guild',
+    ownerEmail: 'duc.ngo@encyclopedia.example', // Ngô Minh Đức
     memberEmails: [],
   },
 ];
 
-// phuong.do@keystone.example (Đỗ Thị Phương) — intentionally not
+// phuong.do@encyclopedia.example (Đỗ Thị Phương) — intentionally not
 // referenced in PROVIDER_PLAN above. Explicitly nulled out below
 // rather than just "never touched", so re-running this script after
 // any manual testing (e.g. someone joined her to a provider by hand)
 // puts her back in the "no provider" state #146 asks for.
-const UNLINKED_TRAINER_EMAILS = ['phuong.do@keystone.example'];
+const UNLINKED_TRAINER_EMAILS = ['phuong.do@encyclopedia.example'];
 
 async function listAllAuthUsers(
   supabaseAdmin: SupabaseClient,

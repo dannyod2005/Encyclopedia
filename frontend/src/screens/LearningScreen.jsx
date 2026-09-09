@@ -593,7 +593,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 />
                 {editingError && <div style={{ fontSize: 12, color: "var(--coral)", marginBottom: 8 }}>{editingError}</div>}
                 <button
-                  className="ks-btn ks-btn-gold"
+                  className="enc-btn enc-btn-gold"
                   disabled={savingEdit || !editContent.trim()}
                   style={{ opacity: savingEdit || !editContent.trim() ? 0.6 : 1, padding: "6px 14px", fontSize: 13, marginRight: 10 }}
                   onClick={() => handleSaveEdit(p.id)}
@@ -649,7 +649,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 />
                 {postingError && <div style={{ fontSize: 12, color: "var(--coral)", marginBottom: 8 }}>{postingError}</div>}
                 <button
-                  className="ks-btn ks-btn-gold"
+                  className="enc-btn enc-btn-gold"
                   disabled={postingTarget === p.id || !replyContent.trim()}
                   style={{ opacity: postingTarget === p.id || !replyContent.trim() ? 0.6 : 1, padding: "6px 14px", fontSize: 13 }}
                   onClick={() => handleCreatePost(p.id)}
@@ -670,11 +670,11 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
   // this hugged the left edge instead of centering like Catalogue/
   // Discover (which both pair maxWidth with margin: "0 auto").
   //
-  // #334 — replaced the fixed 1080 cap with the shared .ks-page-wide
+  // #334 — replaced the fixed 1080 cap with the shared .enc-page-wide
   // class (introduced in #332 for My Learning) so this page carries the
   // same large-breakpoint width policy instead of its own one-off value.
   return (
-    <div className="ks-page-enter ks-page-wide" style={{ padding: "22px 32px 40px" }}>
+    <div className="enc-page-enter enc-page-wide" style={{ padding: "22px 32px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         {/* #360 — was <div onClick>: not a real link/button, unreachable by
             keyboard. */}
@@ -702,11 +702,11 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
       </div>
 
       {!hasModules ? (
-        <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
           This course doesn't have any modules yet. Check back once the trainer has added content.
         </div>
       ) : isComplete ? (
-        <div className="ks-card" style={{ padding: 24, textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 24, textAlign: "center" }}>
           <CheckCircle2 size={32} color="var(--success)" style={{ marginBottom: 10 }} />
           <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Course complete</div>
           <div style={{ fontSize: 13.5, color: "var(--slate-light)" }}>You've finished all {modules.length} modules.</div>
@@ -747,6 +747,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                         onClick={() => handleSubmitRating(n)}
                         style={{ background: "none", border: "none", padding: 0, cursor: ratingSubmitting ? "default" : "pointer", display: "inline-flex", lineHeight: 0 }}
                       >
+                        {/* #385 — reverted to var(--gold) (was briefly
+                            var(--star)): see the Primitives.jsx Stars
+                            component comment for why the split was undone. */}
                         <Star size={26} fill={n <= ratingHover ? "var(--gold)" : "none"} color="var(--gold)" />
                       </button>
                     ))}
@@ -779,7 +782,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
       // goes to the progress/grades cards instead of just the left column.
       <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] min-[1440px]:grid-cols-[1fr_360px]" style={{ gap: 22 }}>
         <div>
-          <div className="ks-card" style={{ padding: "12px 16px", marginBottom: 14 }}>
+          <div className="enc-card" style={{ padding: "12px 16px", marginBottom: 14 }}>
             <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Module {activeModule + 1} of {modules.length}</div>
             <div style={{ fontSize: 15, fontWeight: 600 }}>{currentModule.title}</div>
           </div>
@@ -814,7 +817,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 type="button"
                 role="tab"
                 aria-selected={tab === t}
-                className={`ks-tab ${tab === t ? "active" : ""}`}
+                className={`enc-tab ${tab === t ? "active" : ""}`}
                 onClick={() => setTab(t)}
                 style={{ background: "none", border: "none", font: "inherit", textTransform: "capitalize" }}
               >
@@ -824,15 +827,15 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
           </div>
 
           {/* #105 — key={tab} remounts this wrapper on every tab switch,
-              which replays the ks-tab-panel fade defined in global.css. */}
-          <div key={tab} className="ks-tab-panel">
+              which replays the enc-tab-panel fade defined in global.css. */}
+          <div key={tab} className="enc-tab-panel">
           {tab === "video" && (
             <p style={{ fontSize: 14, color: "var(--slate)", lineHeight: 1.6 }}>
               This module covers {currentModule.title.toLowerCase()}. Follow along in the video, then apply it in the short exercise before moving to the quiz.
             </p>
           )}
           {tab === "notes" && (
-            <div className="ks-card" style={{ padding: 16 }}>
+            <div className="enc-card" style={{ padding: 16 }}>
               <textarea
                 value={noteContent}
                 onChange={handleNoteChange}
@@ -855,7 +858,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
             </div>
           )}
           {tab === "quiz" && (
-            <div className="ks-card" style={{ padding: 18 }}>
+            <div className="enc-card" style={{ padding: 18 }}>
               {quizLoading ? (
                 <div style={{ fontSize: 13.5, color: "var(--slate-light)" }}>Loading quiz…</div>
               ) : quizQuestions.length === 0 ? (
@@ -885,7 +888,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                       Below the {PASS_THRESHOLD_PCT}% pass bar — consider retaking to improve your course grade.
                     </div>
                   )}
-                  <button className="ks-btn ks-btn-ghost" onClick={startRetake}>
+                  <button className="enc-btn enc-btn-ghost" onClick={startRetake}>
                     Retake quiz
                   </button>
                 </div>
@@ -973,7 +976,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
 
                   {!quizResult && (
                     <button
-                      className="ks-btn ks-btn-gold"
+                      className="enc-btn enc-btn-gold"
                       disabled={submittingQuiz}
                       style={{ opacity: submittingQuiz ? 0.7 : 1 }}
                       onClick={handleSubmitQuiz}
@@ -986,7 +989,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
             </div>
           )}
           {tab === "forum" && (
-            <div className="ks-card" style={{ padding: 16 }}>
+            <div className="enc-card" style={{ padding: 16 }}>
               {postsLoading ? (
                 <div style={{ fontSize: 13.5, color: "var(--slate-light)" }}>Loading…</div>
               ) : (
@@ -1008,7 +1011,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                     />
                     {postingError && <div style={{ fontSize: 12, color: "var(--coral)", marginBottom: 8 }}>{postingError}</div>}
                     <button
-                      className="ks-btn ks-btn-gold"
+                      className="enc-btn enc-btn-gold"
                       disabled={postingTarget === "new" || !newPostContent.trim()}
                       style={{ opacity: postingTarget === "new" || !newPostContent.trim() ? 0.6 : 1 }}
                       onClick={() => handleCreatePost()}
@@ -1028,7 +1031,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
             </div>
           )}
           <button
-            className="ks-btn ks-btn-gold"
+            className="enc-btn enc-btn-gold"
             style={{ marginTop: markCompleteError ? 10 : 20, opacity: (saving || quizBlocksCompletion) ? 0.7 : 1 }}
             disabled={saving || quizBlocksCompletion}
             title={quizBlocksCompletion ? "Submit this module's quiz to continue" : undefined}
@@ -1047,7 +1050,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
           {/* #335 — larger card padding + a bigger, bolder progress
               percentage give this rail more visual weight now that #334
               frees up extra width for it. */}
-          <div className="ks-card" style={{ padding: 20, marginBottom: 14 }}>
+          <div className="enc-card" style={{ padding: 20, marginBottom: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Course progress</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 700, lineHeight: 1, color: "var(--gold-dark)" }}>{Math.round((Math.min(completedCount, modules.length) / modules.length) * 100)}%</span>
@@ -1056,7 +1059,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               <div style={{ height: "100%", width: `${(Math.min(completedCount, modules.length) / modules.length) * 100}%`, background: "var(--gold)", borderRadius: 5, transition: "width .2s ease" }} />
             </div>
             <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 8, marginBottom: 14 }}>{Math.min(completedCount, modules.length)} of {modules.length} modules complete</div>
-            <hr className="ks-hairline" style={{ margin: "0 0 10px" }} />
+            <hr className="enc-hairline" style={{ margin: "0 0 10px" }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {modules.map((m, i) => (
                 <div key={m.id} onClick={() => setActiveModule(i)} style={{
@@ -1074,7 +1077,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               pass-bar badge so this is the standout stat in the rail,
               matching the client's callout that this section needed more
               presence. */}
-          <div className="ks-card" style={{ padding: 20 }}>
+          <div className="enc-card" style={{ padding: 20 }}>
             <div style={{ marginBottom: courseGradePct !== null ? 16 : 10 }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Grades</span>
               {/* #240 — hidden until there's at least one graded module,
@@ -1093,7 +1096,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                     {courseGradePct}%
                   </span>
                   <span
-                    className="ks-badge"
+                    className="enc-badge"
                     style={{
                       background: courseGradePct < PASS_THRESHOLD_PCT ? "var(--coral-tint)" : "var(--success-tint)",
                       color: courseGradePct < PASS_THRESHOLD_PCT ? "var(--coral)" : "var(--success)",
@@ -1140,28 +1143,28 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
       {/* #365 — same confirm-modal shape as DashboardScreen's Retake
           dialog (backdrop click/X/Cancel all close it, guarded by
           !unenrolling; portaled to document.body for the same reason
-          that screen's modal is — this root div carries ks-page-enter's
+          that screen's modal is — this root div carries enc-page-enter's
           animation-fill-mode transform, which would otherwise become the
           fixed backdrop's containing block and size it to the page
           instead of the viewport). */}
       {confirmingUnenroll && createPortal(
         <div
           onClick={() => !unenrolling && setConfirmingUnenroll(false)}
-          className="ks-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          className="enc-modal-backdrop"
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={unenrollDialogRef}
             onClick={(e) => e.stopPropagation()}
-            className="ks-card ks-modal-card"
+            className="enc-card enc-modal-card"
             style={{ width: "100%", maxWidth: 400, padding: "24px 26px" }}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="ks-unenroll-modal-title"
+            aria-labelledby="enc-unenroll-modal-title"
             tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-              <div id="ks-unenroll-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>
+              <div id="enc-unenroll-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>
                 Unenroll from this course?
               </div>
               <button
@@ -1181,9 +1184,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{unenrollError}</div>
             )}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="ks-btn ks-btn-ghost" disabled={unenrolling} onClick={() => setConfirmingUnenroll(false)}>Cancel</button>
+              <button className="enc-btn enc-btn-ghost" disabled={unenrolling} onClick={() => setConfirmingUnenroll(false)}>Cancel</button>
               <button
-                className="ks-btn"
+                className="enc-btn"
                 style={{ background: "var(--coral)", color: "#fff", opacity: unenrolling ? 0.7 : 1 }}
                 disabled={unenrolling}
                 onClick={handleConfirmUnenroll}

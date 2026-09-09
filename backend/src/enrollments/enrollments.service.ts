@@ -506,7 +506,7 @@ export class EnrollmentsService {
     });
 
     return enrollments.map((e) => ({
-      authorName: e.user.name || 'Keystone Learner',
+      authorName: e.user.name || 'Encyclopedia Learner',
       rating: e.rating as number,
       reviewText: e.reviewText as string,
       createdAt: e.createdAt,
@@ -551,7 +551,7 @@ export class EnrollmentsService {
       );
     }
 
-    const learnerName = enrollment.user.name || 'Keystone Learner';
+    const learnerName = enrollment.user.name || 'Encyclopedia Learner';
     const courseTitle = enrollment.course.title;
     const completionDate = (
       enrollment.lastAccessed ?? new Date()
@@ -646,7 +646,7 @@ export class EnrollmentsService {
     centerText(completedLine, height - 265, fontRegular, 14, slate);
     centerText(courseTitle, height - 300, fontBold, 20, gold);
     centerText(bottomLine, height - 350, fontRegular, 12, slate);
-    centerText('Keystone Learning', height - 80, fontBold, 14, ink);
+    centerText('Encyclopedia Learning', height - 80, fontBold, 14, ink);
 
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);

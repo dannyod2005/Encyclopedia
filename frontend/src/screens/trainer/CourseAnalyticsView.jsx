@@ -41,10 +41,10 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
   const stat = { flex: 1, minWidth: 140, padding: 16 };
 
   return (
-    // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+    // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="ks-page-enter ks-page-scaled" style={{ padding: "28px 32px 60px", "--ks-page-base": "900px" }}>
+    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "900px" }}>
       {/* #360 — was <div onClick>: not a real link/button. */}
       <button type="button" onClick={onBack} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
@@ -55,31 +55,35 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
       <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 20 }}>Learner progress and quiz performance for this course.</div>
 
       {loading ? (
-        <div className="ks-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
           Loading analytics…
         </div>
       ) : error ? (
-        <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
           {error}
         </div>
       ) : (
         <>
           <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
-            <div className="ks-card" style={stat}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--gold-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                <Users size={15} color="var(--gold-dark)" />
+            {/* #385 — Enrolled switched to --blue-tint/--blue-dark: a
+                lower-traffic, trainer-only page, so a good spot to trial
+                a bit more blue without touching the main learner
+                Dashboard's own stat row (which stays gold). */}
+            <div className="enc-card" style={stat}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--blue-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                <Users size={15} color="var(--blue-dark)" />
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 500 }}>{analytics.enrollmentCount}</div>
               <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Enrolled</div>
             </div>
-            <div className="ks-card" style={stat}>
+            <div className="enc-card" style={stat}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--success-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                 <CheckCircle2 size={15} color="var(--success)" />
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 500 }}>{analytics.averageCompletionPct}%</div>
               <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Avg. completion</div>
             </div>
-            <div className="ks-card" style={stat}>
+            <div className="enc-card" style={stat}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--coral-tint)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                 <Target size={15} color="var(--coral)" />
               </div>
@@ -92,7 +96,7 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", marginBottom: 12 }}>Learners</div>
 
-          <div className="ks-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
             {analytics.learners.length === 0 ? (
               <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
                 No one has enrolled in this course yet.

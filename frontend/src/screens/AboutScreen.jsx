@@ -11,7 +11,7 @@ import { MarketingHeader } from "../components/layout/MarketingHeader";
 const SECTIONS = [
   {
     title: "What we do",
-    body: "Keystone Learning is a workplace learning platform for growing teams — short, project-based courses in AI, data, and leadership, built so a busy person can actually finish them. Trainers author courses and guided learning paths; learners track progress, sit quizzes, and earn certificates as they go.",
+    body: "Encyclopedia Learning is a workplace learning platform for growing teams — short, project-based courses in AI, data, and leadership, built so a busy person can actually finish them. Trainers author courses and guided learning paths; learners track progress, sit quizzes, and earn certificates as they go.",
   },
   {
     title: "Our approach",
@@ -19,22 +19,22 @@ const SECTIONS = [
   },
   {
     title: "Where we're based",
-    body: "Keystone Learning is based in Singapore.",
+    body: "Encyclopedia Learning is based in Singapore.",
   },
   {
     title: "Get in touch",
-    body: "Questions about the product, a course, or a partnership? Reach us at hello@keystonelearning.example.",
+    body: "Questions about the product, a course, or a partnership? Reach us at hello@encyclopedialearning.example.",
   },
 ];
 
 export function AboutScreen({ loggedIn, onGo, onAuth }) {
   return (
-    <div className="ks-page-enter">
+    <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
       {/* Same narrower 760 base as PrivacyScreen — a reading page reads
           better with a tighter line length than the app's wider grid
           pages. */}
-      <div className="ks-page-scaled" style={{ "--ks-page-base": "760px", padding: "36px 28px 60px" }}>
+      <div className="enc-page-scaled" style={{ "--enc-page-base": "760px", padding: "36px 28px 60px" }}>
         {/* #364 — only shown logged out: AppTopbar already shows "About
             us" as the page title for logged-in visitors, and AppShell
             has no topbar at all when logged out, so this is the only

@@ -49,25 +49,25 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
   }, []);
 
   return (
-    // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+    // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth, so this page grows (modestly, from its own 720 base) at
     // the same large breakpoint as the rest of the app.
-    <div className="ks-page-enter ks-page-scaled" style={{ padding: "28px 32px 60px", "--ks-page-base": "720px" }}>
+    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "720px" }}>
       {/* #364 — title dropped: this route is always reached logged-in
           (RequireAuth), so AppTopbar already shows "Leaderboard" as the
           page title. Subtitle stays — it's context, not a duplicate. */}
       <PageHeader subtitle="Ranked by learning points logged this week. Only learners who've opted in appear here." />
 
       {loading ? (
-        <div className="ks-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
           Loading leaderboard…
         </div>
       ) : error ? (
-        <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
           {error}
         </div>
       ) : entries.length === 0 ? (
-        <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
           No one has opted in yet. Opt in from your dashboard to be the first.
         </div>
       ) : (
@@ -79,7 +79,7 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
               convention as the rest of the app's optional cards. */}
           {myEntry && (
             <div
-              className="ks-card"
+              className="enc-card"
               style={{
                 padding: "18px 20px", marginBottom: 18, background: "var(--gold-tint)",
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
@@ -102,7 +102,7 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
             </div>
           )}
 
-          <div className="ks-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
             {entries.map((e, i) => {
               const medal = MEDAL_STYLE[e.rank];
               return (

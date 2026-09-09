@@ -244,10 +244,10 @@ export function TrainerScreen({
   }
 
   return (
-    // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+    // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="ks-page-enter ks-page-scaled" style={{ padding: "28px 32px", "--ks-page-base": "1080px" }}>
+    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px", "--enc-page-base": "1080px" }}>
       {/* #364 — was a hand-rolled 15px title ("Trainer studio") above this
           subtitle, duplicating AppTopbar's own title for this route at a
           size wildly inconsistent with every other page's 30px
@@ -271,13 +271,22 @@ export function TrainerScreen({
           usable immediately regardless. */}
       {overview && (
         <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
+          {/* #385 — Team used to double up on --gold-tint/--gold-dark
+              (same pairing as Courses), which made two of the four cards
+              look identical. Now that --gold is reserved as the single
+              CTA/interactive accent, Team is a good small, contained spot
+              for the new --blue-tint/--blue-dark pair (sampled from the
+              logo, see the :root comment) — a stat-card icon chip, not a
+              button, so it stays a minimal nod to the logo rather than a
+              second competing accent. Also gives all four cards a
+              distinct color instead of two matching by coincidence. */}
           {[
             { label: "Courses", value: overview.totalCourses, icon: BookOpen, tint: "var(--gold-tint)", fg: "var(--gold-dark)" },
             { label: "Students", value: overview.totalStudents, icon: Users, tint: "var(--success-tint)", fg: "var(--success)" },
             { label: "Learning paths", value: overview.totalPaths, icon: Milestone, tint: "var(--coral-tint)", fg: "var(--coral)" },
-            { label: "Team", value: overview.teamSize, icon: UsersRound, tint: "var(--gold-tint)", fg: "var(--gold-dark)" },
+            { label: "Team", value: overview.teamSize, icon: UsersRound, tint: "var(--blue-tint)", fg: "var(--blue-dark)" },
           ].map((s) => (
-            <div key={s.label} className="ks-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
+            <div key={s.label} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: s.tint, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                 <s.icon size={15} color={s.fg} />
               </div>
@@ -297,7 +306,7 @@ export function TrainerScreen({
           type="button"
           role="tab"
           aria-selected={tab === "courses"}
-          className={`ks-tab ${tab === "courses" ? "active" : ""}`}
+          className={`enc-tab ${tab === "courses" ? "active" : ""}`}
           onClick={() => setTab("courses")}
           style={{ background: "none", border: "none", font: "inherit" }}
         >
@@ -307,7 +316,7 @@ export function TrainerScreen({
           type="button"
           role="tab"
           aria-selected={tab === "paths"}
-          className={`ks-tab ${tab === "paths" ? "active" : ""}`}
+          className={`enc-tab ${tab === "paths" ? "active" : ""}`}
           onClick={() => setTab("paths")}
           style={{ background: "none", border: "none", font: "inherit" }}
         >
@@ -317,7 +326,7 @@ export function TrainerScreen({
           type="button"
           role="tab"
           aria-selected={tab === "team"}
-          className={`ks-tab ${tab === "team" ? "active" : ""}`}
+          className={`enc-tab ${tab === "team" ? "active" : ""}`}
           onClick={() => setTab("team")}
           style={{ background: "none", border: "none", font: "inherit" }}
         >
@@ -326,8 +335,8 @@ export function TrainerScreen({
       </div>
 
       {/* #105 — key={tab} remounts this wrapper on tab switch, replaying
-          the ks-tab-panel fade defined in global.css. */}
-      <div key={tab} className="ks-tab-panel">
+          the enc-tab-panel fade defined in global.css. */}
+      <div key={tab} className="enc-tab-panel">
       {tab === "courses" && (
         <>
           {/* #185 — search by title + ownership filter, same visual
@@ -336,7 +345,7 @@ export function TrainerScreen({
             <div style={{ position: "relative", flex: 1, maxWidth: 360 }}>
               <Search size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 11 }} />
               <input
-                className="ks-input"
+                className="enc-input"
                 placeholder="Search by title"
                 value={courseSearch}
                 onChange={(e) => setCourseSearch(e.target.value)}
@@ -363,10 +372,10 @@ export function TrainerScreen({
               ))}
             </div>
             <div style={{ flex: 1 }} />
-            <button className="ks-btn ks-btn-gold" onClick={() => setEditingId("__new")}><Plus size={15} /> New course</button>
+            <button className="enc-btn enc-btn-gold" onClick={() => setEditingId("__new")}><Plus size={15} /> New course</button>
           </div>
 
-          <div className="ks-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
             {filteredCourses.map((c, i) => (
               <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < filteredCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
                 <CategoryDot color={c.color} />
@@ -376,10 +385,10 @@ export function TrainerScreen({
                 </div>
                 {canEditCourse(c) ? (
                   <>
-                    <button className="ks-btn ks-btn-ghost" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> Analytics</button>
-                    <button className="ks-btn ks-btn-ghost" onClick={() => setEditingId(c.id)}><Pencil size={14} /> Edit</button>
+                    <button className="enc-btn enc-btn-ghost" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> Analytics</button>
+                    <button className="enc-btn enc-btn-ghost" onClick={() => setEditingId(c.id)}><Pencil size={14} /> Edit</button>
                     <button
-                      className="ks-btn ks-btn-ghost"
+                      className="enc-btn enc-btn-ghost"
                       style={{ color: "var(--coral)" }}
                       onClick={() => { setDeletingCourse(c); setDeleteError(null); }}
                     >
@@ -411,10 +420,10 @@ export function TrainerScreen({
       {tab === "paths" && (
         <>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-            <button className="ks-btn ks-btn-gold" onClick={() => setEditingPathId("__new")}><Plus size={15} /> New path</button>
+            <button className="enc-btn enc-btn-gold" onClick={() => setEditingPathId("__new")}><Plus size={15} /> New path</button>
           </div>
 
-          <div className="ks-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
             {paths.map((p, i) => (
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < paths.length - 1 ? "1px solid var(--line)" : "none" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -423,9 +432,9 @@ export function TrainerScreen({
                 </div>
                 {canEditPath(p) ? (
                   <>
-                    <button className="ks-btn ks-btn-ghost" onClick={() => setEditingPathId(p.id)}><Pencil size={14} /> Edit</button>
+                    <button className="enc-btn enc-btn-ghost" onClick={() => setEditingPathId(p.id)}><Pencil size={14} /> Edit</button>
                     <button
-                      className="ks-btn ks-btn-ghost"
+                      className="enc-btn enc-btn-ghost"
                       style={{ color: "var(--coral)" }}
                       onClick={() => { setDeletingPath(p); setDeletePathError(null); }}
                     >
@@ -459,7 +468,7 @@ export function TrainerScreen({
       </div>
 
       {/* #301 — portaled to document.body: this screen's root div carries
-          ks-page-enter for the page-load animation, which leaves a
+          enc-page-enter for the page-load animation, which leaves a
           `transform` applied via animation-fill-mode: both even after the
           animation finishes. Any ancestor with a transform becomes a new
           containing block for a `position: fixed` descendant, so without
@@ -472,21 +481,21 @@ export function TrainerScreen({
       {deletingCourse && createPortal(
         <div
           onClick={() => !deleting && setDeletingCourse(null)}
-          className="ks-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          className="enc-modal-backdrop"
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={deleteCourseDialogRef}
             onClick={(e) => e.stopPropagation()}
-            className="ks-card ks-modal-card"
+            className="enc-card enc-modal-card"
             style={{ width: "100%", maxWidth: 400, padding: "24px 26px" }}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="ks-delete-course-modal-title"
+            aria-labelledby="enc-delete-course-modal-title"
             tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-              <div id="ks-delete-course-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Delete course?</div>
+              <div id="enc-delete-course-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Delete course?</div>
               {/* #258 — real button (was a bare clickable icon). */}
               <button
                 type="button"
@@ -505,9 +514,9 @@ export function TrainerScreen({
               <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{deleteError}</div>
             )}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="ks-btn ks-btn-ghost" disabled={deleting} onClick={() => setDeletingCourse(null)}>Cancel</button>
+              <button className="enc-btn enc-btn-ghost" disabled={deleting} onClick={() => setDeletingCourse(null)}>Cancel</button>
               <button
-                className="ks-btn"
+                className="enc-btn"
                 style={{ background: "var(--coral)", color: "#fff", opacity: deleting ? 0.7 : 1 }}
                 disabled={deleting}
                 onClick={handleConfirmDelete}
@@ -523,21 +532,21 @@ export function TrainerScreen({
       {deletingPath && createPortal(
         <div
           onClick={() => !deletingPathBusy && setDeletingPath(null)}
-          className="ks-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          className="enc-modal-backdrop"
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={deletePathDialogRef}
             onClick={(e) => e.stopPropagation()}
-            className="ks-card ks-modal-card"
+            className="enc-card enc-modal-card"
             style={{ width: "100%", maxWidth: 400, padding: "24px 26px" }}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="ks-delete-path-modal-title"
+            aria-labelledby="enc-delete-path-modal-title"
             tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-              <div id="ks-delete-path-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Delete learning path?</div>
+              <div id="enc-delete-path-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Delete learning path?</div>
               {/* #258 — real button (was a bare clickable icon). */}
               <button
                 type="button"
@@ -556,9 +565,9 @@ export function TrainerScreen({
               <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{deletePathError}</div>
             )}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="ks-btn ks-btn-ghost" disabled={deletingPathBusy} onClick={() => setDeletingPath(null)}>Cancel</button>
+              <button className="enc-btn enc-btn-ghost" disabled={deletingPathBusy} onClick={() => setDeletingPath(null)}>Cancel</button>
               <button
-                className="ks-btn"
+                className="enc-btn"
                 style={{ background: "var(--coral)", color: "#fff", opacity: deletingPathBusy ? 0.7 : 1 }}
                 disabled={deletingPathBusy}
                 onClick={handleConfirmDeletePath}

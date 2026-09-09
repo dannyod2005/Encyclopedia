@@ -668,10 +668,10 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
   const rowInput = { fontFamily: "var(--font-body)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13, width: "100%", background: "var(--paper-2)" };
 
   return (
-    // #336 — shared .ks-page-scaled primitive instead of a hardcoded
+    // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="ks-page-enter ks-page-scaled" style={{ padding: "28px 32px 60px", "--ks-page-base": "760px" }}>
+    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "760px" }}>
       {/* #360 — was <div onClick>: not a real link/button. */}
       <button type="button" onClick={onCancel} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
@@ -680,7 +680,7 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         {course ? "Edit course" : "New course"}
       </div>
 
-      <div className="ks-card" style={{ padding: 20, marginBottom: 16 }}>
+      <div className="enc-card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>Catalogue details</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={field}>
@@ -729,7 +729,7 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             {suggestedHours > 0 && (
               hoursMatchesEstimate ? (
                 <div style={{ fontSize: 11.5, color: "var(--success)", fontWeight: 600, marginTop: 5 }}>
-                  ✓ Matching Keystone's estimated time (~{formatMinutes(suggestedHours * 60)}).
+                  ✓ Matching Encyclopedia's estimated time (~{formatMinutes(suggestedHours * 60)}).
                 </div>
               ) : (
                 <div style={{ fontSize: 11.5, color: "var(--slate-light)", marginTop: 5 }}>
@@ -787,7 +787,7 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         </div>
       </div>
 
-      <div className="ks-card" style={{ padding: 20, marginBottom: 16 }}>
+      <div className="enc-card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
           <Video size={14} color="var(--slate-light)" />
           <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Modules &amp; video</span>
@@ -841,7 +841,7 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                 </span>
 
                 {qState?.expanded && (
-                  <div className="ks-card" style={{ padding: 14, marginTop: 8, background: "var(--paper)" }}>
+                  <div className="enc-card" style={{ padding: 14, marginTop: 8, background: "var(--paper)" }}>
                     {qState.loading ? (
                       <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Loading quiz…</div>
                     ) : (
@@ -941,11 +941,11 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                           </div>
                         ))}
 
-                        <button className="ks-btn ks-btn-ghost" style={{ fontSize: 12.5, padding: "6px 12px", marginRight: 8 }} onClick={() => addQuestion(quizKey(m))}>
+                        <button className="enc-btn enc-btn-ghost" style={{ fontSize: 12.5, padding: "6px 12px", marginRight: 8 }} onClick={() => addQuestion(quizKey(m))}>
                           <Plus size={12} /> Add question
                         </button>
                         <button
-                          className="ks-btn ks-btn-gold"
+                          className="enc-btn enc-btn-gold"
                           style={{ fontSize: 12.5, padding: "6px 12px", opacity: qState.saving ? 0.7 : 1 }}
                           disabled={qState.saving}
                           onClick={() => handleSaveQuiz(m)}
@@ -967,10 +967,10 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             </div>
           );
         })}
-        <button className="ks-btn ks-btn-ghost" style={{ fontSize: 13, padding: "7px 12px", marginTop: 4 }} onClick={addModule}><Plus size={13} /> Add module</button>
+        <button className="enc-btn enc-btn-ghost" style={{ fontSize: 13, padding: "7px 12px", marginTop: 4 }} onClick={addModule}><Plus size={13} /> Add module</button>
       </div>
 
-      <div className="ks-card" style={{ padding: 20, marginBottom: 16 }}>
+      <div className="enc-card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>FAQ</div>
         {draft.faqs.map((f, i) => (
           <div key={f.id ?? `new-${i}`} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
@@ -989,10 +989,10 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             </button>
           </div>
         ))}
-        <button className="ks-btn ks-btn-ghost" style={{ fontSize: 13, padding: "7px 12px" }} onClick={addFaq}><Plus size={13} /> Add FAQ item</button>
+        <button className="enc-btn enc-btn-ghost" style={{ fontSize: 13, padding: "7px 12px" }} onClick={addFaq}><Plus size={13} /> Add FAQ item</button>
       </div>
 
-      <div className="ks-card" style={{ padding: 20, marginBottom: 20 }}>
+      <div className="enc-card" style={{ padding: 20, marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
           <BookMarked size={13} color="var(--slate-light)" />
           <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Sources &amp; credits</span>
@@ -1011,20 +1011,20 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             </button>
           </div>
         ))}
-        <button className="ks-btn ks-btn-ghost" style={{ fontSize: 13, padding: "7px 12px" }} onClick={addCredit}><Plus size={13} /> Add credit line</button>
+        <button className="enc-btn enc-btn-ghost" style={{ fontSize: 13, padding: "7px 12px" }} onClick={addCredit}><Plus size={13} /> Add credit line</button>
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
-        <button className="ks-btn ks-btn-gold" style={{ opacity: canSave && !saving ? 1 : 0.5 }} disabled={!canSave || saving} onClick={handleSave}>
+        <button className="enc-btn enc-btn-gold" style={{ opacity: canSave && !saving ? 1 : 0.5 }} disabled={!canSave || saving} onClick={handleSave}>
           <Save size={15} /> {saving ? "Saving…" : "Save course"}
         </button>
-        <button className="ks-btn ks-btn-ghost" onClick={onCancel} disabled={saving}>Cancel</button>
+        <button className="enc-btn enc-btn-ghost" onClick={onCancel} disabled={saving}>Cancel</button>
       </div>
       {!canSave && <div style={{ fontSize: 12, color: "var(--slate-light)", marginTop: 8 }}>Add a title and at least one module to save.</div>}
       {saveError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginTop: 8 }}>{saveError}</div>}
 
       {/* #316 — portaled to document.body, same fix/reasoning as #301's
-          modals: this whole screen is nested inside a `ks-page-enter`
+          modals: this whole screen is nested inside a `enc-page-enter`
           root div, whose keyframe leaves a lingering transform after it
           finishes animating in, which creates a containing block for
           `position: fixed` descendants and would otherwise size this
@@ -1032,21 +1032,21 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
       {removingModuleIndex !== null && createPortal(
         <div
           onClick={() => setRemovingModuleIndex(null)}
-          className="ks-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          className="enc-modal-backdrop"
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={removeModuleDialogRef}
             onClick={(e) => e.stopPropagation()}
-            className="ks-card ks-modal-card"
+            className="enc-card enc-modal-card"
             style={{ width: "100%", maxWidth: 400, padding: "24px 26px" }}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="ks-remove-module-modal-title"
+            aria-labelledby="enc-remove-module-modal-title"
             tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-              <div id="ks-remove-module-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Remove this module?</div>
+              <div id="enc-remove-module-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Remove this module?</div>
               <button
                 type="button"
                 aria-label="Close"
@@ -1062,9 +1062,9 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
               enrolled learner's notes, forum posts, and quiz submissions for it — not just your own. This can't be undone.
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="ks-btn ks-btn-ghost" onClick={() => setRemovingModuleIndex(null)}>Cancel</button>
+              <button className="enc-btn enc-btn-ghost" onClick={() => setRemovingModuleIndex(null)}>Cancel</button>
               <button
-                className="ks-btn"
+                className="enc-btn"
                 style={{ background: "var(--coral)", color: "#fff" }}
                 onClick={confirmRemoveModule}
               >

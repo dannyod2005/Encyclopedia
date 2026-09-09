@@ -127,7 +127,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
 
   if (loading) {
     return (
-      <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+      <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
         Loading…
       </div>
     );
@@ -135,7 +135,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
 
   if (fetchError) {
     return (
-      <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
+      <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
         {fetchError}
       </div>
     );
@@ -144,7 +144,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   if (!provider) {
     return (
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-        <form onSubmit={handleCreate} className="ks-card" style={{ padding: 20, flex: "1 1 320px" }}>
+        <form onSubmit={handleCreate} className="enc-card" style={{ padding: 20, flex: "1 1 320px" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Create a provider</div>
           <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 16, lineHeight: 1.5 }}>
             Start a team. You'll get an invite code to share with other trainers.
@@ -155,17 +155,17 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
               style={rowInput}
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
-              placeholder="e.g. Keystone Business School"
+              placeholder="e.g. Encyclopedia Business School"
               disabled={creating}
             />
           </div>
           {createError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 12 }}>{createError}</div>}
-          <button className="ks-btn ks-btn-gold" type="submit" disabled={creating || !createName.trim()}>
+          <button className="enc-btn enc-btn-gold" type="submit" disabled={creating || !createName.trim()}>
             {creating ? "Creating…" : "Create provider"}
           </button>
         </form>
 
-        <form onSubmit={handleJoin} className="ks-card" style={{ padding: 20, flex: "1 1 320px" }}>
+        <form onSubmit={handleJoin} className="enc-card" style={{ padding: 20, flex: "1 1 320px" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Join a provider</div>
           <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 16, lineHeight: 1.5 }}>
             Have an invite code from a teammate? Join their provider instead.
@@ -181,7 +181,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
             />
           </div>
           {joinError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 12 }}>{joinError}</div>}
-          <button className="ks-btn ks-btn-ghost" type="submit" disabled={joining || !joinCode.trim()}>
+          <button className="enc-btn enc-btn-ghost" type="submit" disabled={joining || !joinCode.trim()}>
             {joining ? "Joining…" : "Join provider"}
           </button>
         </form>
@@ -192,7 +192,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   const isOwner = provider.ownerId === currentUserId;
 
   return (
-    <div className="ks-card" style={{ padding: 20, maxWidth: 640 }}>
+    <div className="enc-card" style={{ padding: 20, maxWidth: 640 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{provider.name}</div>
@@ -201,7 +201,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
           </div>
         </div>
         <button
-          className="ks-btn ks-btn-ghost"
+          className="enc-btn enc-btn-ghost"
           style={{ color: "var(--coral)" }}
           onClick={() => { setConfirmingLeave(true); setLeaveError(null); }}
         >
@@ -215,11 +215,11 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
           <div style={{ ...rowInput, fontFamily: "monospace", letterSpacing: 1.5, flex: 1 }}>{provider.inviteCode}</div>
           {/* #258 — title alone isn't exposed to all screen readers; explicit
               aria-label added, reflecting the copied/not-copied state. */}
-          <button className="ks-btn ks-btn-ghost" type="button" onClick={handleCopy} title="Copy invite code" aria-label={copied ? "Invite code copied" : "Copy invite code"}>
+          <button className="enc-btn enc-btn-ghost" type="button" onClick={handleCopy} title="Copy invite code" aria-label={copied ? "Invite code copied" : "Copy invite code"}>
             {copied ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
           </button>
           {isOwner && (
-            <button className="ks-btn ks-btn-ghost" type="button" onClick={handleRegenerate} disabled={regenerating} title="Regenerate invite code" aria-label="Regenerate invite code">
+            <button className="enc-btn enc-btn-ghost" type="button" onClick={handleRegenerate} disabled={regenerating} title="Regenerate invite code" aria-label="Regenerate invite code">
               <RefreshCw size={14} />
             </button>
           )}
@@ -254,7 +254,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
       </div>
 
       {/* #301 — portaled to document.body: TeamTab is rendered inside
-          TrainerScreen's ks-page-enter-animated root, whose entrance
+          TrainerScreen's enc-page-enter-animated root, whose entrance
           animation leaves a `transform` applied via
           animation-fill-mode: both even after it finishes. Any ancestor
           with a transform becomes a new containing block for a
@@ -267,20 +267,20 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
       {confirmingLeave && createPortal(
         <div
           onClick={() => !leaving && setConfirmingLeave(false)}
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={leaveDialogRef}
             onClick={(e) => e.stopPropagation()}
-            className="ks-card"
+            className="enc-card"
             style={{ width: "100%", maxWidth: 400, padding: "24px 26px" }}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="ks-leave-provider-modal-title"
+            aria-labelledby="enc-leave-provider-modal-title"
             tabIndex={-1}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-              <div id="ks-leave-provider-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Leave provider?</div>
+              <div id="enc-leave-provider-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>Leave provider?</div>
               {/* #258 — real button (was a bare clickable icon). */}
               <button
                 type="button"
@@ -297,9 +297,9 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
             </div>
             {leaveError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{leaveError}</div>}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="ks-btn ks-btn-ghost" disabled={leaving} onClick={() => setConfirmingLeave(false)}>Cancel</button>
+              <button className="enc-btn enc-btn-ghost" disabled={leaving} onClick={() => setConfirmingLeave(false)}>Cancel</button>
               <button
-                className="ks-btn"
+                className="enc-btn"
                 style={{ background: "var(--coral)", color: "#fff", opacity: leaving ? 0.7 : 1 }}
                 disabled={leaving}
                 onClick={handleConfirmLeave}

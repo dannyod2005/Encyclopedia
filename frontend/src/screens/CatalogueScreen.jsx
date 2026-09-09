@@ -101,7 +101,7 @@ export function CatalogueScreen({
     // card renders exactly as it did before this feature.
     const isBookmarked = bookmarkedIds.includes(c.id);
     return (
-      <div key={c.id} className="ks-card" style={{ padding: 18, display: "flex", flexDirection: "column", position: "relative" }}>
+      <div key={c.id} className="enc-card" style={{ padding: 18, display: "flex", flexDirection: "column", position: "relative" }}>
         {/* #360 — "stretched button": an invisible button covering the
             whole card is the real Tab stop / Enter-Space target for
             opening the course. Can't just make the whole card a <button>
@@ -123,7 +123,7 @@ export function CatalogueScreen({
             <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{c.category}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {isEnrolled && <span className="ks-badge" style={{ background: "var(--success-tint)", color: "var(--success)" }}>Enrolled</span>}
+            {isEnrolled && <span className="enc-badge" style={{ background: "var(--success-tint)", color: "var(--success)" }}>Enrolled</span>}
             {/* #258 — real button (was a bare clickable icon); aria-label
                 reflects current saved state, same reasoning as the
                 password-visibility toggles.
@@ -149,7 +149,7 @@ export function CatalogueScreen({
         <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{c.title}</div>
         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 10 }}>{c.provider}</div>
         <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 16, flex: 1 }}>{c.blurb}</div>
-        <hr className="ks-hairline" style={{ margin: "0 0 12px" }} />
+        <hr className="enc-hairline" style={{ margin: "0 0 12px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Stars rating={c.rating} />
           <span style={{ fontSize: 12, color: "var(--slate-light)", fontFamily: "var(--font-mono)" }}>{c.hours}h · {c.level}</span>
@@ -169,7 +169,7 @@ export function CatalogueScreen({
   // (filtered) count ahead of time.
   function renderCourseCardSkeleton(i) {
     return (
-      <div key={i} className="ks-card" aria-hidden="true" style={{ padding: 18 }}>
+      <div key={i} className="enc-card" aria-hidden="true" style={{ padding: 18 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--line)" }} />
@@ -180,7 +180,7 @@ export function CatalogueScreen({
         <div style={{ width: "45%", height: 12.5, borderRadius: 4, background: "var(--line)", marginBottom: 12 }} />
         <div style={{ width: "100%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
         <div style={{ width: "70%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 16 }} />
-        <hr className="ks-hairline" style={{ margin: "0 0 12px" }} />
+        <hr className="enc-hairline" style={{ margin: "0 0 12px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ width: 70, height: 12, borderRadius: 4, background: "var(--line)" }} />
           <div style={{ width: 50, height: 12, borderRadius: 4, background: "var(--line)" }} />
@@ -200,13 +200,13 @@ export function CatalogueScreen({
     // so a plain <button> wrapping the whole thing is enough — no need
     // for the stretched-button trick.
     return (
-      <button key={p.id} type="button" className="ks-card" onClick={() => onOpenPath(p)} style={{ padding: 18, display: "flex", flexDirection: "column", width: "100%", textAlign: "left", font: "inherit", cursor: "pointer" }}>
+      <button key={p.id} type="button" className="enc-card" onClick={() => onOpenPath(p)} style={{ padding: 18, display: "flex", flexDirection: "column", width: "100%", textAlign: "left", font: "inherit", cursor: "pointer" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <Milestone size={13} color="var(--gold-dark)" />
             <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{p.courses.length} courses</span>
           </div>
-          {isEnrolled && <span className="ks-badge" style={{ background: "var(--success-tint)", color: "var(--success)" }}>Enrolled</span>}
+          {isEnrolled && <span className="enc-badge" style={{ background: "var(--success-tint)", color: "var(--success)" }}>Enrolled</span>}
         </div>
         <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{p.title}</div>
         <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, flex: 1 }}>{p.description}</div>
@@ -215,12 +215,12 @@ export function CatalogueScreen({
   }
 
   return (
-    <div className="ks-page-enter">
+    <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
-      {/* #336 — shared .ks-page-scaled primitive (global.css) instead of a
+      {/* #336 — shared .enc-page-scaled primitive (global.css) instead of a
           hardcoded maxWidth, so this page grows at the same large
           breakpoint as My Learning/Learning instead of staying fixed. */}
-      <div className="ks-page-scaled" style={{ "--ks-page-base": "1160px", padding: "36px 28px 60px" }}>
+      <div className="enc-page-scaled" style={{ "--enc-page-base": "1160px", padding: "36px 28px 60px" }}>
         {/* #213 — was an inline h1/p; now the shared PageHeader primitive
             (same 30px/font-display/600 title, same subtitle styling) so
             Dashboard/Discover can match this scale exactly instead of
@@ -258,7 +258,7 @@ export function CatalogueScreen({
           <div style={{ position: "relative", flex: 1, maxWidth: 360 }}>
             <Search size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 11 }} />
             <input
-              className="ks-input"
+              className="enc-input"
               placeholder="Search by title or provider"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -318,7 +318,7 @@ export function CatalogueScreen({
                       : <>Show all {learningPaths.length} paths <ChevronDown size={14} /></>}
                   </button>
                 )}
-                <hr className="ks-hairline" style={{ margin: "28px 0 0" }} />
+                <hr className="enc-hairline" style={{ margin: "28px 0 0" }} />
               </div>
             )}
 
@@ -334,12 +334,12 @@ export function CatalogueScreen({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
                   {recommended.map(renderCourseCard)}
                 </div>
-                <hr className="ks-hairline" style={{ margin: "28px 0 0" }} />
+                <hr className="enc-hairline" style={{ margin: "28px 0 0" }} />
               </div>
             )}
 
             {filtered.length === 0 ? (
-              <div className="ks-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+              <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
                 No courses match "{search}".
               </div>
             ) : (

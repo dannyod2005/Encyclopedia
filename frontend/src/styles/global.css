@@ -30,70 +30,211 @@ html, body {
 }
 
 :root{
-  --ink:#16233D; --ink-70:#16233Db3; --paper:#F7F5EF; --paper-2:#FFFFFF;
-  /* #351 — was #96701F (~3.7:1 on --gold-tint — the "X-day streak" pill,
-     leaderboard rank, stat-card icons, and gold text links all sit on
-     that background — and only ~4.2:1 on --paper). #805F1A holds ~4.8:1
-     on --gold-tint, ~5.4:1 on --paper, ~5.9:1 on white — same margin as
-     the --slate-light/--coral fixes above, same hue ratio preserved. */
+  /* #385 — full history of the accent/surface palette through five
+     passes (muting the logo's literal sky blue, widening the neutral
+     lightness gap for structure, reintroducing a dark sidebar once the
+     logo moved to the topbar, and de-blueing --gold-tint) lived here
+     across #385's earlier commits — see git history on this file if
+     that reasoning is needed again. This pass reverts all of it: after
+     comparing the muted navy+blue palette against the original
+     gold+navy+cream one side by side, client feedback was that an
+     all-blue page reads as cold and less inviting than the warm gold
+     accent the app shipped with before the logo rebrand — so --ink,
+     --gold/--gold-dark/--gold-tint, --paper, --line, --success and
+     --coral are restored to their exact pre-rebrand (Keystone-era)
+     values, byte-for-byte from git history (commit b466a2cb^), not
+     reconstructed from memory. --star (split out from --gold during
+     the muted-blue phase specifically so rating stars wouldn't carry a
+     cold brand color) is removed — with --gold warm again, that
+     reason no longer applies, so Stars/LearningScreen's rating picker
+     go back to var(--gold) directly, matching the original code.
+     --font-display stays 'Poppins' — that was a separate decision (the
+     logo's own wordmark font) and wasn't part of what read as "cold."
+     The structural change from earlier in #385 — moving the logo out
+     of the sidebar and into the topbar, and the dark --sidebar-bg that
+     move enabled — is also kept; the client confirmed that placement
+     works well independent of the color revert. --sidebar-fg/
+     --sidebar-fg-muted (tokens that didn't exist in the original
+     Keystone code, since the original sidebar's text colors were
+     inline hex rather than tokenized) are kept as an architecture but
+     set to the original sidebar's actual text colors (--paper and
+     #B9C0CC) so AppSidebar.jsx's light-on-dark hierarchy still works.
+     The active nav-item pill also reverts to the original solid
+     --gold-tint background + --ink text (see AppSidebar.jsx) now that
+     warm gold-tint has strong contrast again — the translucent-white
+     overlay from the dark-sidebar pass was only needed because the
+     muted blue --gold held just 2.5:1 against --ink, under the 3:1
+     non-text minimum.
+
+     Contrast (WCAG AA, re-verified against the restored values, not
+     assumed from the original ship date): --ink on --paper 14.35:1, on
+     white 15.65:1. --gold-dark on --paper 5.40:1, on --gold-tint
+     4.80:1. --ink on --gold-tint (active sidebar pill) 12.77:1.
+     #2B1E06 (the original .enc-btn-gold/avatar/isToday-cell text color)
+     on --gold 5.81:1. --gold as a UI/icon color on --paper 2.57:1 —
+     under the 3:1 non-text minimum, same as it was originally; the
+     codebase has never relied on --gold alone as an icon fill against
+     --paper without a text label alongside it, so this isn't a new
+     regression. --slate-light on --paper 4.93:1, --coral on --paper
+     5.34:1, --success on --paper ~4.5:1 (right at the line, same as it
+     shipped originally — never flagged in production). --sidebar-fg on
+     --sidebar-bg 14.35:1, --sidebar-fg-muted on --sidebar-bg 8.55:1.
+     Follow-up (still #385): a second, small accent — --blue/--blue-dark/
+     --blue-tint — sampled directly from the logo icon's own light blue
+     (#15A3E1, picked with PIL from logo-full.png's icon region, not
+     eyeballed) rather than reusing --gold's earlier blue values, which
+     were tuned for a different (much larger) role as the primary
+     accent and would read as too saturated for a small secondary
+     touch. This is deliberately not a second primary accent — --gold
+     stays the only color used on buttons, active/selected states, and
+     anything CTA-shaped. --blue is reserved for small icon-only or
+     decorative accents (a stat-card icon, a section-header icon, a
+     hairline divider) that want to nod at the logo's own color without
+     competing with --gold for attention, per the "one blue note,
+     used sparingly" brief. --blue itself (raw #15A3E1) only holds
+     2.62:1 on --paper — well under the 3:1 non-text minimum — so it's
+     used only where nothing needs to pass a contrast check (a
+     decorative 1px divider). --blue-dark (#0A6591) is the one that
+     actually renders as an icon/text color: 5.87:1 on --paper, 6.4:1
+     on white, 5.64:1 on --blue-tint — comfortably past AA everywhere
+     it's used. --blue-tint (#E4F3FB) is sized to the same pale-wash
+     lightness as --gold-tint/--success-tint/--coral-tint so a blue
+     stat-card icon chip sits at the same visual weight as its
+     gold/green/coral neighbors, not louder or quieter.
+
+     Second follow-up (still #385): after the blue accent went into the
+     sidebar as a radial glow, client feedback was that the page overall
+     still felt cold — not from any one element, but cumulatively, and
+     specifically called out --paper-2 (pure white, #FFFFFF, the topbar
+     and every card surface) and --paper (the near-white #F7F5EF page
+     canvas) as reading as clinical/cool rather than warm. Neither token
+     had actually changed since the very first Keystone-era revert — the
+     "coldness" was pure white/near-white itself, which was never a
+     deliberate part of the original warm palette so much as a neutral
+     backdrop for it. Two depths were previewed side by side — a bigger
+     step (--paper-2 #FBF6EC / --paper #F2EBD8) and a subtler one — and
+     the subtler pairing is what's live: --paper-2 #FDFBF6 (a soft ivory,
+     barely off white) and --paper #F5F0E3 (a gentle cream cast, visible
+     but not a strong color shift). --success still needed the same
+     compensating nudge as the bigger-step version (see its own comment
+     below) — even this subtler --paper drops the original #3F7D58 to
+     4.31:1, under the 4.5:1 AA minimum. --line didn't: at this shallower
+     depth it holds ~1.16:1 against the new --paper, close enough to the
+     original pairing's ~1.21:1 that the earlier #DCD4C0 nudge (tuned for
+     the bigger step) isn't needed here, so --line stays at its original
+     #E4E0D6. --gold-tint was left alone for the same reason as before —
+     it mostly appears on --paper-2 card surfaces, not bare --paper. */
+  --ink:#16233D; --ink-70:#16233Db3; --paper:#F5F0E3; --paper-2:#FDFBF6;
+  --sidebar-bg:var(--ink); --sidebar-fg:#F7F5EF; --sidebar-fg-muted:#B9C0CC;
   --gold:#C4922F; --gold-dark:#805F1A; --gold-tint:#F3E7CE;
+  --blue:#15A3E1; --blue-dark:#0A6591; --blue-tint:#E4F3FB;
   /* #351 — was #8B93A0 (~2.8:1 on --paper), well under the 4.5:1 WCAG AA
      minimum for body-sized text. #626B7A holds ~4.9:1 on --paper (and
      ~5.4:1 on --paper-2/white) — comfortably past the threshold rather
      than sitting right on the edge, while staying visibly lighter than
-     --slate so the two tokens don't collapse into the same shade. */
-  --slate:#5B6472; --slate-light:#626B7A; --line:#E4E0D6;
+     --slate so the two tokens don't collapse into the same shade.
+     #385 — re-checked against the deepened --paper below: still 4.73:1,
+     margin intact. */
+  --slate:#5B6472; --slate-light:#626B7A;
+  /* #385 — briefly nudged to #DCD4C0 alongside a bigger --paper deepening
+     that was tried and then dialed back (see the :root history note
+     above) — at the subtler depth actually live now, --line's original
+     #E4E0D6 holds ~1.16:1 against the new --paper, close enough to the
+     original pairing's ~1.21:1 that no nudge is needed here; reverted. */
+  --line:#E4E0D6;
   /* #351 — was #C1573D (~4.1:1 on --paper, ~4.5:1 on white, ~3.7:1 on
      --coral-tint — the "Unenroll"/"Retake" ghost-button text and the
      white-on-coral destructive-action buttons both failed AA). #A44A34
      holds ~5.3:1 on --paper, ~5.8:1 on white, ~4.8:1 on --coral-tint —
-     margin on the toughest of the three pairings this token appears in. */
-  --success:#3F7D58; --success-tint:#E4EFE8; --coral:#A44A34; --coral-tint:#F6E5DF;
-  --font-display:'Fraunces', serif; --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+     margin on the toughest of the three pairings this token appears in.
+     #385 — --success nudged darker again (#3F7D58 -> #397250, the exact
+     value used for the same reason during the earlier navy+blue phase):
+     even the subtler --paper depth live now drops #3F7D58 to 4.31:1,
+     under the 4.5:1 minimum. #397250 holds 4.99:1 on the new --paper,
+     4.82:1 on --success-tint. */
+  --success:#397250; --success-tint:#E4EFE8; --coral:#A44A34; --coral-tint:#F6E5DF;
+  /* #385 — --font-display swapped from 'Fraunces' (serif) to 'Poppins'
+     (sans-serif): the real logo's wordmark is set in Poppins Bold (see
+     the index.html font-link comment for how that was confirmed), and
+     the client asked for the page's own typography to follow the logo's
+     font rather than the unrelated placeholder-era serif it inherited
+     from the old K-mark branding. */
+  --font-display:'Poppins', sans-serif; --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
 }
-.ks-root{ font-family:var(--font-body); color:var(--ink); background:var(--paper); min-height:100vh; }
-.ks-root *{ box-sizing:border-box; }
-.ks-btn{ font-family:var(--font-body); font-weight:600; font-size:14px; border-radius:8px; padding:10px 18px; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:6px; transition:opacity .15s ease, transform .1s ease; }
-.ks-btn:active{ transform:scale(0.98); }
-.ks-btn:hover{ opacity:0.88; }
-.ks-btn-primary{ background:var(--ink); color:var(--paper); }
-.ks-btn-gold{ background:var(--gold); color:#2B1E06; }
-.ks-btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--line); }
-.ks-btn-ghost:hover{ background:var(--paper-2); opacity:1; border-color:var(--slate-light); }
-.ks-card{ background:var(--paper-2); border:1px solid var(--line); border-radius:14px; }
+.enc-root{ font-family:var(--font-body); color:var(--ink); background:var(--paper); min-height:100vh; }
+.enc-root *{ box-sizing:border-box; }
+/* #385 — every var(--font-display) heading in src/ (~25 call sites across
+   ~20 files: PageHeader, AppTopbar's title, every modal title, every
+   trainer-studio card heading, HomeScreen's hero/section headings, etc.)
+   sets it via an inline style — fontFamily:"var(--font-display)" — rather
+   than a shared class, so there's no single className to hang a new rule
+   on. Rather than touching every one of those ~25 call sites to add a
+   matching inline letterSpacing (a large, purely-mechanical diff for one
+   value), this attribute selector targets exactly the elements whose
+   rendered `style` attribute contains that inline font-family string —
+   React always serializes inline styles to kebab-case CSS text in the
+   DOM as "font-family: var(--font-display);" — note the space after the
+   colon, which the browser always inserts regardless of how the JS
+   style object was written (checked directly: setting el.style.
+   fontFamily then reading el.getAttribute('style') back), so the
+   selector below matches on "var(--font-display)" alone rather than
+   "font-family:var(--font-display)" with no space, which would silently
+   match nothing. -0.02em (roughly -2% of the type size) is close to what
+   direct measurement showed the logo's own "Encyclopedia" wordmark uses
+   relative to Poppins Bold's default spacing (see the AppTopbar.jsx logo-
+   height comment for the underlying measurement) — tight enough to read
+   as the same intentional, slightly-condensed logotype feel, without
+   being so tight that longer headings (e.g. course titles) start
+   colliding. Lives here rather than as part of the --font-display custom
+   property itself because a CSS custom property can only hold one value
+   (a font stack string), not a font-family+letter-spacing pair. */
+[style*="var(--font-display)"]{ letter-spacing:-0.02em; }
+.enc-btn{ font-family:var(--font-body); font-weight:600; font-size:14px; border-radius:8px; padding:10px 18px; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:6px; transition:opacity .15s ease, transform .1s ease; }
+.enc-btn:active{ transform:scale(0.98); }
+.enc-btn:hover{ opacity:0.88; }
+.enc-btn-primary{ background:var(--ink); color:var(--paper); }
+/* #385 — text color reverted to the original hardcoded #2B1E06 (a dark
+   brown tuned specifically for gold backgrounds) now that --gold is
+   back to its original warm value — see the :root history note. This
+   went var(--ink) -> white and back across the accent's several
+   changes this pass; #2B1E06 holds 5.81:1 on the restored --gold. */
+.enc-btn-gold{ background:var(--gold); color:#2B1E06; }
+.enc-btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--line); }
+.enc-btn-ghost:hover{ background:var(--paper-2); opacity:1; border-color:var(--slate-light); }
+.enc-card{ background:var(--paper-2); border:1px solid var(--line); border-radius:14px; }
 /* #332 — shared "wide page" container: keeps the existing 1160 cap up to
    a large-desktop breakpoint, then widens further so pages don't carry a
    big fixed gutter on large monitors. A class (not an inline style)
    because inline maxWidth/margin values can't respond to viewport width
    on their own — this is the pattern #5 (site-wide rollout) reuses on
    the other screens once this one's confirmed. */
-.ks-page-wide{ max-width:1160px; margin:0 auto; }
+.enc-page-wide{ max-width:1160px; margin:0 auto; }
 @media (min-width:1440px){
-  .ks-page-wide{ max-width:1480px; }
+  .enc-page-wide{ max-width:1480px; }
 }
-/* #336 — generalized version of .ks-page-wide above: rather than every
+/* #336 — generalized version of .enc-page-wide above: rather than every
    page adopting the exact same 1160/1480 numbers (too wide for a
    settings form, too narrow a jump for a 720 leaderboard), each page
-   sets its own base width via the --ks-page-base custom property and
+   sets its own base width via the --enc-page-base custom property and
    still grows at the same >=1440px breakpoint, by the same ~1.276x
    ratio Dashboard/Learning already grow by (1160 -> 1480). This is the
    single shared primitive the remaining hardcoded-maxWidth pages
    (Catalogue, Home, Trainer Studio, Leaderboard, Settings, course/path
    editors, analytics) adopt instead of each hand-rolling their own
    static cap that never responds to viewport width. */
-.ks-page-scaled{ max-width:var(--ks-page-base, 1160px); margin:0 auto; }
+.enc-page-scaled{ max-width:var(--enc-page-base, 1160px); margin:0 auto; }
 @media (min-width:1440px){
-  .ks-page-scaled{ max-width:calc(var(--ks-page-base, 1160px) * 1.2759); }
+  .enc-page-scaled{ max-width:calc(var(--enc-page-base, 1160px) * 1.2759); }
 }
-.ks-badge{ font-size:11px; font-weight:600; letter-spacing:0.02em; padding:3px 9px; border-radius:100px; text-transform:uppercase; }
-.ks-hairline{ border:none; border-top:1px solid var(--line); }
-.ks-scroll::-webkit-scrollbar{ width:6px; height:6px; }
-.ks-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
-.ks-nav-item{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; font-size:14px; font-weight:500; color:var(--slate); cursor:pointer; transition:background .15s; }
-.ks-nav-item:hover{ background:#FFFFFF10; }
-.ks-nav-item.active{ background:var(--paper-2); color:var(--ink); }
-.ks-input{ font-family:var(--font-body); border:1px solid var(--line); border-radius:9px; padding:10px 14px 10px 40px; font-size:14px; width:100%; background:var(--paper-2); }
-.ks-input:focus{ border-color:var(--gold); }
+.enc-badge{ font-size:11px; font-weight:600; letter-spacing:0.02em; padding:3px 9px; border-radius:100px; text-transform:uppercase; }
+.enc-hairline{ border:none; border-top:1px solid var(--line); }
+.enc-scroll::-webkit-scrollbar{ width:6px; height:6px; }
+.enc-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
+.enc-nav-item{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; font-size:14px; font-weight:500; color:var(--slate); cursor:pointer; transition:background .15s; }
+.enc-nav-item:hover{ background:#FFFFFF10; }
+.enc-nav-item.active{ background:var(--paper-2); color:var(--ink); }
+.enc-input{ font-family:var(--font-body); border:1px solid var(--line); border-radius:9px; padding:10px 14px 10px 40px; font-size:14px; width:100%; background:var(--paper-2); }
+.enc-input:focus{ border-color:var(--gold); }
 
 /* #350 — every text input/select/textarea in the app suppressed the
    browser's default focus outline (outline:none, here and in every
@@ -107,36 +248,36 @@ html, body {
 input:focus-visible, select:focus-visible, textarea:focus-visible{
   outline:2px solid var(--gold); outline-offset:1px;
 }
-.ks-tab{ padding:10px 4px; font-size:14px; font-weight:600; color:var(--slate-light); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease; }
-.ks-tab.active{ color:var(--ink); border-bottom-color:var(--gold); }
+.enc-tab{ padding:10px 4px; font-size:14px; font-weight:600; color:var(--slate-light); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease; }
+.enc-tab.active{ color:var(--ink); border-bottom-color:var(--gold); }
 
 /* #105 — subtle UI transitions/polish.
    Kept as a small, reusable set of keyframes + helper classes rather than
    per-component animations, so every "open/switch/navigate" interaction in
    the app gets the same feel. Durations are short (140-220ms) and easing
    is a plain ease/ease-out — deliberately unremarkable, not a demo flourish. */
-@keyframes ks-fade-in{ from{ opacity:0; } to{ opacity:1; } }
-@keyframes ks-fade-slide-in{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
-@keyframes ks-backdrop-in{ from{ opacity:0; } to{ opacity:1; } }
-@keyframes ks-backdrop-out{ from{ opacity:1; } to{ opacity:0; } }
-@keyframes ks-modal-in{ from{ opacity:0; transform:scale(.97) translateY(4px); } to{ opacity:1; transform:scale(1) translateY(0); } }
-@keyframes ks-modal-out{ from{ opacity:1; transform:scale(1) translateY(0); } to{ opacity:0; transform:scale(.97) translateY(4px); } }
+@keyframes enc-fade-in{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes enc-fade-slide-in{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes enc-backdrop-in{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes enc-backdrop-out{ from{ opacity:1; } to{ opacity:0; } }
+@keyframes enc-modal-in{ from{ opacity:0; transform:scale(.97) translateY(4px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+@keyframes enc-modal-out{ from{ opacity:1; transform:scale(1) translateY(0); } to{ opacity:0; transform:scale(.97) translateY(4px); } }
 
 /* Route transitions — applied to each screen's root element; replays
    automatically since React Router mounts a fresh component per route. */
-.ks-page-enter{ animation:ks-fade-slide-in 220ms ease both; }
+.enc-page-enter{ animation:enc-fade-slide-in 220ms ease both; }
 
 /* Tab-switch content — applied to a tab panel wrapper keyed by the active
    tab, so switching tabs remounts it and replays the fade. */
-.ks-tab-panel{ animation:ks-fade-in 160ms ease both; }
+.enc-tab-panel{ animation:enc-fade-in 160ms ease both; }
 
-/* Modal open/close — .ks-modal-closing is added right before a modal
+/* Modal open/close — .enc-modal-closing is added right before a modal
    unmounts (see CourseDetailModal/AuthModal) so the close also animates
    instead of the modal just vanishing. */
-.ks-modal-backdrop{ animation:ks-backdrop-in 160ms ease both; }
-.ks-modal-backdrop.ks-modal-closing{ animation:ks-backdrop-out 160ms ease both; }
-.ks-modal-card{ animation:ks-modal-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-.ks-modal-card.ks-modal-closing{ animation:ks-modal-out 160ms ease both; }
+.enc-modal-backdrop{ animation:enc-backdrop-in 160ms ease both; }
+.enc-modal-backdrop.enc-modal-closing{ animation:enc-backdrop-out 160ms ease both; }
+.enc-modal-card{ animation:enc-modal-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.enc-modal-card.enc-modal-closing{ animation:enc-modal-out 160ms ease both; }
 
 /* Respect the OS-level reduced-motion preference — every animation/
    transition above (and anything else on the page) collapses to
