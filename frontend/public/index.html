@@ -73,7 +73,13 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>Encyclopedia Learning</title>
+    <!-- #403 — "Encyclopedia Learning" -> just "Encyclopedia": client call
+         to trim the wordmark now that "Encyclopedia" alone is already
+         long everywhere this appears (tab title, PWA install prompt,
+         certificate footer, About/Privacy body copy, footer) — settled on
+         dropping the second word entirely rather than swapping in
+         another one. -->
+    <title>Encyclopedia</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
