@@ -335,7 +335,16 @@ export function HomeScreen({
             <div style={{ marginBottom: 32 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <TrendingUp size={16} color="var(--gold-dark)" />
+                  {/* #385 — one small accent touch: this section's heading
+                      icon uses the new --blue-dark (sampled from the logo,
+                      see global.css) instead of --gold-dark, so it reads as
+                      a distinct visual note from the Sparkles/Milestone
+                      icons on the sections above/below rather than all
+                      three looking identical. "View catalogue" stays gold
+                      since it's the interactive/clickable element here —
+                      --gold remains the one color reserved for anything
+                      CTA-shaped; --blue is only ever a static glyph. */}
+                  <TrendingUp size={16} color="var(--blue-dark)" />
                   <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>New on Encyclopedia</span>
                 </div>
                 {/* #360 — was <span onClick>: not a real link/button. */}

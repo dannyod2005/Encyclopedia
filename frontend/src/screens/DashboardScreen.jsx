@@ -360,6 +360,13 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   <div key={day.date} style={{
                     fontSize: 12, padding: "5px 0", borderRadius: 6,
                     background: isToday ? "var(--gold)" : day.goalHit ? "var(--gold-tint)" : "transparent",
+                    // #385 — reverted to the original hardcoded #2B1E06 for
+                    // "today" alongside --gold's revert back to its warm
+                    // value (see the :root history note in global.css) —
+                    // this went var(--ink) -> white and back across the
+                    // accent's several changes this pass. Non-today cells
+                    // keep --ink, which holds comfortably on both
+                    // transparent and the restored --gold-tint.
                     color: isToday ? "#2B1E06" : "var(--ink)", fontWeight: isToday ? 700 : 400,
                   }}>{new Date(`${day.date}T00:00:00Z`).getUTCDate()}</div>
                 );
@@ -413,10 +420,16 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Badges</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* #385 — badge-icon chips switched to --blue-tint/--blue-dark:
+                    a standalone, non-interactive icon repeated in a list,
+                    away from the primary Dashboard stat row above (which
+                    stays gold) — a contained, low-traffic spot to trial a
+                    bit more of the logo's blue without thinning out gold
+                    where it matters most (see global.css's :root comment). */}
                 {badges.map((b) => (
                   <div key={b.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--gold-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Medal size={15} color="var(--gold-dark)" />
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--blue-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Medal size={15} color="var(--blue-dark)" />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{b.label}</div>
@@ -548,7 +561,7 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
         <div
           onClick={() => !retaking && setRetakingCourse(null)}
           className="enc-modal-backdrop"
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={retakeDialogRef}

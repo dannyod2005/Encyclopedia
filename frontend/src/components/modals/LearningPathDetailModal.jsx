@@ -33,7 +33,7 @@ export function LearningPathDetailModal({ path, onClose, onEnrol, onGoToDashboar
 
   if (!visiblePath) return null;
   return (
-    <div onClick={onClose} className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
+    <div onClick={onClose} className={`enc-modal-backdrop ${closing ? "enc-modal-closing" : ""}`} style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
       <div
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}

@@ -267,7 +267,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
       {confirmingLeave && createPortal(
         <div
           onClick={() => !leaving && setConfirmingLeave(false)}
-          style={{ position: "fixed", inset: 0, background: "#16233Db3", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "var(--ink-70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 55, padding: 20 }}
         >
           <div
             ref={leaveDialogRef}

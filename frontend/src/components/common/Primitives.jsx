@@ -1,25 +1,12 @@
 import { Star } from "lucide-react";
 /* ---------- small pieces ---------- */
 
-// #103 — Encyclopedia brand mark: a "K" built from a bar + two keystone-wedge
-// triangles (fixed gold accent — same idea as an architectural keystone
-// wedge, doubling as the K's diagonal strokes). Unlike the old single-fill
-// house/doorway glyph it replaces, this one is deliberately two-tone and
-// NOT recolorable via a single `fill` prop, so it takes a `variant` instead:
-// "dark" for use on ink/dark surfaces (bar renders in paper), "light" for
-// use on paper/light surfaces (bar renders in ink). The gold wedges stay
-// gold in both cases, matching the app's ink-background/gold-accent scheme.
-export function EncyclopediaMark({ variant = "light", size = 22 }) {
-  const barColor = variant === "dark" ? "var(--paper)" : "var(--ink)";
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="3" width="3.5" height="18" rx="1" fill={barColor} />
-      <polygon points="9,3 19,3 11,11.3" fill="var(--gold)" />
-      <polygon points="9,21 19,21 11,12.7" fill="var(--gold)" />
-    </svg>
-  );
-}
-
+// #385 — stars briefly used a dedicated --star token (a muted amber),
+// split out from the brand-accent --gold while --gold was a cold muted
+// blue, so ratings wouldn't carry that color. The palette revert back to
+// the original warm gold (see global.css's :root history note) removed
+// the reason for the split, so this reverts to var(--gold) directly,
+// matching the original pre-rebrand code.
 export function Stars({ rating }) {
   return (
     <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }}>
