@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Plus, Search, Trash2, X, BarChart3, BookOpen, Users, Milestone, UsersRound } from "lucide-react";
 
@@ -92,6 +92,16 @@ export function TrainerScreen({
   // than blocking the rest of the screen, since Trainer Studio's actual
   // CRUD tools underneath don't depend on it at all.
   const [overview, setOverview] = useState(null);
+  // #413 — `courses` is already-loaded App-level state by the time this
+  // screen mounts, so the course list below renders instantly, while these
+  // stat cards wait on their own network round-trip (GET
+  // /courses/trainer-overview) and previously had no placeholder — so they
+  // visibly popped in after the (already-rendered) list, with a layout
+  // shift once they did. Tracked separately from `overview` itself so the
+  // render below can distinguish "still loading" (show a skeleton, same
+  // pattern as DashboardScreen's #367 CLS fix) from "loaded, nothing to
+  // show" (a failed fetch — stays hidden, as before).
+  const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,12 +111,33 @@ export function TrainerScreen({
       })
       .catch(() => {
         // Silently leave `overview` null — see comment above.
+      })
+      .finally(() => {
+        if (!cancelled) setOverviewLoading(false);
       });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // #413 — the course list previously rendered every course in
+  // `filteredCourses` in one pass on every visit to this tab, regardless of
+  // catalogue size. Paginated client-side (same in-memory `courses` data,
+  // just capped how many rows render at once) rather than switching to a
+  // paginated fetch, since `courses` is shared App-level state used by
+  // several other screens and re-fetching it per-page here would duplicate
+  // data the app already has. Reset to the first page whenever the search
+  // or ownership filter changes, so a new filter always starts from the top
+  // instead of preserving an unrelated scroll position.
+  //
+  // Grown automatically as the trainer scrolls (see the IntersectionObserver
+  // effect + loadMoreRef below) rather than behind a "Load more" click —
+  // same underlying cap, just triggered by a sentinel row entering the
+  // viewport instead of a click.
+  const COURSES_PAGE_SIZE = 20;
+  const [visibleCourseCount, setVisibleCourseCount] = useState(COURSES_PAGE_SIZE);
+  const loadMoreRef = useRef(null);
 
   // #155 — mirrors RequireCourseOwnerGuard exactly: a NULL ownerId is a
   // legacy/pre-ownership course, exempted (editable by any trainer);
@@ -142,6 +173,43 @@ export function TrainerScreen({
           (c.provider || "").toLowerCase().includes(query),
       )
     : byOwnership;
+
+  // #413 — a new search term or ownership filter should always start
+  // pagination back at the top, rather than keeping whatever page the
+  // trainer had scrolled to under the previous (now-irrelevant) list.
+  useEffect(() => {
+    setVisibleCourseCount(COURSES_PAGE_SIZE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseSearch, ownerFilter]);
+
+  const visibleCourses = filteredCourses.slice(0, visibleCourseCount);
+  const hasMoreCourses = filteredCourses.length > visibleCourseCount;
+
+  // #413 (follow-up) — swaps the "Load more" click for scroll-triggered
+  // loading: a 1px sentinel row rendered right after the visible courses
+  // (only while hasMoreCourses is true — see the JSX below) is observed,
+  // and crossing into the viewport bumps visibleCourseCount by one page,
+  // same as a click would have. rootMargin gives it a 300px head start so
+  // the next page is already in place before the trainer hits the literal
+  // bottom, avoiding a visible pause. Re-created whenever hasMoreCourses
+  // flips or the tab/search/filter changes the underlying list, since the
+  // sentinel node itself gets torn down and re-mounted in those cases.
+  useEffect(() => {
+    if (!hasMoreCourses || tab !== "courses") return;
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCourseCount((n) => n + COURSES_PAGE_SIZE);
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMoreCourses, tab, filteredCourses.length]);
 
   const editingCourse =
     editingId === "__new" ? null :
@@ -266,10 +334,27 @@ export function TrainerScreen({
 
       {/* #259 — trainer-home stats row, same "flex row of stat cards"
           convention as DashboardScreen's In progress/Completed/Certificates
-          row. Hidden until the overview has loaded (see the effect above);
-          no loading placeholder here since the tab content below it is
-          usable immediately regardless. */}
-      {overview && (
+          row.
+          #413 — used to be hidden with no placeholder until `overview`
+          resolved, so this row visibly popped in (with a layout shift)
+          after everything below it had already rendered from
+          already-loaded `courses` data. Now shows a skeleton — same
+          var(--line) block pattern as DashboardScreen's #367 CLS fix —
+          while overviewLoading is true, so the row's space is reserved
+          from first paint. Genuine load failures still just leave the row
+          empty (overviewLoading resolves to false with overview still
+          null) rather than showing a broken/stuck skeleton forever. */}
+      {overviewLoading ? (
+        <div aria-hidden="true" style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--line)", marginBottom: 10 }} />
+              <div style={{ width: 28, height: 22, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+              <div style={{ width: 70, height: 12, borderRadius: 4, background: "var(--line)" }} />
+            </div>
+          ))}
+        </div>
+      ) : overview && (
         <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
           {/* #385 — Team used to double up on --gold-tint/--gold-dark
               (same pairing as Courses), which made two of the four cards
@@ -375,9 +460,15 @@ export function TrainerScreen({
             <button className="enc-btn enc-btn-gold" onClick={() => setEditingId("__new")}><Plus size={15} /> New course</button>
           </div>
 
+          {/* #413 — was `filteredCourses.map(...)`, rendering every course
+              in the (potentially catalogue-wide) filtered list in one pass
+              on every visit to this tab. Now renders only the current page
+              (`visibleCourses`, capped at COURSES_PAGE_SIZE and grown via
+              the "Load more" button below) — same filtering/search
+              behavior, just capped how many rows paint at once. */}
           <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
-            {filteredCourses.map((c, i) => (
-              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < filteredCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
+            {visibleCourses.map((c, i) => (
+              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < visibleCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
                 <CategoryDot color={c.color} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{c.title || "(untitled course)"}</div>
@@ -414,6 +505,24 @@ export function TrainerScreen({
               </div>
             )}
           </div>
+          {/* #413 — scroll-triggered sentinel, not a click target: the
+              IntersectionObserver effect above watches this element and
+              grows visibleCourseCount once it scrolls into view, re-slicing
+              visibleCourses above rather than triggering a new fetch, since
+              `courses` is already fully loaded App-level state. Only
+              rendered while hasMoreCourses is true, so it naturally
+              disappears (and stops being observed) once every filtered
+              course has loaded. The "Loading more…" text is a fallback for
+              anyone who scrolls fast enough to see it briefly, not the
+              primary UX — loading is otherwise invisible/automatic. */}
+          {hasMoreCourses && (
+            <div
+              ref={loadMoreRef}
+              style={{ padding: "14px 18px", textAlign: "center", fontSize: 12.5, color: "var(--slate-light)" }}
+            >
+              Loading more…
+            </div>
+          )}
         </>
       )}
 
