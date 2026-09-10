@@ -179,16 +179,33 @@ export class CourseAnalyticsService {
   // shallow compared to getAnalyticsForCourse above — no per-learner
   // detail, just counts — since that per-course depth is a click away via
   // the Analytics view this powers a summary above, not a replacement for.
+  //
+  // #421 — this used to run as four sequential round trips to the
+  // (remote, Supabase-hosted) database: profile lookup, then
+  // courses+paths together, then totalStudents, then teamSize — each of
+  // those last two awaited on its own even though neither depends on the
+  // other. With #419 having removed the per-request auth round trip,
+  // *this* endpoint's own query count became the next-biggest cost, live
+  // Network-tab-measured as the slowest endpoint in the app. teamSize only
+  // needs profile.providerId (known immediately after the first lookup),
+  // so it now runs in the same Promise.all as courses/paths instead of
+  // waiting behind totalStudents, which is the only step that genuinely
+  // has to wait — it needs courseIds, which only exist once ownedCourses
+  // resolves. Down from 4 sequential stages to 3.
   async getOverviewForOwner(userId: string): Promise<TrainerOverviewDto> {
     const profile = await this.profilesRepo.findOne({ where: { id: userId } });
+    const providerId = profile?.providerId ?? null;
 
-    const [ownedCourses, ownedPaths] = await Promise.all([
-      this.findOwnedOrShared(this.coursesRepo, userId, profile?.providerId ?? null),
-      this.findOwnedOrShared(
-        this.learningPathsRepo,
-        userId,
-        profile?.providerId ?? null,
-      ),
+    const [ownedCourses, ownedPaths, teamSize] = await Promise.all([
+      this.findOwnedOrShared(this.coursesRepo, userId, providerId),
+      this.findOwnedOrShared(this.learningPathsRepo, userId, providerId),
+      // A trainer with no provider is still a "team" of one (themselves);
+      // one with a provider counts every member, owner included — matches
+      // ProvidersService.getMine's member list, which always includes the
+      // owner alongside everyone else who joined via invite code.
+      providerId
+        ? this.profilesRepo.count({ where: { providerId } })
+        : Promise.resolve(1),
     ]);
 
     const courseIds = ownedCourses.map((c) => c.id);
@@ -212,16 +229,6 @@ export class CourseAnalyticsService {
             .then((row) => parseInt(row?.count ?? '0', 10))
         : 0;
 
-    // A trainer with no provider is still a "team" of one (themselves);
-    // one with a provider counts every member, owner included — matches
-    // ProvidersService.getMine's member list, which always includes the
-    // owner alongside everyone else who joined via invite code.
-    const teamSize = profile?.providerId
-      ? await this.profilesRepo.count({
-          where: { providerId: profile.providerId },
-        })
-      : 1;
-
     return {
       totalCourses: ownedCourses.length,
       totalPaths: ownedPaths.length,
@@ -230,30 +237,29 @@ export class CourseAnalyticsService {
     };
   }
 
-  // #259 — mirrors TrainerScreen's client-side canEditCourse/canEditPath
-  // exactly (own ownerId, or shared providerId), just run against the
-  // whole not-deleted table server-side instead of a page's already-loaded
-  // list. Two queries + a Map-dedupe rather than a single OR'd
-  // QueryBuilder call — simpler to read, and cheap at this table size.
+  // #259/#421 — mirrors TrainerScreen's client-side canEditCourse/
+  // canEditPath exactly (own ownerId, or shared providerId), just run
+  // against the whole not-deleted table server-side instead of a page's
+  // already-loaded list. Used to be two separate find() calls (owned,
+  // shared) run in parallel and deduped in JS with a Map — that was two
+  // round trips to a remote database for what a single query can answer.
+  // TypeORM's array-of-objects `where` produces an OR across the two
+  // branches in one query, and since it's one query a matching row can
+  // only ever come back once — no duplicate-row case the way two separate
+  // result sets unioned together could produce, so the Map dedupe is no
+  // longer needed either.
   private async findOwnedOrShared<T extends { id: string; deletedAt: Date | null }>(
     repo: Repository<T>,
     userId: string,
     providerId: string | null,
   ): Promise<T[]> {
-    // #417 — owned/shared used to run sequentially (await, then await);
-    // neither depends on the other's result, so running them together
-    // shaves one full round-trip's latency off every call site (courses
-    // and paths, both awaited again in parallel via Promise.all in
-    // getOverviewForOwner below).
-    const [owned, shared] = await Promise.all([
-      repo.find({ where: { ownerId: userId, deletedAt: IsNull() } as any }),
-      providerId
-        ? repo.find({ where: { providerId, deletedAt: IsNull() } as any })
-        : Promise.resolve([] as T[]),
-    ]);
-    const byId = new Map<string, T>();
-    for (const item of [...owned, ...shared]) byId.set(item.id, item);
-    return [...byId.values()];
+    const where = providerId
+      ? [
+          { ownerId: userId, deletedAt: IsNull() },
+          { providerId, deletedAt: IsNull() },
+        ]
+      : [{ ownerId: userId, deletedAt: IsNull() }];
+    return repo.find({ where: where as any });
   }
 
   // #227/#246 — "expected pace" derived from the same daily-goal concept
