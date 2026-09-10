@@ -1178,7 +1178,16 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               </button>
             </div>
             <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20 }}>
-              You'll be removed from <strong>{course.title}</strong> and your progress will reset if you enrol again.
+              {/* #426 — previously said "your progress will reset if you
+                  enrol again", which overpromised a full wipe: quiz
+                  answers/grades and notes were never actually deleted on
+                  unenroll (kept deliberately, see EnrollmentsService.remove's
+                  comment), so the Grades panel kept showing prior results
+                  even after "resetting." Now that EnrollmentsService.create
+                  also resumes progress from that same history on re-enrol,
+                  this copy describes what genuinely happens instead of what
+                  it used to (mistakenly) imply. */}
+              You'll be removed from <strong>{course.title}</strong>. Your quiz answers, grades and notes are kept — if you enrol again, you'll pick up where you left off.
             </div>
             {unenrollError && (
               <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{unenrollError}</div>
