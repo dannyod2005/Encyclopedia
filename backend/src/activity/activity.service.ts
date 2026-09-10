@@ -383,21 +383,22 @@ export class ActivityService {
     const weekStart = startOfWeekUTC(now);
     const weekEnd = addDaysUTC(weekStart, 7);
 
-    let events: Pick<ActivityEvent, 'userId' | 'points'>[] = [];
+    let events: ActivityEvent[] = [];
     try {
-      // #417 — was `where: { user: { id: In(userIds) } }` with `relations:
-      // { user: true }`, which joined and hydrated a full Profile row for
-      // every matching event just so this loop could read e.user.id.
-      // Filtering/selecting on the dual-mapped `userId` scalar (see the
-      // entity) reads straight off activity_events' own columns — no join
-      // at all, and `select` limits the row shape to just the two columns
-      // actually used below.
+      // #417/#421-hotfix — was rewritten to filter/select on a dual-mapped
+      // `userId` scalar column to avoid joining and hydrating a full
+      // Profile row per event. That column mapping broke every
+      // activity_events insert (see the entity's own comment) and has
+      // been reverted, so this goes back to the relation-based query it
+      // started as. Slightly more expensive (one join) than the
+      // in-between version was meant to be, but correct — worth
+      // revisiting the optimization separately, carefully, later.
       events = await this.activityRepo.find({
         where: {
-          userId: In(userIds),
+          user: { id: In(userIds) },
           occurredAt: Between(weekStart, weekEnd),
         },
-        select: { userId: true, points: true },
+        relations: { user: true },
       });
     } catch (err) {
       // #179 — same reasoning as getSummary: fall back to the zeroed map
@@ -409,7 +410,7 @@ export class ActivityService {
     }
 
     for (const e of events) {
-      result.set(e.userId, (result.get(e.userId) ?? 0) + e.points);
+      result.set(e.user.id, (result.get(e.user.id) ?? 0) + e.points);
     }
     return result;
   }
