@@ -383,14 +383,21 @@ export class ActivityService {
     const weekStart = startOfWeekUTC(now);
     const weekEnd = addDaysUTC(weekStart, 7);
 
-    let events: ActivityEvent[] = [];
+    let events: Pick<ActivityEvent, 'userId' | 'points'>[] = [];
     try {
+      // #417 — was `where: { user: { id: In(userIds) } }` with `relations:
+      // { user: true }`, which joined and hydrated a full Profile row for
+      // every matching event just so this loop could read e.user.id.
+      // Filtering/selecting on the dual-mapped `userId` scalar (see the
+      // entity) reads straight off activity_events' own columns — no join
+      // at all, and `select` limits the row shape to just the two columns
+      // actually used below.
       events = await this.activityRepo.find({
         where: {
-          user: { id: In(userIds) },
+          userId: In(userIds),
           occurredAt: Between(weekStart, weekEnd),
         },
-        relations: { user: true },
+        select: { userId: true, points: true },
       });
     } catch (err) {
       // #179 — same reasoning as getSummary: fall back to the zeroed map
@@ -402,7 +409,7 @@ export class ActivityService {
     }
 
     for (const e of events) {
-      result.set(e.user.id, (result.get(e.user.id) ?? 0) + e.points);
+      result.set(e.userId, (result.get(e.userId) ?? 0) + e.points);
     }
     return result;
   }

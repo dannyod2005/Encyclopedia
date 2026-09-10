@@ -192,17 +192,25 @@ export class CourseAnalyticsService {
     ]);
 
     const courseIds = ownedCourses.map((c) => c.id);
-    // Same "skip the query on an empty id list" guard as
-    // getAnalyticsForCourse's questionIds check above — In([]) is a
+    // #417 — was `find({ relations: { user: true } })` over every matching
+    // enrollment row, just to dedupe them into a count in JS. That joined
+    // and hydrated a full Profile row per enrollment for data this only
+    // ever turned into a number. A single COUNT(DISTINCT) aggregate does
+    // the same dedupe on the DB side, with no join and no row hydration at
+    // all — same "skip the query on an empty id list" guard as
+    // getAnalyticsForCourse's questionIds check above, In([]) being a
     // needless round trip that always returns nothing.
-    const enrollments =
+    const totalStudents =
       courseIds.length > 0
-        ? await this.enrollmentsRepo.find({
-            where: { course: { id: In(courseIds) } },
-            relations: { user: true },
-          })
-        : [];
-    const totalStudents = new Set(enrollments.map((e) => e.user.id)).size;
+        ? await this.enrollmentsRepo
+            .createQueryBuilder('enrollment')
+            .leftJoin('enrollment.course', 'course')
+            .leftJoin('enrollment.user', 'user')
+            .select('COUNT(DISTINCT user.id)', 'count')
+            .where('course.id IN (:...courseIds)', { courseIds })
+            .getRawOne<{ count: string }>()
+            .then((row) => parseInt(row?.count ?? '0', 10))
+        : 0;
 
     // A trainer with no provider is still a "team" of one (themselves);
     // one with a provider counts every member, owner included — matches
@@ -232,12 +240,17 @@ export class CourseAnalyticsService {
     userId: string,
     providerId: string | null,
   ): Promise<T[]> {
-    const owned = await repo.find({
-      where: { ownerId: userId, deletedAt: IsNull() } as any,
-    });
-    const shared = providerId
-      ? await repo.find({ where: { providerId, deletedAt: IsNull() } as any })
-      : [];
+    // #417 — owned/shared used to run sequentially (await, then await);
+    // neither depends on the other's result, so running them together
+    // shaves one full round-trip's latency off every call site (courses
+    // and paths, both awaited again in parallel via Promise.all in
+    // getOverviewForOwner below).
+    const [owned, shared] = await Promise.all([
+      repo.find({ where: { ownerId: userId, deletedAt: IsNull() } as any }),
+      providerId
+        ? repo.find({ where: { providerId, deletedAt: IsNull() } as any })
+        : Promise.resolve([] as T[]),
+    ]);
     const byId = new Map<string, T>();
     for (const item of [...owned, ...shared]) byId.set(item.id, item);
     return [...byId.values()];
