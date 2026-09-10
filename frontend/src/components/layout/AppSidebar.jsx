@@ -103,26 +103,6 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
         // cheaply the browser can run it.
         style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100vh", willChange: "transform" }}
       >
-        {/* #415 — this <aside> sits flush against the actual left edge of
-            the viewport (AppShell's outer flex row has no wrapping
-            container/margin), so its solid --sidebar-bg ends exactly at
-            x=0. The browser's own two-finger trackpad swipe-navigation
-            gesture translates the whole rendered page horizontally as the
-            user drags, which can reveal a sliver past that x=0 edge — and
-            since nothing is painted there, it shows as a stark mismatched
-            seam next to the dark sidebar. This purely-decorative strip
-            (aria-hidden, no pointer events, doesn't affect layout — it's
-            absolutely positioned against the aside, which is already a
-            positioning context via fixed/sticky) bleeds the same
-            background past that edge, so a brief reveal during the
-            gesture shows more of the same color instead of a seam. Kept
-            deliberately separate from the gradient glow above (flat
-            --sidebar-bg only) since this area is well outside the glow's
-            own radial falloff anyway. */}
-        <div
-          aria-hidden="true"
-          style={{ position: "absolute", top: 0, bottom: 0, right: "100%", width: "100vw", background: "var(--sidebar-bg)", pointerEvents: "none" }}
-        />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 10px 22px" }}>
           {/* #258 — real button (not a bare clickable icon) so this is
               keyboard-reachable and announces as "Close menu" to screen
