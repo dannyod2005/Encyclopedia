@@ -256,6 +256,44 @@ export class ActivityService {
     }
   }
 
+  // #426 — which of the given moduleIds this user has ever completed
+  // (has a 'module_complete' event for), regardless of which enrollment
+  // was active when that happened. Used by EnrollmentsService.create to
+  // resume a re-enrollment's progress from real completion history
+  // instead of always starting a fresh Enrollment row at 0 — see that
+  // method's comment for why. Deliberately not date-bounded or
+  // deduped-by-day like getSummary/getViewedDayKeys above: a module is
+  // either completed (one 'module_complete' row exists, ever — see the
+  // `alreadyPaid` guard in logModuleCompletion, which makes this
+  // source+module combination inherently at-most-once per user) or it
+  // isn't, so this only needs distinct module ids, not event counts.
+  // Same fail-safe posture as getSummary: a query failure here shouldn't
+  // block enrollment creation, just falls back to "nothing completed
+  // yet" (an empty set), same as a genuinely first-time enrollment.
+  async getCompletedModuleIds(
+    userId: string,
+    moduleIds: string[],
+  ): Promise<Set<string>> {
+    if (moduleIds.length === 0) return new Set();
+
+    try {
+      const events = await this.activityRepo.find({
+        where: {
+          user: { id: userId },
+          module: { id: In(moduleIds) },
+          source: 'module_complete',
+        },
+        relations: { module: true },
+      });
+      return new Set(events.map((e) => e.module!.id));
+    } catch (err) {
+      this.logger.error(
+        `Failed to load completed-module history (userId=${userId}): ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return new Set();
+    }
+  }
+
   // Distinct UTC date-keys this user has a 'module_view' event for this
   // module, ascending. Not date-bounded like getSummary's streak lookback
   // — the result set is naturally small (however many days one learner
@@ -385,6 +423,14 @@ export class ActivityService {
 
     let events: ActivityEvent[] = [];
     try {
+      // #417/#421-hotfix — was rewritten to filter/select on a dual-mapped
+      // `userId` scalar column to avoid joining and hydrating a full
+      // Profile row per event. That column mapping broke every
+      // activity_events insert (see the entity's own comment) and has
+      // been reverted, so this goes back to the relation-based query it
+      // started as. Slightly more expensive (one join) than the
+      // in-between version was meant to be, but correct — worth
+      // revisiting the optimization separately, carefully, later.
       events = await this.activityRepo.find({
         where: {
           user: { id: In(userIds) },

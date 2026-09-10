@@ -255,50 +255,71 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             </>
           )}
 
-          <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", margin: notStarted.length > 0 ? "24px 0 12px" : "0 0 12px" }}>Continue learning</div>
-          {continuing.length === 0 ? (
-            // #398 — was a flat "Nothing in progress yet." with no way
-            // out. HomeScreen already solves this same empty state with
-            // an encouraging message + a direct Catalogue link (see its
-            // "Nothing in progress right now" card) — matching that copy
-            // here rather than HomeScreen's other branch ("you haven't
-            // started a course yet"), since that one would read as wrong
-            // for a learner who has Start-my-learning or Completed
-            // courses in the sections right above/below this one; this
-            // message is scoped to "nothing in progress" specifically,
-            // not "never touched this app."
-            <div className="enc-card" style={{ padding: 16, marginBottom: 12, fontSize: 13, color: "var(--slate-light)" }}>
-              Nothing in progress right now —{" "}
-              <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", color: "var(--gold-dark)", fontWeight: 600, background: "none", border: "none", padding: 0, cursor: "pointer" }}>browse the catalogue</button> to start something new.
-            </div>
-          ) : (
-            continuing.map((e) => {
-              const c = courses.find((x) => x.id === e.courseId);
-              if (!c) return null;
-              return (
-                // #365 — same single-accent treatment as the Not-started
-                // row above.
-                <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
-                  <EncyclopediaArch progress={e.progress} size={44} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
-                    <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
-                      {Math.round(e.progress * c.modules.length)} of {c.modules.length} modules · last opened {e.lastAccessed}
-                    </div>
-                    <div style={{ height: 5, background: "var(--line)", borderRadius: 3, marginTop: 8, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${e.progress * 100}%`, background: "var(--gold)" }} />
-                    </div>
-                  </div>
-                  <button
-                    className="enc-btn enc-btn-primary"
-                    style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
-                    onClick={() => onStartLearning(c)}
-                  >
-                    Resume <ChevronRight size={18} />
-                  </button>
+          {/* #410 — "Continue learning" used to render an empty-state
+              catalogue prompt any time continuing.length === 0, even
+              when notStarted.length > 0 (i.e. the learner already has
+              an enrolled, actionable course sitting in "Start my
+              learning" directly above). That's redundant/confusing —
+              there's already a "Start" button right there, so telling
+              the learner to go "browse the catalogue" points them
+              somewhere else instead. "Start my learning" above already
+              hides itself entirely when it has nothing to show
+              (notStarted.length > 0 && (...) wrapper); this mirrors
+              that same hide-when-redundant behavior here: only render
+              this section+header when there's something in progress to
+              list, or when there's truly nothing pending anywhere
+              (notStarted also empty) — in which case the catalogue
+              prompt is the only useful thing left to show. */}
+          {(continuing.length > 0 || notStarted.length === 0) && (
+            <>
+              <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", margin: notStarted.length > 0 ? "24px 0 12px" : "0 0 12px" }}>Continue learning</div>
+              {continuing.length === 0 ? (
+                // #398 — was a flat "Nothing in progress yet." with no way
+                // out. HomeScreen already solves this same empty state with
+                // an encouraging message + a direct Catalogue link (see its
+                // "Nothing in progress right now" card) — matching that copy
+                // here rather than HomeScreen's other branch ("you haven't
+                // started a course yet"), since that one would read as wrong
+                // for a learner who has Start-my-learning or Completed
+                // courses in the sections right above/below this one; this
+                // message is scoped to "nothing in progress" specifically,
+                // not "never touched this app." (#410 — only reachable now
+                // when notStarted is also empty, i.e. genuinely nothing
+                // pending anywhere.)
+                <div className="enc-card" style={{ padding: 16, marginBottom: 12, fontSize: 13, color: "var(--slate-light)" }}>
+                  Nothing in progress right now —{" "}
+                  <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", color: "var(--gold-dark)", fontWeight: 600, background: "none", border: "none", padding: 0, cursor: "pointer" }}>browse the catalogue</button> to start something new.
                 </div>
-              );
-            })
+              ) : (
+                continuing.map((e) => {
+                  const c = courses.find((x) => x.id === e.courseId);
+                  if (!c) return null;
+                  return (
+                    // #365 — same single-accent treatment as the Not-started
+                    // row above.
+                    <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                      <EncyclopediaArch progress={e.progress} size={44} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                        <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
+                          {Math.round(e.progress * c.modules.length)} of {c.modules.length} modules · last opened {e.lastAccessed}
+                        </div>
+                        <div style={{ height: 5, background: "var(--line)", borderRadius: 3, marginTop: 8, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${e.progress * 100}%`, background: "var(--gold)" }} />
+                        </div>
+                      </div>
+                      <button
+                        className="enc-btn enc-btn-primary"
+                        style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
+                        onClick={() => onStartLearning(c)}
+                      >
+                        Resume <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </>
           )}
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", margin: "24px 0 12px" }}>Completed</div>

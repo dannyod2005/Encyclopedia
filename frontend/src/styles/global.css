@@ -23,6 +23,23 @@ html, body {
      if the page can bounce past it. Horizontal (edge-swipe back/forward
      navigation) is left alone. */
   overscroll-behavior-y: none;
+  /* #415 — three attempts at hiding the background seam a trackpad
+     swipe-navigation gesture reveals past the sidebar/topbar's edges: a
+     real DOM strip clipped via overflow-x: hidden here, the same clip
+     moved one level down onto AppShell's outer row, and a box-shadow
+     bleed (which avoids scrollable-overflow entirely). Each broke real
+     functionality in a different way — dragging the sticky sidebar out
+     of view on genuine horizontal scroll, breaking normal trackpad
+     vertical scrolling on tall pages, and breaking the sidebar's height/
+     sticky behavior on scroll, respectively — and none actually changed
+     what appears during the gesture regardless. Root cause: Chromium
+     implements this gesture's edge fill in its own compositor (cc/input),
+     operating on an already-rasterized bitmap of the page below the
+     DOM/CSS layer entirely — there's no channel by which any page-level
+     CSS or markup can reach it, the same way a page can't restyle the
+     browser's native scrollbar arrows. Reverted back to this plain #105
+     rule; the cosmetic seam is a genuine browser-level limitation, not
+     an unsolved page bug — don't re-attempt a page-CSS fix here. */
 }
 
 #root {
