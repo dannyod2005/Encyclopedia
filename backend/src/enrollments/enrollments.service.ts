@@ -108,8 +108,13 @@ export class EnrollmentsService {
     // deletedAt filter: a soft-deleted course shouldn't be enrollable —
     // same NotFoundException as a genuinely missing course, since from the
     // learner's perspective it no longer exists.
+    // #426 — modules relation now loaded (wasn't before) so the
+    // resume-progress seeding below has a module list to check completion
+    // history against; harmless for the ordinary first-time-enrol path,
+    // which just doesn't find any completed modules in it.
     const course = await this.coursesRepo.findOne({
       where: { id: dto.courseId, deletedAt: IsNull() },
+      relations: { modules: true },
     });
     if (!course) {
       throw new NotFoundException(`Course with id "${dto.courseId}" not found`);
@@ -119,6 +124,38 @@ export class EnrollmentsService {
       user: profile,
       course,
     });
+
+    // #426 — a re-enrollment after a previous unenroll shouldn't start
+    // this course over from module 1: quiz answers/notes/module_complete
+    // history all survive unenrolling already (see remove()'s comment),
+    // so a fresh Enrollment row landing back at progress: 0 contradicted
+    // what the Grades panel still showed. Seed progress/status from this
+    // user's real completed-module history for this course instead of
+    // leaving the entity defaults in place. A genuinely first-time
+    // enrollment has no completed modules for this course yet, so
+    // completedModules is 0 and this is a no-op — same as before.
+    //
+    // Deliberately does NOT go through updateProgress or call any
+    // badge/notification logic here: those already fired the first time
+    // this learner completed (parts of) this course, and re-firing them
+    // on a resumed enrollment would be wrong. This only sets the two raw
+    // columns updateProgress would otherwise compute.
+    const totalModules = course.modules.length;
+    if (totalModules > 0) {
+      const moduleIds = course.modules.map((m) => m.id);
+      const completedIds = await this.activityService.getCompletedModuleIds(
+        userId,
+        moduleIds,
+      );
+      const completedModules = course.modules.filter((m) =>
+        completedIds.has(m.id),
+      ).length;
+      if (completedModules > 0) {
+        enrollment.progress = completedModules / totalModules;
+        enrollment.status =
+          completedModules >= totalModules ? 'complete' : 'in-progress';
+      }
+    }
 
     try {
       return await this.enrollmentsRepo.save(enrollment);
