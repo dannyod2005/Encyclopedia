@@ -26,6 +26,18 @@ export class ActivityEvent {
   @JoinColumn({ name: 'user_id' })
   user: Profile;
 
+  // #417 — dual-mapped to the exact same physical `user_id` column as the
+  // `user` relation above, so callers that only need the id (e.g.
+  // ActivityService.getWeeklyPointsForUsers, aggregating points per user
+  // for the leaderboard) can select/filter on it directly without asking
+  // TypeORM to join and hydrate the full Profile row for every matching
+  // event — that join was real, unnecessary overhead on a query that
+  // already runs once per leaderboard load. insert/update disabled since
+  // the `user` relation (via @JoinColumn) already owns writes to this
+  // column; this property is read-only.
+  @Column({ name: 'user_id', type: 'uuid', insert: false, update: false })
+  userId: string;
+
   // 'module_complete' | 'quiz_submit' | 'note_save' | 'forum_post' |
   // 'module_view'. Server-side only — not exposed to the client, just
   // useful for debugging/analytics later.
