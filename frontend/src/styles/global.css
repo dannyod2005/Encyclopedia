@@ -23,6 +23,19 @@ html, body {
      if the page can bounce past it. Horizontal (edge-swipe back/forward
      navigation) is left alone. */
   overscroll-behavior-y: none;
+  /* #415 — AppSidebar and AppShell's content column each bleed their own
+     background 100vw past the visible edge (see their own comments) so a
+     trackpad swipe-navigation gesture doesn't reveal a mismatched seam.
+     Without this rule, those bleed strips widen html/body's own
+     scrollable area, which does two bad things: it puts a real horizontal
+     scrollbar on the page, and — because AppSidebar is only pinned
+     vertically (sticky top:0, not fixed, at md+) — scrolling into that
+     new horizontal space drags the sidebar along with it, so it slides
+     out of view instead of staying put. overflow-x: hidden clips both
+     bleed strips out of the scrollable region entirely: they still paint
+     (and are still there for the swipe gesture to reveal), but there's no
+     way to scroll/drag into them through normal interaction. */
+  overflow-x: hidden;
 }
 
 #root {

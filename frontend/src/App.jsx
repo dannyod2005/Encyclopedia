@@ -145,7 +145,26 @@ function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notif
           {children} wrapper set to flex:1 lets that wrapper grow to fill
           the leftover space, pushing Footer down to the actual bottom
           regardless of how much content is above it. */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", position: "relative" }}>
+        {/* #415 — mirrors AppSidebar's own left-edge bleed strip (see its
+            comment for the full reasoning): this column sits flush
+            against the actual right edge of the viewport, so a two-finger
+            trackpad swipe-navigation gesture can briefly reveal a
+            mismatched seam past it. `position: relative` on this column
+            (added above) makes it a positioning context for this
+            aria-hidden strip, which bleeds the app's general page
+            background (`var(--paper)` — the base tone every routed screen
+            sits on) past the right edge, so that reveal shows more of the
+            same tone instead of a seam. Gated on showSidebar since it's
+            only the logged-in two-column shell that has this asymmetric
+            edge in the first place; logged-out marketing pages are full-
+            width and don't need it. */}
+        {showSidebar && (
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", top: 0, bottom: 0, left: "100%", width: "100vw", background: "var(--paper)", pointerEvents: "none" }}
+          />
+        )}
         {showSidebar && (
           <AppTopbar
             title={title}
