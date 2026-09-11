@@ -326,7 +326,7 @@ function EncyclopediaPrototype() {
 
   useEffect(() => {
     setCoursesError(false);
-    fetchWithTimeout(`${process.env.REACT_APP_API_URL}/courses`)
+    fetchWithTimeout(`${import.meta.env.VITE_API_URL}/courses`)
       .then((res) => {
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
         return res.json();
@@ -352,7 +352,7 @@ function EncyclopediaPrototype() {
 
     setEnrolledLoading(true);
     setEnrolledError(false);
-    fetchWithTimeout(`${process.env.REACT_APP_API_URL}/enrollments`, {
+    fetchWithTimeout(`${import.meta.env.VITE_API_URL}/enrollments`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -383,7 +383,7 @@ function EncyclopediaPrototype() {
   // #224 — public list of learning paths, same fetch-on-mount shape as
   // courses above.
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/learning-paths`)
+    fetch(`${import.meta.env.VITE_API_URL}/learning-paths`)
       .then((res) => {
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
         return res.json();
@@ -402,7 +402,7 @@ function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_URL}/learning-path-enrollments`, {
+    fetch(`${import.meta.env.VITE_API_URL}/learning-path-enrollments`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -428,7 +428,7 @@ function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_URL}/badges/me`, {
+    fetch(`${import.meta.env.VITE_API_URL}/badges/me`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -455,7 +455,7 @@ function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+    fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -482,7 +482,7 @@ function EncyclopediaPrototype() {
   async function refetchNotifications() {
     if (!session) return;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/notifications`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) return;
@@ -501,7 +501,7 @@ function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_URL}/bookmarks`, {
+    fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -528,14 +528,14 @@ function EncyclopediaPrototype() {
     try {
       if (isBookmarked) {
         setBookmarks((prev) => prev.filter((b) => b.courseId !== course.id));
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/bookmarks/${course.id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/bookmarks/${course.id}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       } else {
         setBookmarks((prev) => [...prev, { id: `pending-${course.id}`, courseId: course.id, createdAt: new Date().toISOString() }]);
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/bookmarks`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -551,7 +551,7 @@ function EncyclopediaPrototype() {
       console.error("Failed to toggle bookmark:", err.message);
       // Re-sync from the server rather than guessing what the optimistic
       // update above should roll back to.
-      fetch(`${process.env.REACT_APP_API_URL}/bookmarks`, {
+      fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
         .then((res) => (res.ok ? res.json() : []))
@@ -566,7 +566,7 @@ function EncyclopediaPrototype() {
   // the part that actually matters.
   async function markNotificationRead(notificationId) {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/notifications/${notificationId}/read`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications/${notificationId}/read`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -617,7 +617,7 @@ function EncyclopediaPrototype() {
     // keeps streak/pointsThisWeek/goalHitDays pinned to the real
     // current week regardless, so those don't flicker as the calendar is
     // browsed.
-    fetch(`${process.env.REACT_APP_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -658,7 +658,7 @@ function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_URL}/profiles/me`, {
+    fetch(`${import.meta.env.VITE_API_URL}/profiles/me`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((res) => {
@@ -727,7 +727,7 @@ function EncyclopediaPrototype() {
   async function refetchActivitySummary() {
     if (!session) return;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) return;
@@ -746,7 +746,7 @@ function EncyclopediaPrototype() {
   // days and "N of 7 days hit" in sync with it, same as any other action
   // that calls refetchActivitySummary above.
   async function updateDailyGoal(dailyGoalPoints) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/profiles/me/daily-goal`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me/daily-goal`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -768,7 +768,7 @@ function EncyclopediaPrototype() {
   // no equivalent "refetch a whole summary" step needed — just reflect
   // the new value locally once the write succeeds.
   async function updateLeaderboardOptIn(optIn) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/profiles/me/leaderboard-opt-in`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me/leaderboard-opt-in`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -797,7 +797,7 @@ function EncyclopediaPrototype() {
   // touching auth state, so a failed save never leaves the two sources
   // half-synced.
   async function updateName(name) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/profiles/me/name`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me/name`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -838,7 +838,7 @@ function EncyclopediaPrototype() {
   // the app needs this data, so it isn't fetched globally on login like
   // badges/notifications/bookmarks are.
   async function fetchLeaderboard() {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/leaderboard`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/leaderboard`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) {
@@ -907,8 +907,8 @@ function EncyclopediaPrototype() {
   async function saveCourse(draft) {
     const isNew = !draft.id;
     const url = isNew
-      ? `${process.env.REACT_APP_API_URL}/courses`
-      : `${process.env.REACT_APP_API_URL}/courses/${draft.id}`;
+      ? `${import.meta.env.VITE_API_URL}/courses`
+      : `${import.meta.env.VITE_API_URL}/courses/${draft.id}`;
 
     const res = await fetch(url, {
       method: isNew ? "POST" : "PUT",
@@ -942,7 +942,7 @@ function EncyclopediaPrototype() {
   // removing the row, so existing enrollments/progress aren't touched.
   // Here that just means removing it from the local catalogue list.
   async function deleteCourse(courseId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/courses/${courseId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${courseId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -967,8 +967,8 @@ function EncyclopediaPrototype() {
   async function savePath(draft) {
     const isNew = !draft.id;
     const url = isNew
-      ? `${process.env.REACT_APP_API_URL}/learning-paths`
-      : `${process.env.REACT_APP_API_URL}/learning-paths/${draft.id}`;
+      ? `${import.meta.env.VITE_API_URL}/learning-paths`
+      : `${import.meta.env.VITE_API_URL}/learning-paths/${draft.id}`;
 
     const res = await fetch(url, {
       method: isNew ? "POST" : "PUT",
@@ -1000,7 +1000,7 @@ function EncyclopediaPrototype() {
 
   // Soft delete, same shape as deleteCourse above.
   async function deletePath(pathId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/learning-paths/${pathId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/learning-paths/${pathId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -1016,7 +1016,7 @@ function EncyclopediaPrototype() {
   }
 
   async function saveProgress(enrollmentId, completedModules) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments/${enrollmentId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments/${enrollmentId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -1055,7 +1055,7 @@ function EncyclopediaPrototype() {
   // so this stays a no-op body-wise for the pure-star-rating case that
   // worked before #228.
   async function submitRating(enrollmentId, rating, reviewText = "") {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments/${enrollmentId}/rating`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments/${enrollmentId}/rating`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -1093,7 +1093,7 @@ function EncyclopediaPrototype() {
     // caught and logged on its own rather than left to bubble up to
     // LearningScreen's handleSubmitRating catch block.
     try {
-      const courseRes = await fetch(`${process.env.REACT_APP_API_URL}/courses/${updated.courseId}`);
+      const courseRes = await fetch(`${import.meta.env.VITE_API_URL}/courses/${updated.courseId}`);
       if (courseRes.ok) {
         const freshCourse = normalizeCourse(await courseRes.json());
         setCourses((prev) => prev.map((c) => (c.id === freshCourse.id ? freshCourse : c)));
@@ -1109,7 +1109,7 @@ function EncyclopediaPrototype() {
   // body, no local state to update — LearningScreen calls this once per
   // module focus and doesn't need to await anything beyond error logging.
   async function logModuleView(moduleId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/view`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/view`, {
       method: "POST",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -1117,7 +1117,7 @@ function EncyclopediaPrototype() {
   }
 
   async function fetchNote(moduleId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/notes`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/notes`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -1125,7 +1125,7 @@ function EncyclopediaPrototype() {
   }
 
   async function saveNote(moduleId, content) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/notes`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/notes`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -1157,7 +1157,7 @@ function EncyclopediaPrototype() {
   // doesn't show the new enrollment until something else re-triggers it.
   async function refetchEnrollments(sessionOverride = session) {
     if (!sessionOverride) return;
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments`, {
       headers: { Authorization: `Bearer ${sessionOverride.access_token}` },
     });
     if (!res.ok) return;
@@ -1174,7 +1174,7 @@ function EncyclopediaPrototype() {
   // #318 — sessionOverride, same reasoning as refetchEnrollments above.
   async function refetchPathEnrollments(sessionOverride = session) {
     if (!sessionOverride) return;
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/learning-path-enrollments`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/learning-path-enrollments`, {
       headers: { Authorization: `Bearer ${sessionOverride.access_token}` },
     });
     if (!res.ok) return;
@@ -1197,7 +1197,7 @@ function EncyclopediaPrototype() {
 
     setEnrollingPath(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/learning-path-enrollments`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/learning-path-enrollments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1249,7 +1249,7 @@ function EncyclopediaPrototype() {
 
     setEnrolling(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1286,7 +1286,7 @@ function EncyclopediaPrototype() {
   // need a fresh read from the server rather than being patched by hand
   // here.
   async function unenrolCourse(enrollmentId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments/${enrollmentId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments/${enrollmentId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -1310,7 +1310,7 @@ function EncyclopediaPrototype() {
   // enrolled learning path, whose derived progress needs the same fresh
   // read.
   async function retakeCourse(enrollmentId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments/${enrollmentId}/retake`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments/${enrollmentId}/retake`, {
       method: "POST",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -1345,13 +1345,13 @@ function EncyclopediaPrototype() {
   }, [loggedIn, coursesLoading]);
 
   async function fetchQuiz(moduleId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/quiz`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/quiz`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     return res.json();
   }
 
   async function submitQuiz(moduleId, answers) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/quiz/submit`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/quiz/submit`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1376,7 +1376,7 @@ function EncyclopediaPrototype() {
   }
 
   async function fetchCourseQuizResults(courseId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/courses/${courseId}/quiz-results`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${courseId}/quiz-results`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -1387,19 +1387,19 @@ function EncyclopediaPrototype() {
   // anyone browsing the catalogue, logged in or not, so this needs no auth
   // header.
   async function fetchCourseReviews(courseId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/courses/${courseId}/reviews`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${courseId}/reviews`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     return res.json();
   }
 
   async function fetchPosts(moduleId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/forum`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/forum`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     return res.json();
   }
 
   async function createPost(moduleId, content, parentPostId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/forum`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/forum`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1427,7 +1427,7 @@ function EncyclopediaPrototype() {
   }
 
   async function editPost(moduleId, postId, content) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/forum/${postId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/forum/${postId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -1451,7 +1451,7 @@ function EncyclopediaPrototype() {
   // set once at signup — the two happen to match today, but only the
   // backend value stays correct once a profile-editing feature exists.
   async function fetchMyProfile() {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/profiles/me`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
@@ -1464,7 +1464,7 @@ function EncyclopediaPrototype() {
   // than swallowing the error, unlike most fire-and-forget calls in this
   // file — this one has a visible loading/retry state in its caller.
   async function updateGoal(goal) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/profiles/me`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -1497,7 +1497,7 @@ function EncyclopediaPrototype() {
   // AuthContext's existing listener already picks up, so `user` refreshes
   // on its own with no extra plumbing here.
   async function updateRole(role) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/profiles/me/role`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me/role`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -1524,7 +1524,7 @@ function EncyclopediaPrototype() {
   // state here (the no-provider view), not an error, so it's translated
   // to null rather than thrown.
   async function fetchMyProvider() {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/providers/me`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/providers/me`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
@@ -1534,7 +1534,7 @@ function EncyclopediaPrototype() {
   }
 
   async function createProvider(name) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/providers`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/providers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1552,7 +1552,7 @@ function EncyclopediaPrototype() {
   }
 
   async function joinProvider(inviteCode) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/providers/join`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/providers/join`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1570,7 +1570,7 @@ function EncyclopediaPrototype() {
   }
 
   async function regenerateInviteCode() {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/providers/invite-code/regenerate`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/providers/invite-code/regenerate`, {
       method: "POST",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -1584,7 +1584,7 @@ function EncyclopediaPrototype() {
   }
 
   async function leaveProvider() {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/providers/leave`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/providers/leave`, {
       method: "POST",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
@@ -1600,7 +1600,7 @@ function EncyclopediaPrototype() {
   // exposes individual learners' names/progress, so this is never a public
   // fetch like fetchCourseReviews above.
   async function fetchCourseAnalytics(courseId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/courses/${courseId}/analytics`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${courseId}/analytics`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) {
@@ -1616,7 +1616,7 @@ function EncyclopediaPrototype() {
   // against) — the backend scopes the counts to whatever this caller owns
   // or shares via their own provider.
   async function fetchTrainerOverview() {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/courses/trainer-overview`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/trainer-overview`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) {
@@ -1627,7 +1627,7 @@ function EncyclopediaPrototype() {
   }
 
   async function fetchQuizForEdit(moduleId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/quiz/edit`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/quiz/edit`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -1635,7 +1635,7 @@ function EncyclopediaPrototype() {
   }
 
   async function saveQuiz(moduleId, payload) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/modules/${moduleId}/quiz`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/quiz`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -1664,7 +1664,7 @@ function EncyclopediaPrototype() {
   // catch.
   async function fetchVideoDuration(url) {
     const res = await fetch(
-      `${process.env.REACT_APP_API_URL}/courses/video-duration?url=${encodeURIComponent(url)}`,
+      `${import.meta.env.VITE_API_URL}/courses/video-duration?url=${encodeURIComponent(url)}`,
       { headers: { Authorization: `Bearer ${session.access_token}` } },
     );
     if (!res.ok) return { supported: false, seconds: null };
@@ -1765,7 +1765,7 @@ function EncyclopediaPrototype() {
   }
 
   async function viewCertificate(enrollmentId) {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/enrollments/${enrollmentId}/certificate`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/enrollments/${enrollmentId}/certificate`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
