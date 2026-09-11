@@ -249,7 +249,11 @@ function LearningRoute({ courses, enrolled, coursesLoading, enrolledLoading, onS
 }
 
 /* ---------- Root ---------- */
-function EncyclopediaPrototype() {
+// #439 — exported (not just the default App() wrapper below) so
+// integration tests can render this directly inside their own
+// MemoryRouter with a controlled initialEntries/route, instead of only
+// being reachable via the real BrowserRouter that App() always mounts.
+export function EncyclopediaPrototype() {
   const navigate = useNavigate();
   const location = useLocation();
 
