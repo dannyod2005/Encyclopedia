@@ -1,6 +1,22 @@
 import { Star } from "lucide-react";
 /* ---------- small pieces ---------- */
 
+// #444 — shared hit-area expansion for icon-only buttons (bookmark
+// toggles, password-visibility toggles, etc.): Lighthouse flagged these
+// as too small to tap reliably (icon-only, padding:0, so the clickable
+// area was just the icon itself — 15-16px, under the ~24px minimum it
+// checks for). Padding + an equal-and-opposite negative margin grows
+// the actual clickable/tappable area without changing the button's
+// visible size or shifting surrounding layout — the negative margin
+// exactly cancels the padding's effect on the box's footprint (this
+// works the same way for position:absolute buttons too, e.g. the
+// password-toggle icons anchored via top/right: the math is scheme-
+// agnostic, since top/right only anchor the margin edge, and
+// margin + padding still cancel out from there to the content).
+// Spread this into an icon button's style object alongside whatever
+// else it already sets (background/border/cursor/etc.).
+export const iconButtonHitArea = { padding: 12, margin: -12 };
+
 // #385 — stars briefly used a dedicated --star token (a muted amber),
 // split out from the brand-accent --gold while --gold was a cold muted
 // blue, so ratings wouldn't carry that color. The palette revert back to
