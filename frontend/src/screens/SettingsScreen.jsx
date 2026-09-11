@@ -2,6 +2,7 @@ import { useState } from "react";
 import { User, Lock, Eye, EyeOff, Trophy } from "lucide-react";
 
 import { getDisplayName } from "../lib/userDisplay";
+import { iconButtonHitArea } from "../components/common/Primitives";
 
 // #296 — the original 150/300/450/600/900 presets (and the 300 default
 // below) were calibrated on the old flat per-action point values
@@ -208,7 +209,12 @@ export function SettingsScreen({
                 type="button"
                 aria-label={showPw ? "Hide password" : "Show password"}
                 onClick={() => setShowPw((v) => !v)}
-                style={{ position: "absolute", right: 13, top: 12, background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", lineHeight: 0 }}
+                // #444 — iconButtonHitArea grows the tappable area (Lighthouse
+                // flagged this as too small) without shifting the icon's
+                // visible position — see that constant's comment for why the
+                // padding/negative-margin trick works the same for an
+                // absolutely-positioned button as a statically-positioned one.
+                style={{ position: "absolute", right: 13, top: 12, background: "none", border: "none", cursor: "pointer", display: "inline-flex", lineHeight: 0, ...iconButtonHitArea }}
               >
                 {showPw
                   ? <EyeOff size={15} color="var(--slate-light)" />

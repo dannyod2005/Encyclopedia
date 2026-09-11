@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search, Milestone, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 
-import { Stars, CategoryDot, PageHeader } from "../components/common/Primitives";
+import { Stars, CategoryDot, PageHeader, iconButtonHitArea } from "../components/common/Primitives";
 import { MarketingHeader } from "../components/layout/MarketingHeader";
 
 // #190 — a curated row, not a dumping ground for every course in the
@@ -135,7 +135,9 @@ export function CatalogueScreen({
                 aria-label={isBookmarked ? "Remove bookmark" : "Save course"}
                 aria-pressed={isBookmarked}
                 onClick={() => onToggleBookmark(c, isBookmarked)}
-                style={{ position: "relative", zIndex: 2, background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", lineHeight: 0 }}
+                // #444 — iconButtonHitArea grows the tappable area (Lighthouse
+                // flagged this as too small) without changing the visible size.
+                style={{ position: "relative", zIndex: 2, background: "none", border: "none", cursor: "pointer", display: "inline-flex", lineHeight: 0, ...iconButtonHitArea }}
               >
                 <Bookmark
                   size={16}

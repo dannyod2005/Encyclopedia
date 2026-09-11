@@ -11,6 +11,7 @@ import { CourseAnalyticsView } from "./CourseAnalyticsView";
 
 export function TrainerScreen({
   courses,
+  coursesLoading = false,
   onSaveCourse,
   onDeleteCourse,
   onFetchQuizForEdit,
@@ -466,45 +467,73 @@ export function TrainerScreen({
               (`visibleCourses`, capped at COURSES_PAGE_SIZE and grown via
               the "Load more" button below) — same filtering/search
               behavior, just capped how many rows paint at once. */}
-          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
-            {visibleCourses.map((c, i) => (
-              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < visibleCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <CategoryDot color={c.color} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{c.title || "(untitled course)"}</div>
-                  <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{c.provider} · {c.modules.length} modules · {c.hours}h</div>
+          {/* #446 — `courses` is fetched once in App.jsx (coursesLoading),
+              same shape as overviewLoading above. Before this, the list
+              rendered its "No courses yet" empty state the instant
+              coursesLoading flipped false with the request still pending,
+              since courses defaults to []) — the whole page container
+              jumped from that tiny empty-state height to the full course
+              list once the fetch resolved. Lighthouse measured this as a
+              CLS of 0.561, almost entirely attributed to this page's
+              top-level container. A skeleton stack of rows (same
+              var(--line) block pattern as the stats row above) reserves
+              roughly the list's real height from first paint instead. */}
+          {coursesLoading ? (
+            <div aria-hidden="true" className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < 4 ? "1px solid var(--line)" : "none" }}>
+                  <div style={{ width: 7, height: 7, borderRadius: 99, background: "var(--line)" }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ width: "40%", height: 14, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                    <div style={{ width: "60%", height: 12, borderRadius: 4, background: "var(--line)" }} />
+                  </div>
+                  <div style={{ width: 90, height: 28, borderRadius: 6, background: "var(--line)" }} />
+                  <div style={{ width: 60, height: 28, borderRadius: 6, background: "var(--line)" }} />
+                  <div style={{ width: 70, height: 28, borderRadius: 6, background: "var(--line)" }} />
                 </div>
-                {canEditCourse(c) ? (
-                  <>
-                    <button className="enc-btn enc-btn-ghost" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> Analytics</button>
-                    <button className="enc-btn enc-btn-ghost" onClick={() => setEditingId(c.id)}><Pencil size={14} /> Edit</button>
-                    <button
-                      className="enc-btn enc-btn-ghost"
-                      style={{ color: "var(--coral)" }}
-                      onClick={() => { setDeletingCourse(c); setDeleteError(null); }}
-                    >
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </>
-                ) : (
-                  // #155 — not this trainer's course (no ownerId/providerId
-                  // match): no Edit/Delete, and deliberately no click-through
-                  // to the editor either, since that's what was exposing full
-                  // course details for courses CRUD would reject anyway.
-                  <span style={{ fontSize: 12, color: "var(--slate-light)" }}>View only</span>
-                )}
-              </div>
-            ))}
-            {filteredCourses.length === 0 && (
-              <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-                {courses.length === 0
-                  ? "No courses yet — add your first one."
-                  : query
-                    ? `No courses match "${courseSearch.trim()}".`
-                    : "No courses match this filter."}
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+              {visibleCourses.map((c, i) => (
+                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < visibleCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
+                  <CategoryDot color={c.color} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{c.title || "(untitled course)"}</div>
+                    <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{c.provider} · {c.modules.length} modules · {c.hours}h</div>
+                  </div>
+                  {canEditCourse(c) ? (
+                    <>
+                      <button className="enc-btn enc-btn-ghost" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> Analytics</button>
+                      <button className="enc-btn enc-btn-ghost" onClick={() => setEditingId(c.id)}><Pencil size={14} /> Edit</button>
+                      <button
+                        className="enc-btn enc-btn-ghost"
+                        style={{ color: "var(--coral)" }}
+                        onClick={() => { setDeletingCourse(c); setDeleteError(null); }}
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </>
+                  ) : (
+                    // #155 — not this trainer's course (no ownerId/providerId
+                    // match): no Edit/Delete, and deliberately no click-through
+                    // to the editor either, since that's what was exposing full
+                    // course details for courses CRUD would reject anyway.
+                    <span style={{ fontSize: 12, color: "var(--slate-light)" }}>View only</span>
+                  )}
+                </div>
+              ))}
+              {filteredCourses.length === 0 && (
+                <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+                  {courses.length === 0
+                    ? "No courses yet — add your first one."
+                    : query
+                      ? `No courses match "${courseSearch.trim()}".`
+                      : "No courses match this filter."}
+                </div>
+              )}
+            </div>
+          )}
           {/* #413 — scroll-triggered sentinel, not a click target: the
               IntersectionObserver effect above watches this element and
               grows visibleCourseCount once it scrolls into view, re-slicing

@@ -91,13 +91,18 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>Your rank this week</div>
-                  <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
+                  {/* #445 — --slate-light on --gold-tint measured at 4.39:1,
+                      just under WCAG AA's 4.5:1 for this text size. --slate
+                      on the same background is 4.88:1. Scoped to just this
+                      card — --slate-light elsewhere in the app sits on
+                      --paper, where it already passes at 4.93:1. */}
+                  <div style={{ fontSize: 12, color: "var(--slate)" }}>
                     Out of {entries.length} learner{entries.length === 1 ? "" : "s"} on the leaderboard
                   </div>
                 </div>
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>
-                {myEntry.weeklyPoints} <span style={{ fontSize: 12, fontWeight: 600, color: "var(--slate-light)" }}>pts</span>
+                {myEntry.weeklyPoints} <span style={{ fontSize: 12, fontWeight: 600, color: "var(--slate)" }}>pts</span>
               </div>
             </div>
           )}
