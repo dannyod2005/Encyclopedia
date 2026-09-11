@@ -9,7 +9,8 @@
 /coverage
 
 # production
-/build
+# #431 — Vite's default build output dir (was /build under CRA)
+/dist
 
 # misc
 .DS_Store

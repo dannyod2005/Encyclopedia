@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
+  // #431 — index.html moved from public/index.html to the project root as
+  // part of the CRA -> Vite migration; updated to match.
+  content: ['./src/**/*.{js,jsx,ts,tsx}', './index.html'],
   // #104 — Preflight (Tailwind's base CSS reset) is off on purpose. This
   // app is 100% inline `style={{}}` today, with its own small `.ks-*`
   // class layer and no reliance on Tailwind's reset conventions anywhere
