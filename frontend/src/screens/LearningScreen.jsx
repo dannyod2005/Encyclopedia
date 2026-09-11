@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { PlayCircle, CheckCircle2, XCircle, ChevronLeft, Star, AlertTriangle, X } from "lucide-react";
 
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { computeCourseGradePct } from "../lib/courseGrade";
 
 // #240/#254 — a module's quiz score has to clear this to count as
 // "passed." Purely a comparison bar for display/nudging, never a gate on
@@ -316,24 +317,14 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
     ? true // don't know yet whether this module has a quiz — block rather than flash unlocked
     : !!currentQuizStatus?.hasQuiz && !quizAlreadySatisfied;
 
-  // #240 — continuous course grade: summed correct answers over summed
-  // question counts, across every taken-and-quizzed module. This is
-  // mathematically identical to CourseAnalyticsService's per-learner
-  // quizAverageScorePct (which pools every raw QuizSubmission's
-  // isCorrect across the course) rather than a divergent calculation —
-  // a "taken" module always has a graded answer for every one of its
-  // questions (submitQuiz requires a complete set, no partial
-  // submissions), so summing score/total per module and summing every
-  // submission directly land on the same number. Null (not a 0%) when
-  // no quizzed module has been taken yet, so the UI can show "—" instead
-  // of a misleadingly bad grade before any quiz exists to grade.
-  const gradedModules = quizResultsOverview.filter((r) => r.hasQuiz && r.taken);
-  const courseGradePct = gradedModules.length > 0
-    ? Math.round(
-        (gradedModules.reduce((sum, r) => sum + r.score, 0) /
-          gradedModules.reduce((sum, r) => sum + r.total, 0)) * 100,
-      )
-    : null;
+  // #240/#435 — continuous course grade: summed correct answers over
+  // summed question counts, across every taken-and-quizzed module. Null
+  // (not a 0%) when no quizzed module has been taken yet, so the UI can
+  // show "—" instead of a misleadingly bad grade before any quiz exists
+  // to grade. Extracted to lib/courseGrade.js (#435) for direct unit-test
+  // coverage — see the comment there for the full rationale, including
+  // parity with backend's computeCourseGrade.
+  const courseGradePct = computeCourseGradePct(quizResultsOverview);
 
   // #282 — previously advanced activeModule/completedCount (and, via
   // #229's course-completion notification trigger, the badge/notification
