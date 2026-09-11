@@ -2029,6 +2029,7 @@ export function EncyclopediaPrototype() {
                 <AppShell loggedIn={loggedIn} role={role} onLogout={handleLogout} title={shellTitle} user={user} goal={learnerGoal} notifications={notifications} unreadCount={unreadCount} onOpenNotification={handleOpenNotification}>
                   <TrainerScreen
                     courses={courses}
+                    coursesLoading={coursesLoading}
                     onSaveCourse={saveCourse}
                     onDeleteCourse={deleteCourse}
                     onFetchQuizForEdit={fetchQuizForEdit}
