@@ -165,7 +165,9 @@ async function main() {
 
   const weekStartDate = new Date();
   weekStartDate.setUTCHours(0, 0, 0, 0);
-  weekStartDate.setUTCDate(weekStartDate.getUTCDate() - weekStartDate.getUTCDay());
+  weekStartDate.setUTCDate(
+    weekStartDate.getUTCDate() - weekStartDate.getUTCDay(),
+  );
   const thisWeekPointsRemoved = toDelete
     .filter((r) => r.occurred_at >= weekStartDate)
     .reduce((sum, r) => sum + r.points, 0);

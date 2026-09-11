@@ -248,7 +248,9 @@ export class CourseAnalyticsService {
   // only ever come back once — no duplicate-row case the way two separate
   // result sets unioned together could produce, so the Map dedupe is no
   // longer needed either.
-  private async findOwnedOrShared<T extends { id: string; deletedAt: Date | null }>(
+  private async findOwnedOrShared<
+    T extends { id: string; deletedAt: Date | null },
+  >(
     repo: Repository<T>,
     userId: string,
     providerId: string | null,

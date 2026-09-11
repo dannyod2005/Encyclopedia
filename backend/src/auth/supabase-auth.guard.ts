@@ -6,7 +6,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createRemoteJWKSet, jwtVerify, JWTPayload, FlattenedJWSInput, JWSHeaderParameters } from 'jose';
+import {
+  createRemoteJWKSet,
+  jwtVerify,
+  JWTPayload,
+  FlattenedJWSInput,
+  JWSHeaderParameters,
+} from 'jose';
 
 // #419 — this guard used to validate every request's token by calling
 // `supabase.auth.getUser(token)`, which is a network round-trip out to

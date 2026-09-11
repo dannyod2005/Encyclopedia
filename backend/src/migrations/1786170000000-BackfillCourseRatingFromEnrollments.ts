@@ -13,9 +13,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 // the new behavior immediately rather than drifting back into sync over
 // time. Courses with no real submissions yet are left untouched — same
 // "don't wipe the seed baseline" rule the service method follows.
-export class BackfillCourseRatingFromEnrollments1786170000000
-  implements MigrationInterface
-{
+export class BackfillCourseRatingFromEnrollments1786170000000 implements MigrationInterface {
   name = 'BackfillCourseRatingFromEnrollments1786170000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
