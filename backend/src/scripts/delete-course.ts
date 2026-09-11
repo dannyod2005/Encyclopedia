@@ -31,11 +31,15 @@ async function main() {
   await AppDataSource.initialize();
 
   const rows = await AppDataSource.query<
-    { id: string; title: string; owner_id: string | null; deleted_at: Date | null }[]
-  >(
-    `SELECT id, title, owner_id, deleted_at FROM courses WHERE id = $1`,
-    [courseId],
-  );
+    {
+      id: string;
+      title: string;
+      owner_id: string | null;
+      deleted_at: Date | null;
+    }[]
+  >(`SELECT id, title, owner_id, deleted_at FROM courses WHERE id = $1`, [
+    courseId,
+  ]);
 
   if (rows.length === 0) {
     console.log(`No course found with id ${courseId}.`);
@@ -68,7 +72,9 @@ async function main() {
     `UPDATE courses SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL`,
     [courseId],
   );
-  console.log('\nDeleted (soft-delete — deleted_at set). It will no longer show in the app.');
+  console.log(
+    '\nDeleted (soft-delete — deleted_at set). It will no longer show in the app.',
+  );
   await AppDataSource.destroy();
 }
 
