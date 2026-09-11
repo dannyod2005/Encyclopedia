@@ -68,8 +68,16 @@ export const ACCOUNTS: SeedAccount[] = [
     email: 'minh.tran@encyclopedia.example',
     role: 'learner',
   },
-  { name: 'Phạm Thị Mai', email: 'mai.pham@encyclopedia.example', role: 'learner' },
-  { name: 'Lê Hoàng Nam', email: 'nam.le@encyclopedia.example', role: 'learner' },
+  {
+    name: 'Phạm Thị Mai',
+    email: 'mai.pham@encyclopedia.example',
+    role: 'learner',
+  },
+  {
+    name: 'Lê Hoàng Nam',
+    email: 'nam.le@encyclopedia.example',
+    role: 'learner',
+  },
   {
     name: 'Vũ Thị Thu Hà',
     email: 'thuha.vu@encyclopedia.example',
@@ -86,13 +94,21 @@ export const ACCOUNTS: SeedAccount[] = [
     email: 'ngoc.hoang@encyclopedia.example',
     role: 'trainer',
   },
-  { name: 'Bùi Văn Tuấn', email: 'tuan.bui@encyclopedia.example', role: 'trainer' },
+  {
+    name: 'Bùi Văn Tuấn',
+    email: 'tuan.bui@encyclopedia.example',
+    role: 'trainer',
+  },
   {
     name: 'Đỗ Thị Phương',
     email: 'phuong.do@encyclopedia.example',
     role: 'trainer',
   },
-  { name: 'Ngô Minh Đức', email: 'duc.ngo@encyclopedia.example', role: 'trainer' },
+  {
+    name: 'Ngô Minh Đức',
+    email: 'duc.ngo@encyclopedia.example',
+    role: 'trainer',
+  },
 ];
 
 interface AccountResult {

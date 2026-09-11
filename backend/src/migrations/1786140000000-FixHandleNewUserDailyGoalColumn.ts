@@ -14,9 +14,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 //
 // Fix is just re-pointing the INSERT at the current column name. No data
 // to backfill — this was a pure column-name mismatch, not a values issue.
-export class FixHandleNewUserDailyGoalColumn1786140000000
-  implements MigrationInterface
-{
+export class FixHandleNewUserDailyGoalColumn1786140000000 implements MigrationInterface {
   name = 'FixHandleNewUserDailyGoalColumn1786140000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
