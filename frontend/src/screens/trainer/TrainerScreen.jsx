@@ -316,7 +316,22 @@ export function TrainerScreen({
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px", "--enc-page-base": "1080px" }}>
+    //
+    // #446 (diagnostic) — Lighthouse's CLS score for this page was
+    // bit-identical (0.5614964526696307) across two rounds of unrelated
+    // content-loading fixes, which points away from the async data swaps
+    // and toward something deterministic: this root div's enc-page-enter
+    // mount animation (translateY/opacity, 220ms). This page is unusual
+    // in having two separate async fetches (stats + course list) that can
+    // resolve while that animation is still playing — a real content
+    // reflow happening mid-animation on an ancestor is a known Chrome
+    // edge case for over-counted layout shift. Dropping enc-page-enter
+    // here (page-scaled centering kept) is a test to confirm/rule this
+    // out before deciding on a permanent fix — re-run Lighthouse against
+    // this to see if the score moves. If it does, the permanent fix would
+    // be either delaying the animation until data is ready, or scoping
+    // enc-page-enter away from data-heavy pages like this one.
+    <div className="enc-page-scaled" style={{ padding: "28px 32px", "--enc-page-base": "1080px" }}>
       {/* #364 — was a hand-rolled 15px title ("Trainer studio") above this
           subtitle, duplicating AppTopbar's own title for this route at a
           size wildly inconsistent with every other page's 30px
@@ -345,13 +360,22 @@ export function TrainerScreen({
           from first paint. Genuine load failures still just leave the row
           empty (overviewLoading resolves to false with overview still
           null) rather than showing a broken/stuck skeleton forever. */}
+      {/* #446 (hardening) — a real DevTools trace showed the skeleton→real
+          swap here does register as a small layout shift even on a warm
+          connection (~0.037), because the skeleton's value/label blocks
+          were sized to their declared height (22px/12px) while the real
+          text's rendered line-box is taller than its font-size once normal
+          line-height is applied — a few px of mismatch per card, ×4 cards.
+          Giving both the skeleton blocks and the real text the same
+          explicit lineHeight makes the two states pixel-identical in
+          height, so the swap can't shift anything below it. */}
       {overviewLoading ? (
         <div aria-hidden="true" style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--line)", marginBottom: 10 }} />
-              <div style={{ width: 28, height: 22, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
-              <div style={{ width: 70, height: 12, borderRadius: 4, background: "var(--line)" }} />
+              <div style={{ width: 28, height: 22, lineHeight: "22px", borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+              <div style={{ width: 70, height: 15, lineHeight: "15px", borderRadius: 4, background: "var(--line)" }} />
             </div>
           ))}
         </div>
@@ -376,8 +400,8 @@ export function TrainerScreen({
               <div style={{ width: 30, height: 30, borderRadius: 8, background: s.tint, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                 <s.icon size={15} color={s.fg} />
               </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 500 }}>{s.value}</div>
-              <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{s.label}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 22, lineHeight: "22px", fontWeight: 500, marginBottom: 6 }}>{s.value}</div>
+              <div style={{ fontSize: 12.5, lineHeight: "15px", color: "var(--slate-light)" }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -524,7 +548,17 @@ export function TrainerScreen({
                 </div>
               ))}
               {filteredCourses.length === 0 && (
-                <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+                // #446 (hardening) — a Lighthouse re-run against a 0-course
+                // account showed this swap in the *other* direction: the
+                // ~284px skeleton (5 rows) collapsing down to this message's
+                // natural ~70px height is just as much of a shift as the
+                // original empty-state → full-list jump this skeleton was
+                // built to prevent. boxSizing: border-box + minHeight
+                // matching the skeleton's total height (5 × 56px + borders)
+                // means this state lands at roughly the same height either
+                // way, so the swap can't cause a big jump in either
+                // direction regardless of how many courses the account has.
+                <div style={{ boxSizing: "border-box", minHeight: 284, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
                   {courses.length === 0
                     ? "No courses yet — add your first one."
                     : query

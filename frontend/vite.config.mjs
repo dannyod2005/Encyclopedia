@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // #431 — replaces react-scripts (Create React App), which was the root
 // cause of most of the high-severity npm audit vulnerabilities on the
@@ -22,7 +23,21 @@ import react from '@vitejs/plugin-react';
 // file's module type explicit without changing how postcss.config.js /
 // tailwind.config.js (still plain CommonJS) are loaded.
 export default defineConfig({
-  plugins: [react()],
+  // Bundle-size investigation (main chunk flagged >500kB by Vite's own
+  // build warning): visualizer only runs during `npm run build`, and only
+  // writes/opens its report when ANALYZE=true is set, so it stays out of
+  // the way of normal builds and the dev server. Usage:
+  //   ANALYZE=true npm run build
+  plugins: [
+    react(),
+    process.env.ANALYZE &&
+      visualizer({
+        filename: 'dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+      }),
+  ].filter(Boolean),
   // #431 — pinned to CRA's old default (Vite's own default is 5173)
   // rather than switching it: the backend's CORS allow-list is driven by
   // a FRONTEND_URL env var (see backend/src/main.ts), which almost

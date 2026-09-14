@@ -17,6 +17,15 @@ html, body {
   min-height: 100%;
   background: var(--paper);
   margin: 0;
+  /* #446 — reserve the vertical scrollbar's width up front. Without this,
+     a short initial paint (before real data loads) has no scrollbar, then
+     once content pushes the page taller than the viewport a scrollbar
+     appears, shrinking the usable width by ~15-17px. Everything that
+     reacts to viewport width (the centered .enc-page-scaled content, the
+     sticky sidebar, the topbar) then recomputes position at once — a
+     small, hard-to-see shift, but one that spans almost the entire page
+     height, which is why it scores so high on Lighthouse's CLS metric. */
+  scrollbar-gutter: stable;
   /* #105 — stop the vertical rubber-band overscroll from revealing the
      browser's default (non-ink) background past the top/bottom edge of
      the page on mobile; the sticky topbar loses its "always there" feel
