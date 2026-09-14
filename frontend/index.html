@@ -40,6 +40,18 @@
          weights/display=swap as before, just discovered sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- #456 — this app is fully client-rendered (index.html ships with no
+         content beyond the shell below), so every real request — Supabase
+         Auth's session check, and the backend's own API calls — only gets
+         discovered once the JS bundle has downloaded, parsed, and started
+         running. Preconnecting here starts the DNS/TLS handshake to both
+         origins during the initial HTML parse instead of waiting for that,
+         shaving a round trip off the first real request to each. Vite
+         replaces %VITE_*% with the matching env var at build time — same
+         mechanism import.meta.env.VITE_API_URL/VITE_SUPABASE_URL use in
+         src/, just the HTML-side equivalent. -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
     <!-- #367 — Fraunces was requested at weights 500/600/700, but a grep
          across every var(--font-display) usage in src/ shows only 600 and
          700 are ever actually applied — weight 500 was dead weight in the
@@ -80,10 +92,54 @@
          dropping the second word entirely rather than swapping in
          another one. -->
     <title>Encyclopedia</title>
+    <!-- #456 — static loading shell styles, inlined rather than left in
+         global.css: global.css only reaches the page via the JS module
+         graph (index.jsx imports it), so it isn't available until the
+         bundle has loaded — exactly the gap this shell exists to cover.
+         Inlining means the shell can paint from the raw HTML response
+         alone, no extra request. Colors are hardcoded to global.css's
+         --ink/--paper values rather than referencing the custom
+         properties, since those properties are defined in that same
+         not-yet-loaded stylesheet. Only opacity is animated (no layout
+         properties), so this never registers as a Layout Instability API
+         shift even while it's pulsing. -->
+    <style>
+      #enc-loading-shell {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f0e3;
+      }
+      #enc-loading-shell img {
+        width: 56px;
+        height: 56px;
+        animation: enc-loading-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes enc-loading-pulse {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <!-- #456 — static shell: paints immediately from this HTML, before the
+         JS bundle downloads/parses/runs. React's first render on initial
+         mount (see src/index.jsx's createRoot(...).render(...)) replaces
+         #root's entire contents wholesale, so this is automatically wiped
+         the moment the real app is ready — no cleanup code needed here. -->
+    <div id="root">
+      <div id="enc-loading-shell" role="presentation">
+        <img src="/logo-icon.png" alt="" width="56" height="56" />
+      </div>
+    </div>
     <script type="module" src="/src/index.jsx"></script>
   </body>
 </html>
