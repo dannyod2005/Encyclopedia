@@ -49,6 +49,8 @@
     "ws": "^8.21.2"
   },
   "devDependencies": {
+    "@emnapi/core": "2.0.0-alpha.5",
+    "@emnapi/runtime": "2.0.0-alpha.5",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
