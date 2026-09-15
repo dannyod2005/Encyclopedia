@@ -674,7 +674,13 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
     /* (tablet-padding fix) — horizontal padding now comes from the
        shared .enc-outer-pad scale instead of a flat 32px at every
        width; vertical stays inline. */
-    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "760px" }}>
+    /* #468 — was 760px, the same narrow "reading page" base as Privacy/
+       About/LearningPathEditor. But this isn't a reading page — it's the
+       form a trainer lands on straight from TrainerScreen (1080px), so
+       narrowing here made the page visibly shrink mid-flow. Raised to
+       match TrainerScreen; the field grid and module/FAQ rows below were
+       widened to use the extra room rather than just stretching as-is. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "1080px" }}>
       {/* #360 — was <div onClick>: not a real link/button. */}
       <button type="button" onClick={onCancel} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
@@ -689,8 +695,13 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             desktop, but the Provider field's helper text ("Couldn't
             resolve your name or provider...") and Hours' estimate text
             wrapped to several lines in a ~170px column on a phone.
-            Stacks to 1 column below md. */}
-        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
+            Stacks to 1 column below md.
+            #468 — 3rd column added at lg: 6 fields (Title/Provider/
+            Track/Level/Hours/Accent color) at the page's new 1080px
+            width left 2 columns uncomfortably wide; 3 columns keeps
+            each field a reasonable text-input width. Still 2 below lg
+            and 1 below md, unchanged from before. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           <div style={field}>
             <label style={label}>Title</label>
             <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="Course title" />
@@ -808,9 +819,16 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20, marginTop: 9 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div style={{ flex: 1 }}>
-                  <input style={{ ...rowInput, marginBottom: 6 }} value={m.title} onChange={(e) => setModule(i, "title", e.target.value)} placeholder="Module title" />
-                  <input style={rowInput} value={m.videoUrl || ""} onChange={(e) => setModule(i, "videoUrl", e.target.value)}
-                    placeholder="Video embed URL (e.g. https://www.youtube.com/embed/...)" />
+                  {/* #468 — title and video URL used to stack full-width;
+                      at the page's new 1080px width that meant two
+                      ~1000px-wide single-line inputs. Side by side above
+                      md makes better use of the room; still stacks below
+                      md, same as before. */}
+                  <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8 }}>
+                    <input style={rowInput} value={m.title} onChange={(e) => setModule(i, "title", e.target.value)} placeholder="Module title" />
+                    <input style={rowInput} value={m.videoUrl || ""} onChange={(e) => setModule(i, "videoUrl", e.target.value)}
+                      placeholder="Video embed URL (e.g. https://www.youtube.com/embed/...)" />
+                  </div>
                   {/* #275 — computed time estimate for this module: video
                       length (YouTube only, for now) plus a flat allowance
                       per quiz question. Purely informational/additive — it
@@ -982,8 +1000,12 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>FAQ</div>
         {draft.faqs.map((f, i) => (
           <div key={f.id ?? `new-${i}`} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
-            <div style={{ flex: 1 }}>
-              <input style={{ ...rowInput, marginBottom: 6 }} value={f.question} onChange={(e) => setFaq(i, "question", e.target.value)} placeholder="Question" />
+            {/* #468 — question/answer side by side above md, same
+                reasoning as the module title/video URL row above:
+                stacked full-width fields got uncomfortably wide at the
+                page's new 1080px base. */}
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8, flex: 1 }}>
+              <input style={rowInput} value={f.question} onChange={(e) => setFaq(i, "question", e.target.value)} placeholder="Question" />
               <input style={rowInput} value={f.answer} onChange={(e) => setFaq(i, "answer", e.target.value)} placeholder="Answer" />
             </div>
             {/* #258 — real button (was a bare clickable icon). */}
@@ -1007,7 +1029,11 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         </div>
         {draft.credits.map((c, i) => (
           <div key={c.id ?? `new-${i}`} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <input style={rowInput} value={c.line} onChange={(e) => setCredit(i, e.target.value)} placeholder="e.g. Curriculum & instruction: ..." />
+            {/* #468 — a single short field (one credit line) has no
+                natural second field to pair with like the module/FAQ
+                rows above, so it's capped at a reading-line width
+                instead of stretching to the page's full 1080px. */}
+            <input style={{ ...rowInput, maxWidth: 640 }} value={c.line} onChange={(e) => setCredit(i, e.target.value)} placeholder="e.g. Curriculum & instruction: ..." />
             {/* #258 — real button (was a bare clickable icon). */}
             <button
               type="button"
