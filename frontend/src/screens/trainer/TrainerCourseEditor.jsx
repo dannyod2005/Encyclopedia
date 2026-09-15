@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, BookMarked, Plus, Trash2, Save, Video, ChevronDown, ChevronUp, HelpCircle, X } from "lucide-react";
+import { ChevronLeft, BookMarked, Plus, Trash2, Save, Video, ChevronDown, ChevronUp, HelpCircle, X, Clock } from "lucide-react";
 
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
@@ -104,7 +104,7 @@ function normalizeLoadedQuestion(q) {
   return { ...q, type, acceptableAnswers: [""] };
 }
 
-export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEdit, onSaveQuiz, onFetchProvider, onFetchProfile, onFetchVideoDuration }) {
+export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEdit, onFetchQuizQuestionCounts, onSaveQuiz, onFetchProvider, onFetchProfile, onFetchVideoDuration }) {
 
   const [quizState, setQuizState] = useState({}); // { [moduleId]: { expanded, loading, loaded, questions, saving, error } }
 
@@ -228,19 +228,49 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // (module-estimate fix) — { [moduleId]: questionCount }, fetched once on
+  // mount for an existing course so moduleEstimate below has a real count
+  // for every module immediately, not just whichever ones the trainer
+  // happens to expand "Manage quiz" on. Superseded per-module the moment
+  // that module's quizState is populated (see moduleEstimate) — this is
+  // only ever the fallback for a module that hasn't been touched yet.
+  const [initialQuestionCounts, setInitialQuestionCounts] = useState({});
+
+  useEffect(() => {
+    if (!course) return; // new-course flow: no modules have real ids/quizzes yet
+    let cancelled = false;
+    onFetchQuizQuestionCounts(course.id)
+      .then((rows) => {
+        if (cancelled) return;
+        const byModuleId = {};
+        rows.forEach((r) => { byModuleId[r.moduleId] = r.questionCount; });
+        setInitialQuestionCounts(byModuleId);
+      })
+      .catch(() => {
+        // Preload is purely additive to the estimate — if it fails, the
+        // estimate just falls back to video-length-only until a trainer
+        // opens each module's "Manage quiz" panel manually, i.e. the
+        // pre-fix behavior. Not worth a form-blocking error over.
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // #275 — video length (when resolved) plus a flat per-question allowance
-  // for whatever quiz questions are currently loaded/authored for this
-  // module in quizState. For an existing course's module whose "Manage
-  // quiz" panel hasn't been opened this session, that count is 0 — an
-  // known, acceptable gap for a first pass (see the module comment on
-  // SECONDS_PER_QUESTION): the estimate simply improves once the trainer
-  // expands it, same as it does for a freshly authored one.
+  // for this module's quiz questions.
+  // (module-estimate fix) — question count now prefers quizState (the
+  // live, editable count once a trainer has opened this module's "Manage
+  // quiz" panel this session) and falls back to initialQuestionCounts (the
+  // real saved count, preloaded on mount above) otherwise — previously
+  // this silently read as 0 for every module until its panel was opened,
+  // regardless of how many quiz questions actually existed.
   function moduleEstimate(m) {
     const dur = videoDurations[quizKey(m)];
     const videoSeconds = dur?.status === "done" && dur.supported ? dur.seconds : 0;
-    const questionCount = (quizState[quizKey(m)]?.questions ?? []).filter(
-      (q) => q.question.trim().length > 0,
-    ).length;
+    const loadedQuestions = quizState[quizKey(m)]?.questions;
+    const questionCount = loadedQuestions
+      ? loadedQuestions.filter((q) => q.question.trim().length > 0).length
+      : (initialQuestionCounts[m.id] ?? 0);
     const quizSeconds = questionCount * SECONDS_PER_QUESTION;
     return {
       totalMinutes: (videoSeconds + quizSeconds) / 60,
@@ -736,32 +766,6 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
           <div style={field}>
             <label style={label}>Hours</label>
             <input style={rowInput} type="number" min={0} step={HOURS_STEP} value={draft.hours} onChange={(e) => set("hours", e.target.value)} />
-            {/* #275 — additive suggestion, not a replacement: derived from
-                each module's video length + quiz question count below, but
-                the number field above stays manually editable either way
-                (e.g. for modules whose video source isn't YouTube).
-                #297 — this row used to disappear entirely once Hours
-                matched the estimate, which reads as the feature glitching
-                off (especially right after clicking "Use estimate" itself)
-                rather than as confirmation it worked. It now stays put and
-                switches to a green in-sync message instead. */}
-            {suggestedHours > 0 && (
-              hoursMatchesEstimate ? (
-                <div style={{ fontSize: 11.5, color: "var(--success)", fontWeight: 600, marginTop: 5 }}>
-                  ✓ Matching Encyclopedia's estimated time (~{formatMinutes(suggestedHours * 60)}).
-                </div>
-              ) : (
-                <div style={{ fontSize: 11.5, color: "var(--slate-light)", marginTop: 5 }}>
-                  Estimated from modules: ~{formatMinutes(suggestedHours * 60)} ({formatMinutes(totalEstimatedMinutes)} exact).{" "}
-                  <span
-                    onClick={() => set("hours", suggestedHours)}
-                    style={{ color: "var(--gold-dark)", fontWeight: 600, cursor: "pointer" }}
-                  >
-                    Use estimate
-                  </span>
-                </div>
-              )
-            )}
           </div>
           <div style={field}>
             <label style={label}>Accent color</label>
@@ -770,6 +774,61 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             </select>
           </div>
         </div>
+
+        {/* #275 — additive suggestion, not a replacement: derived from each
+            module's video length + quiz question count below, but the
+            Hours field above stays manually editable either way (e.g. for
+            modules whose video source isn't YouTube).
+            #297 — this used to disappear entirely once Hours matched the
+            estimate, which reads as the feature glitching off (especially
+            right after clicking "Use estimate" itself) rather than as
+            confirmation it worked. It stays put and switches to a green
+            in-sync message instead.
+            (module-estimate fix) — this used to live as small helper text
+            tucked under the Hours field in a narrow grid column, easy to
+            never notice even though it directly sets how many points
+            students earn for the course. Moved to a full-width banner with
+            its own visual weight (icon, tinted background, a real button
+            instead of a text link) so it's hard to miss instead of easy to
+            skip past on the way to typing a number in manually. */}
+        {suggestedHours > 0 && (
+          <div
+            className="enc-card"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 14px",
+              marginBottom: 16,
+              background: hoursMatchesEstimate ? "var(--success-tint)" : "var(--gold-tint)",
+              border: `1px solid ${hoursMatchesEstimate ? "var(--success)" : "var(--gold)"}`,
+            }}
+          >
+            <Clock size={16} color={hoursMatchesEstimate ? "var(--success)" : "var(--gold-dark)"} style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, fontSize: 13, lineHeight: 1.4 }}>
+              {hoursMatchesEstimate ? (
+                <span style={{ fontWeight: 600, color: "var(--success)" }}>
+                  ✓ Matches Encyclopedia's estimated module time (~{formatMinutes(suggestedHours * 60)}) — this is what sets student points for this course.
+                </span>
+              ) : (
+                <>
+                  <strong>Estimated course length: ~{formatMinutes(suggestedHours * 60)}</strong> ({formatMinutes(totalEstimatedMinutes)} exact, from module videos + quiz questions below) — worth using over a manual guess, since it's what sets student points.
+                </>
+              )}
+            </div>
+            {!hoursMatchesEstimate && (
+              <button
+                type="button"
+                className="enc-btn enc-btn-gold"
+                style={{ fontSize: 12.5, padding: "7px 14px", flexShrink: 0 }}
+                onClick={() => set("hours", suggestedHours)}
+              >
+                Use estimate
+              </button>
+            )}
+          </div>
+        )}
+
         <div style={field}>
           <label style={label}>Summary</label>
           <textarea style={{ ...rowInput, minHeight: 70, resize: "vertical" }} value={draft.blurb} onChange={(e) => set("blurb", e.target.value)} placeholder="One or two sentences a learner sees on the catalogue card." />

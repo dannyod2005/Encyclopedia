@@ -21,6 +21,7 @@ export function TrainerScreen({
   onSaveCourse,
   onDeleteCourse,
   onFetchQuizForEdit,
+  onFetchQuizQuestionCounts,
   onSaveQuiz,
   onFetchProvider,
   onFetchProfile,
@@ -282,6 +283,7 @@ export function TrainerScreen({
         onCancel={() => setEditingId(null)}
         onSave={handleSave}
         onFetchQuizForEdit={onFetchQuizForEdit}
+        onFetchQuizQuestionCounts={onFetchQuizQuestionCounts}
         onSaveQuiz={onSaveQuiz}
         onFetchProvider={onFetchProvider}
         onFetchProfile={onFetchProfile}

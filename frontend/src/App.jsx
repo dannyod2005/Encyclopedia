@@ -1692,6 +1692,22 @@ export function EncyclopediaPrototype() {
     return res.json();
   }
 
+  // (module-estimate fix) — lightweight per-module quiz question counts for
+  // an existing course, fetched once when TrainerCourseEditor mounts so its
+  // time estimate reflects real quiz content from the start instead of
+  // assuming 0 questions until each module's "Manage quiz" panel has been
+  // opened. Same trainer+owner gating as fetchCourseAnalytics above.
+  async function fetchModuleQuizQuestionCounts(courseId) {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${courseId}/quiz-question-counts`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.message || `Request failed: ${res.status}`);
+    }
+    return res.json();
+  }
+
   async function saveQuiz(moduleId, payload) {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/modules/${moduleId}/quiz`, {
       method: "PUT",
@@ -2125,6 +2141,7 @@ export function EncyclopediaPrototype() {
                     onSaveCourse={saveCourse}
                     onDeleteCourse={deleteCourse}
                     onFetchQuizForEdit={fetchQuizForEdit}
+                    onFetchQuizQuestionCounts={fetchModuleQuizQuestionCounts}
                     onSaveQuiz={saveQuiz}
                     onFetchProvider={fetchMyProvider}
                     onFetchProfile={fetchMyProfile}

@@ -27,6 +27,7 @@ import { CourseAnalyticsDto } from './dto/course-analytics.dto';
 import { TrainerOverviewDto } from './dto/trainer-overview.dto';
 import { VideoDurationQueryDto } from './dto/video-duration-query.dto';
 import { ModuleQuizResultDto } from '../quiz/dto/module-quiz-result.dto';
+import { ModuleQuizQuestionCountDto } from '../quiz/dto/module-quiz-question-count.dto';
 import { CourseReviewDto } from '../enrollments/dto/course-review.dto';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 import { RequireTrainerGuard } from '../auth/require-trainer.guard';
@@ -107,6 +108,20 @@ export class CoursesController {
   @UseGuards(SupabaseAuthGuard, RequireTrainerGuard, RequireCourseOwnerGuard)
   getAnalytics(@Param('id') id: string): Promise<CourseAnalyticsDto> {
     return this.courseAnalyticsService.getAnalyticsForCourse(id);
+  }
+
+  // (module-estimate fix) — trainer + owner only, same guard stack as
+  // analytics/PUT above: this is course-authoring data (per-module quiz
+  // question counts), not something a learner-facing view has any reason
+  // to see. Backs TrainerCourseEditor's on-load estimate preload — see
+  // ModulesService.getQuizQuestionCountsForCourse for why this is a
+  // separate, lightweight endpoint rather than reusing getQuizForEdit.
+  @Get(':id/quiz-question-counts')
+  @UseGuards(SupabaseAuthGuard, RequireTrainerGuard, RequireCourseOwnerGuard)
+  getQuizQuestionCounts(
+    @Param('id') id: string,
+  ): Promise<ModuleQuizQuestionCountDto[]> {
+    return this.modulesService.getQuizQuestionCountsForCourse(id);
   }
 
   @Post()
