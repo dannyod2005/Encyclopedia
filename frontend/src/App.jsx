@@ -264,8 +264,14 @@ export function EncyclopediaPrototype() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [enrolled, setEnrolled] = useState([]);
   const [badges, setBadges] = useState([]);
+  // (461 — site-wide CLS audit) — badgesLoading/bookmarksLoading default
+  // true (mirrors coursesLoading/enrolledLoading below), so DashboardScreen
+  // can reserve fixed height for these cards from first render rather than
+  // treating "not yet fetched" the same as "fetched, genuinely empty."
+  const [badgesLoading, setBadgesLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false); // #154 — the in-flight POST /enrollments request, so CourseDetailModal's Enrol button can disable/show pending state instead of allowing a double-click.
   const [toast, setToast] = useState(null);
   const [authMode, setAuthMode] = useState(null); // null | "login" | "signup"
@@ -293,6 +299,7 @@ export function EncyclopediaPrototype() {
   const [learningPaths, setLearningPaths] = useState([]);
   const [learningPathsLoading, setLearningPathsLoading] = useState(true);
   const [pathEnrollments, setPathEnrollments] = useState([]);
+  const [pathEnrollmentsLoading, setPathEnrollmentsLoading] = useState(true);
   const [enrollingPath, setEnrollingPath] = useState(false);
   const [pendingPath, setPendingPath] = useState(null);
   // #183 — which 7-day week the Dashboard's mini-calendar is showing,
@@ -307,6 +314,17 @@ export function EncyclopediaPrototype() {
     goalHitDays: 0,
     week: [],
   });
+  // (461 follow-up) — activitySummary's own fetch, independent of
+  // coursesLoading/enrolledLoading, so DashboardScreen's streak pill/
+  // "This week" card/calendar card were reading the all-zero default
+  // shape above until this resolved — same 0-default flash class of bug
+  // as everywhere else in #461. Only gates the *first* resolution: left
+  // true here and flipped false once in the effect below, but never
+  // reset back to true on a calendarWeekOffset-driven refetch (paging
+  // the mini-calendar shouldn't re-flash the whole card back to a
+  // skeleton — the old week's numbers staying on screen until the new
+  // ones arrive is the better trade there).
+  const [activitySummaryLoading, setActivitySummaryLoading] = useState(true);
   // #107 — profiles.goal: null until a learner picks one via the
   // onboarding modal below (or never, if they skip — that's a permanent,
   // fine end state, not a "loading" one). goalLoaded distinguishes "not
@@ -400,12 +418,18 @@ export function EncyclopediaPrototype() {
   // #224 — this learner's path enrollments (with live completedCount/
   // totalCount/status from the backend). Same re-run-on-login-change/
   // reset-on-logout pattern as enrolled above.
+  // (461 — site-wide CLS audit) — pathEnrollmentsLoading added, same
+  // reasoning as badgesLoading above: DashboardScreen's "Learning paths"
+  // card needs to reserve fixed height while this is in flight rather
+  // than popping in from zero once it resolves.
   useEffect(() => {
     if (!loggedIn || !session) {
       setPathEnrollments([]);
+      setPathEnrollmentsLoading(false);
       return;
     }
 
+    setPathEnrollmentsLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/learning-path-enrollments`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
@@ -417,21 +441,29 @@ export function EncyclopediaPrototype() {
       .catch((err) => {
         console.error("Failed to load learning path enrollments:", err.message);
         setPathEnrollments([]);
-      });
+      })
+      .finally(() => setPathEnrollmentsLoading(false));
   }, [loggedIn, session]);
 
   // #225 — this learner's earned badges, for the Dashboard's badges card.
   // Same re-run-on-login-change/reset-on-logout pattern as enrollments
-  // above. No dedicated loading flag: the card only renders once there's
-  // at least one badge (see DashboardScreen), so briefly showing nothing
-  // while this resolves reads the same as "no badges yet" rather than
-  // needing its own loading state.
+  // above.
+  // (461 — site-wide CLS audit) — badgesLoading added: this card used to
+  // have no dedicated loading flag at all ("briefly showing nothing while
+  // this resolves reads the same as 'no badges yet'"), which was exactly
+  // backwards for CLS — it meant the card popped in from zero height
+  // whenever a real badge arrived, same class of bug as Home's
+  // "Recommended for you" collapse. DashboardScreen now reserves a fixed
+  // slot for this card while badgesLoading is true, same treatment as
+  // coursesLoading/enrolledLoading above.
   useEffect(() => {
     if (!loggedIn || !session) {
       setBadges([]);
+      setBadgesLoading(false);
       return;
     }
 
+    setBadgesLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/badges/me`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
@@ -443,7 +475,8 @@ export function EncyclopediaPrototype() {
       .catch((err) => {
         console.error("Failed to load badges:", err.message);
         setBadges([]);
-      });
+      })
+      .finally(() => setBadgesLoading(false));
   }, [loggedIn, session]);
 
   // #229 — forum-reply notifications, for the topbar bell. Same
@@ -499,12 +532,16 @@ export function EncyclopediaPrototype() {
   // #230 — this learner's saved-without-enrolling courses, for the
   // Catalogue card toggle and the Dashboard's Saved section. Same
   // on-login-change fetch/reset shape as badges/notifications above.
+  // (461 — site-wide CLS audit) — bookmarksLoading added, same reasoning
+  // as badgesLoading/pathEnrollmentsLoading above.
   useEffect(() => {
     if (!loggedIn || !session) {
       setBookmarks([]);
+      setBookmarksLoading(false);
       return;
     }
 
+    setBookmarksLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
@@ -516,7 +553,8 @@ export function EncyclopediaPrototype() {
       .catch((err) => {
         console.error("Failed to load bookmarks:", err.message);
         setBookmarks([]);
-      });
+      })
+      .finally(() => setBookmarksLoading(false));
   }, [loggedIn, session]);
 
   const bookmarkedIds = bookmarks.map((b) => b.courseId);
@@ -614,6 +652,7 @@ export function EncyclopediaPrototype() {
         week: [],
       });
       setCalendarWeekOffset(0);
+      setActivitySummaryLoading(false);
       return;
     }
 
@@ -629,7 +668,8 @@ export function EncyclopediaPrototype() {
         return res.json();
       })
       .then(setActivitySummary)
-      .catch((err) => console.error("Failed to load activity summary:", err.message));
+      .catch((err) => console.error("Failed to load activity summary:", err.message))
+      .finally(() => setActivitySummaryLoading(false));
   }, [loggedIn, session, calendarWeekOffset]);
 
   // #107 — learner's goal (profiles.goal), replacing the old LEARNER.goal
@@ -1852,6 +1892,8 @@ export function EncyclopediaPrototype() {
                   leaderboardOptIn={leaderboardOptIn}
                   onFetchLeaderboard={fetchLeaderboard}
                   loading={coursesLoading}
+                  enrolledLoading={enrolledLoading}
+                  learningPathsLoading={learningPathsLoading}
                 />
               </AppShell>
             ) : (
@@ -1865,7 +1907,7 @@ export function EncyclopediaPrototype() {
               // <main> — a <main> in there too would nest two on that
               // path, which is invalid.
               <main>
-                <HomeScreen onGo={(key) => navigate(key === "home" ? "/" : `/${key}`)} onAuth={openAuth} courses={courses} loggedIn={loggedIn} user={user} enrolled={enrolled} />
+                <HomeScreen onGo={(key) => navigate(key === "home" ? "/" : `/${key}`)} onAuth={openAuth} courses={courses} loggedIn={loggedIn} user={user} enrolled={enrolled} loading={coursesLoading} />
               </main>
             )
           }
@@ -1933,7 +1975,9 @@ export function EncyclopediaPrototype() {
                   onRetake={retakeCourse}
                   user={user}
                   goal={learnerGoal}
+                  profileLoaded={goalLoaded}
                   activitySummary={activitySummary}
+                  activitySummaryLoading={activitySummaryLoading}
                   loading={coursesLoading || enrolledLoading}
                   error={coursesError || enrolledError}
                   onRetry={retryDashboard}
@@ -1941,7 +1985,10 @@ export function EncyclopediaPrototype() {
                   onPrevWeek={() => setCalendarWeekOffset((n) => n - 1)}
                   onNextWeek={() => setCalendarWeekOffset((n) => n + 1)}
                   pathEnrollments={pathEnrollments}
+                  pathEnrollmentsLoading={pathEnrollmentsLoading}
+                  badgesLoading={badgesLoading}
                   bookmarks={bookmarks}
+                  bookmarksLoading={bookmarksLoading}
                   onToggleBookmark={toggleBookmark}
                   leaderboardOptIn={leaderboardOptIn}
                   onOpenLeaderboard={() => navigate("/leaderboard")}
@@ -2043,6 +2090,7 @@ export function EncyclopediaPrototype() {
                     onLeaveProvider={leaveProvider}
                     currentUserId={user?.id}
                     paths={learningPaths}
+                    pathsLoading={learningPathsLoading}
                     onSavePath={savePath}
                     onDeletePath={deletePath}
                     onFetchCourseAnalytics={fetchCourseAnalytics}

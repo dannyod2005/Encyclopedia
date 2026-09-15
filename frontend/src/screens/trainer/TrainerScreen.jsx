@@ -25,6 +25,7 @@ export function TrainerScreen({
   onLeaveProvider,
   currentUserId,
   paths = [],
+  pathsLoading = false,
   onSavePath,
   onDeletePath,
   onFetchCourseAnalytics,
@@ -595,33 +596,54 @@ export function TrainerScreen({
             <button className="enc-btn enc-btn-gold" onClick={() => setEditingPathId("__new")}><Plus size={15} /> New path</button>
           </div>
 
+          {/* (461 — site-wide CLS audit) — `paths` (learningPaths in
+              App.jsx) had no loading flag threaded through at all, so
+              this list popped in from nothing the instant it resolved —
+              same class of bug as the other pages' un-reserved secondary
+              lists. pathsLoading now gates a matching-shape skeleton. */}
           <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
-            {paths.map((p, i) => (
-              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < paths.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{p.title || "(untitled path)"}</div>
-                  <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{p.courses.length} courses</div>
-                </div>
-                {canEditPath(p) ? (
-                  <>
-                    <button className="enc-btn enc-btn-ghost" onClick={() => setEditingPathId(p.id)}><Pencil size={14} /> Edit</button>
-                    <button
-                      className="enc-btn enc-btn-ghost"
-                      style={{ color: "var(--coral)" }}
-                      onClick={() => { setDeletingPath(p); setDeletePathError(null); }}
-                    >
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </>
-                ) : (
-                  <span style={{ fontSize: 12, color: "var(--slate-light)" }}>View only</span>
+            {pathsLoading ? (
+              <div aria-hidden="true">
+                {[0, 1].map((i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i === 0 ? "1px solid var(--line)" : "none" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ width: "40%", height: 14, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                      <div style={{ width: "25%", height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+                    </div>
+                    <div style={{ width: 64, height: 28, borderRadius: 8, background: "var(--line)" }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {paths.map((p, i) => (
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < paths.length - 1 ? "1px solid var(--line)" : "none" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{p.title || "(untitled path)"}</div>
+                      <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{p.courses.length} courses</div>
+                    </div>
+                    {canEditPath(p) ? (
+                      <>
+                        <button className="enc-btn enc-btn-ghost" onClick={() => setEditingPathId(p.id)}><Pencil size={14} /> Edit</button>
+                        <button
+                          className="enc-btn enc-btn-ghost"
+                          style={{ color: "var(--coral)" }}
+                          onClick={() => { setDeletingPath(p); setDeletePathError(null); }}
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 12, color: "var(--slate-light)" }}>View only</span>
+                    )}
+                  </div>
+                ))}
+                {paths.length === 0 && (
+                  <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+                    No learning paths yet — bundle 2 or more of your courses into one.
+                  </div>
                 )}
-              </div>
-            ))}
-            {paths.length === 0 && (
-              <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-                No learning paths yet — bundle 2 or more of your courses into one.
-              </div>
+              </>
             )}
           </div>
         </>

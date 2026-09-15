@@ -22,6 +22,13 @@ import { computeCourseGradePct } from "../lib/courseGrade";
 // one, change the other.
 export const PASS_THRESHOLD_PCT = 70;
 
+// (461 — site-wide CLS audit) — shared between the forum tab's loading
+// skeleton and its real post list, same reasoning as Dashboard's
+// DASHBOARD_LIST_PANEL_HEIGHT: post count is unbounded and unknowable
+// ahead of time, so both states cap at this height and scroll internally
+// past it rather than letting the tab's height depend on real post count.
+const FORUM_PANEL_HEIGHT = 320;
+
 // Notes previously only saved on blur (tab-switch or clicking away), which
 // left the "Not saved yet" label showing the whole time someone was still
 // typing — reads like the save is broken if you don't know to click away
@@ -837,6 +844,10 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 // visible (global.css's input:focus-visible rule).
                 style={{ width: "100%", minHeight: 120, border: "none", fontFamily: "var(--font-body)", fontSize: 13.5, resize: "vertical", background: "transparent" }}
               />
+              {/* (461 follow-up) — all four states here are a single short
+                  line inside a fixed-height caption row, so the text swap
+                  itself was never a real CLS source — kept as plain text
+                  swaps rather than a skeleton bar for that reason. */}
               <div style={{ fontSize: 11.5, color: "var(--slate-light)", marginTop: 8 }}>
                 {noteLoading
                   ? "Loading…"
@@ -850,8 +861,28 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
           )}
           {tab === "quiz" && (
             <div className="enc-card" style={{ padding: 18 }}>
+              {/* (461 follow-up) — was a single "Loading quiz…" line that
+                  got replaced by a multi-question form once quizLoading
+                  resolved — this card could grow substantially depending
+                  on question count, same class of bug as the forum tab
+                  already fixed. Can't know the real question count ahead
+                  of time, so this approximates a typical 2-question quiz
+                  rather than reserving zero height. */}
               {quizLoading ? (
-                <div style={{ fontSize: 13.5, color: "var(--slate-light)" }}>Loading quiz…</div>
+                <div aria-hidden="true">
+                  <div style={{ width: 170, height: 14, borderRadius: 4, background: "var(--line)", marginBottom: 14 }} />
+                  {[0, 1].map((i) => (
+                    <div key={i} style={{ marginBottom: 14 }}>
+                      <div style={{ width: "75%", height: 13.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {[0, 1, 2].map((j) => (
+                          <div key={j} style={{ width: 72, height: 28, borderRadius: 8, background: "var(--line)" }} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ width: 130, height: 36, borderRadius: 8, background: "var(--line)", marginTop: 4 }} />
+                </div>
               ) : quizQuestions.length === 0 ? (
                 <div style={{ fontSize: 13.5, color: "var(--slate-light)" }}>
                   This module doesn't have a quiz yet.
@@ -981,8 +1012,25 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
           )}
           {tab === "forum" && (
             <div className="enc-card" style={{ padding: 16 }}>
+              {/* (461 — site-wide CLS audit) — was a single "Loading…" line
+                  that got replaced by however many real posts (0 to many)
+                  once postsLoading resolved, same class of bug as the
+                  other pages' skeleton mismatches. A fixed-height,
+                  internally-scrollable panel (same pattern as Dashboard's
+                  course lists) means the forum tab's height doesn't
+                  depend on the real post count. */}
               {postsLoading ? (
-                <div style={{ fontSize: 13.5, color: "var(--slate-light)" }}>Loading…</div>
+                <div aria-hidden="true" style={{ maxHeight: FORUM_PANEL_HEIGHT, overflow: "hidden" }}>
+                  {[0, 1].map((i) => (
+                    <div key={i} style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--line)", flexShrink: 0 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ width: "35%", height: 12, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                        <div style={{ width: "80%", height: 13, borderRadius: 4, background: "var(--line)" }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <>
                   {posts.length === 0 ? (
@@ -990,7 +1038,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                       No posts yet — be the first to start the discussion.
                     </div>
                   ) : (
-                    buildThreads(posts).map((p) => renderPost(p, 0))
+                    <div style={{ maxHeight: FORUM_PANEL_HEIGHT, overflowY: "auto" }}>
+                      {buildThreads(posts).map((p) => renderPost(p, 0))}
+                    </div>
                   )}
 
                   <div style={{ marginTop: 16 }}>
@@ -1069,13 +1119,24 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               matching the client's callout that this section needed more
               presence. */}
           <div className="enc-card" style={{ padding: 20 }}>
-            <div style={{ marginBottom: courseGradePct !== null ? 16 : 10 }}>
+            <div style={{ marginBottom: courseGradePct !== null || quizResultsLoading ? 16 : 10 }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Grades</span>
-              {/* #240 — hidden until there's at least one graded module,
-                  same "hidden until non-empty" convention as the rest of
-                  this app's optional cards — a fresh course with no
-                  quizzes taken yet shouldn't show a misleading 0%. */}
-              {courseGradePct !== null && (
+              {/* (461 follow-up) — was hidden entirely while
+                  quizResultsLoading (only the block below had a "Loading…"
+                  line), so a learner who does have a real grade coming saw
+                  this hero number pop in fully formed the moment the fetch
+                  resolved — same growth-shift class of bug the rest of
+                  #461 fixes. Can't know ahead of time whether this
+                  particular course will end up with a real grade (a fresh
+                  enrollment with zero quizzes taken legitimately has
+                  none), so the loading state is a same-footprint
+                  placeholder rather than a guess either way. */}
+              {quizResultsLoading ? (
+                <div aria-hidden="true" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                  <div style={{ width: 64, height: 34, borderRadius: 4, background: "var(--line)" }} />
+                  <div style={{ width: 78, height: 20, borderRadius: 999, background: "var(--line)" }} />
+                </div>
+              ) : courseGradePct !== null ? (
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 8 }}>
                   <span
                     style={{
@@ -1096,10 +1157,26 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                     {courseGradePct < PASS_THRESHOLD_PCT ? "Below pass bar" : "Passing"}
                   </span>
                 </div>
-              )}
+              ) : null}
             </div>
+            {/* (461 follow-up) — `modules` is already known synchronously
+                (part of `course`, loaded before this screen ever mounts —
+                see LearningRoute's own coursesLoading/enrolledLoading
+                gate), so unlike most loading-state guesses elsewhere in
+                #461, this skeleton doesn't have to approximate a typical
+                count — quizResultsOverview always resolves to exactly one
+                row per module, so rendering that many placeholder rows
+                up front makes the swap to real data exactly zero-height-
+                change, by construction rather than by guessing. */}
             {quizResultsLoading ? (
-              <div style={{ fontSize: 13, color: "var(--slate-light)", padding: "6px 0" }}>Loading…</div>
+              <div aria-hidden="true">
+                {modules.map((m) => (
+                  <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "6px 0" }}>
+                    <div style={{ width: "60%", height: 13, borderRadius: 4, background: "var(--line)" }} />
+                    <div style={{ width: 50, height: 13, borderRadius: 4, background: "var(--line)" }} />
+                  </div>
+                ))}
+              </div>
             ) : quizResultsOverview.length === 0 ? (
               <div style={{ fontSize: 13, color: "var(--slate-light)", padding: "6px 0" }}>No modules yet.</div>
             ) : (
