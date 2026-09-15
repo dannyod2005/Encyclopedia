@@ -307,7 +307,10 @@ export function CatalogueScreen({
       {/* #336 — shared .enc-page-scaled primitive (global.css) instead of a
           hardcoded maxWidth, so this page grows at the same large
           breakpoint as My Learning/Learning instead of staying fixed. */}
-      <div className="enc-page-scaled" style={{ "--enc-page-base": "1160px", padding: "36px 28px 60px" }}>
+      {/* (tablet-padding fix) — horizontal padding now comes from the
+          shared .enc-outer-pad scale instead of a flat 28px at every
+          width; vertical stays inline. */}
+      <div className="enc-page-scaled enc-outer-pad" style={{ "--enc-page-base": "1160px", paddingTop: 36, paddingBottom: 60 }}>
         {/* #213 — was an inline h1/p; now the shared PageHeader primitive
             (same 30px/font-display/600 title, same subtitle styling) so
             Dashboard/Discover can match this scale exactly instead of

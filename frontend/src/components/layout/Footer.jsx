@@ -10,11 +10,16 @@
 export function Footer({ onGo }) {
   return (
     <footer style={{ borderTop: "1px solid var(--line)", marginTop: 40 }}>
+      {/* (tablet-padding fix) — horizontal padding was a flat 28px at
+          every viewport width; now comes from the shared .enc-outer-pad
+          scale, same as every page's own outer padding. */}
       <div
+        className="enc-outer-pad"
         style={{
           maxWidth: 1160,
           margin: "0 auto",
-          padding: "22px 28px",
+          paddingTop: 22,
+          paddingBottom: 22,
           display: "flex",
           flexWrap: "wrap",
           alignItems: "center",

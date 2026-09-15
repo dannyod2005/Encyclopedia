@@ -672,7 +672,10 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
   // class (introduced in #332 for My Learning) so this page carries the
   // same large-breakpoint width policy instead of its own one-off value.
   return (
-    <div className="enc-page-enter enc-page-wide" style={{ padding: "22px 32px 40px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-wide enc-outer-pad" style={{ paddingTop: 22, paddingBottom: 40 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         {/* #360 — was <div onClick>: not a real link/button, unreachable by
             keyboard. */}

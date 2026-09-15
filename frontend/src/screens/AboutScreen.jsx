@@ -38,7 +38,10 @@ export function AboutScreen({ loggedIn, onGo, onAuth }) {
       {/* Same narrower 760 base as PrivacyScreen — a reading page reads
           better with a tighter line length than the app's wider grid
           pages. */}
-      <div className="enc-page-scaled" style={{ "--enc-page-base": "760px", padding: "36px 28px 60px" }}>
+      {/* (tablet-padding fix) — horizontal padding now comes from the
+          shared .enc-outer-pad scale instead of a flat 28px at every
+          width; vertical stays inline. */}
+      <div className="enc-page-scaled enc-outer-pad" style={{ "--enc-page-base": "760px", paddingTop: 36, paddingBottom: 60 }}>
         {/* #364 — only shown logged out: AppTopbar already shows "About
             us" as the page title for logged-in visitors, and AppShell
             has no topbar at all when logged out, so this is the only

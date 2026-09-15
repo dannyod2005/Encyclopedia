@@ -252,6 +252,34 @@ html, body {
 @media (min-width:1440px){
   .enc-page-scaled{ max-width:calc(var(--enc-page-base, 1160px) * 1.2759); }
 }
+/* (tablet-padding fix) — every page's outer horizontal padding was a
+   flat 28-32px set inline (padding: "Npx ...") at every viewport width,
+   never responding to breakpoints the way max-width already does via
+   .enc-page-scaled/.enc-page-wide above. That's invisible on desktop,
+   where a viewport wider than the page's own max-width already creates
+   generous "free" margin from centering — but a tablet viewport
+   (roughly 768-1279px) usually sits *below* every page's max-width
+   (640-1160px, only Catalogue/Home/Trainer Studio approach it), so the
+   only inset at that width was ever that flat 28-32px, noticeably
+   tighter than the wide-open desktop view right next to it. Reusable
+   here (rather than folded into .enc-page-scaled/.enc-page-wide
+   directly) so the same scale also covers containers that don't use
+   either primitive — Home's logged-out marketing sections, Footer,
+   MarketingHeader — which had the identical flat-padding-at-every-width
+   problem. Callers keep their own vertical padding inline
+   (paddingTop/paddingBottom) and add this class for horizontal only;
+   values below intentionally leave small/mobile alone (not the
+   reported problem) and only widen from the tablet breakpoint up. */
+.enc-outer-pad{ padding-left:24px; padding-right:24px; }
+@media (min-width:640px){
+  .enc-outer-pad{ padding-left:28px; padding-right:28px; }
+}
+@media (min-width:768px){
+  .enc-outer-pad{ padding-left:48px; padding-right:48px; }
+}
+@media (min-width:1024px){
+  .enc-outer-pad{ padding-left:64px; padding-right:64px; }
+}
 .enc-badge{ font-size:11px; font-weight:600; letter-spacing:0.02em; padding:3px 9px; border-radius:100px; text-transform:uppercase; }
 .enc-hairline{ border:none; border-top:1px solid var(--line); }
 .enc-scroll::-webkit-scrollbar{ width:6px; height:6px; }

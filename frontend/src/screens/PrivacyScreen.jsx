@@ -61,7 +61,10 @@ export function PrivacyScreen({ loggedIn, onGo, onAuth }) {
           still won't always fit on shorter screens no matter how tight
           the spacing gets — that's fine; the goal here was closing the
           gap, not forcing it at the cost of cramming a legal page. */}
-      <div className="enc-page-scaled" style={{ "--enc-page-base": "760px", padding: "28px 28px 40px" }}>
+      {/* (tablet-padding fix) — horizontal padding now comes from the
+          shared .enc-outer-pad scale instead of a flat 28px at every
+          width; vertical stays inline. */}
+      <div className="enc-page-scaled enc-outer-pad" style={{ "--enc-page-base": "760px", paddingTop: 28, paddingBottom: 40 }}>
         {/* #364 — title only kept logged out (AppTopbar already shows
             "Privacy & GDPR" for logged-in visitors, but there's no
             topbar at all when logged out); subtitle stays either way. */}

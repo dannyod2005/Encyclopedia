@@ -298,7 +298,10 @@ export function HomeScreen({
           Stacks to 1 column below md, same grid-cols-1 md:grid-cols-[...]
           pattern already used by Dashboard/Learning for asymmetric
           column splits. */}
-      <section className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]" style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 28px 40px", gap: 48, alignItems: "center" }}>
+      {/* (tablet-padding fix) — horizontal padding now comes from the
+          shared .enc-outer-pad scale instead of a flat 28px at every
+          width; vertical stays inline. */}
+      <section className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] enc-outer-pad" style={{ maxWidth: 1160, margin: "0 auto", paddingTop: 64, paddingBottom: 40, gap: 48, alignItems: "center" }}>
         {loggedIn ? (
           <div>
             <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>Welcome back</span>
@@ -483,7 +486,10 @@ export function HomeScreen({
         // maxWidth, so this logged-in discovery section grows at the same
         // large breakpoint as the rest of the app. The shared marketing
         // hero above and the logged-out sections below are unaffected.
-        <section className="enc-page-scaled" style={{ "--enc-page-base": "1160px", padding: "20px 28px 56px" }}>
+        /* (tablet-padding fix) — horizontal padding now comes from the
+           shared .enc-outer-pad scale instead of a flat 28px at every
+           width; vertical stays inline. */
+        <section className="enc-page-scaled enc-outer-pad" style={{ "--enc-page-base": "1160px", paddingTop: 20, paddingBottom: 56 }}>
           {/* #367 — goal is known synchronously (part of the already-loaded
               profile), so a skeleton here only shows for a learner who's
               actually going to get a real "Recommended for you" section
@@ -675,7 +681,10 @@ export function HomeScreen({
           from AppShell, which every page including this one now gets.) */}
       {!loggedIn && (
         <>
-          <section style={{ maxWidth: 1160, margin: "0 auto", padding: "20px 28px 56px" }}>
+          {/* (tablet-padding fix) — horizontal padding now comes from the
+              shared .enc-outer-pad scale instead of a flat 28px at every
+              width; vertical stays inline. */}
+          <section className="enc-outer-pad" style={{ maxWidth: 1160, margin: "0 auto", paddingTop: 20, paddingBottom: 56 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0 }}>Popular this month</h2>
               {/* #360 — was <span onClick>: not a real link/button. */}
@@ -715,7 +724,10 @@ export function HomeScreen({
               intensity (0.16/0.06 peak/mid alpha, down from an initial
               0.28/0.10 pass that read as too strong) were both tuned
               live against a running instance before landing here. */}
-          <section style={{ background: "radial-gradient(circle at 50% 75%, rgba(21,163,225,0.16) 0%, rgba(21,163,225,0.06) 40%, rgba(21,163,225,0) 70%), var(--ink)", padding: "56px 28px" }}>
+          {/* (tablet-padding fix) — horizontal padding now comes from the
+              shared .enc-outer-pad scale instead of a flat 28px at every
+              width; vertical stays inline. */}
+          <section className="enc-outer-pad" style={{ background: "radial-gradient(circle at 50% 75%, rgba(21,163,225,0.16) 0%, rgba(21,163,225,0.06) 40%, rgba(21,163,225,0) 70%), var(--ink)", paddingTop: 56, paddingBottom: 56 }}>
             <div style={{ maxWidth: 1160, margin: "0 auto" }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--paper)", marginBottom: 22 }}>What learners say</h2>
               {/* #392 — same fixed-3-column issue as "Popular this month"
