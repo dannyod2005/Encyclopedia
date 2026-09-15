@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, CheckCircle2, Target, AlertTriangle, Clock } from "lucide-react";
 
+import { ScreenMessage } from "../../components/common/Primitives";
+
 // #227 — trainer-facing view of how learners enrolled in one of their
 // courses are actually doing: enrollment count, average completion %,
 // average quiz score %, and a per-learner breakdown table with
@@ -12,6 +14,9 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // #454 — bumping this re-runs the fetch effect below, so the error
+  // state's "Try again" button actually does something.
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,7 +27,12 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
         if (!cancelled) setAnalytics(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message || "Failed to load analytics.");
+        // #454 — was `err.message || "Failed to load analytics."`,
+        // rendering raw network/JS error text straight to the page.
+        if (!cancelled) {
+          console.error("Failed to load course analytics:", err);
+          setError("Couldn't load analytics for this course — please try again.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -31,7 +41,7 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course.id]);
+  }, [course.id, reloadTick]);
 
   function formatLastActive(iso) {
     if (!iso) return "never";
@@ -44,7 +54,10 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "900px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "900px" }}>
       {/* #360 — was <div onClick>: not a real link/button. */}
       <button type="button" onClick={onBack} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
@@ -54,14 +67,38 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
       </div>
       <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 20 }}>Learner progress and quiz performance for this course.</div>
 
+      {/* (461 — site-wide CLS audit) — was a single centered "Loading
+          analytics…" line swapping to 3 stat cards + a variable-length
+          learner list once resolved — same mismatch class as the other
+          pages. Skeleton now mirrors the real stat-card shape, and the
+          learner list gets the same fixed-height/scroll treatment as
+          Dashboard's course lists (learner count is as unknowable ahead
+          of time as any other enrollment-driven list in this app). */}
       {loading ? (
-        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-          Loading analytics…
+        <div aria-hidden="true">
+          <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="enc-card" style={stat}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--line)", marginBottom: 10 }} />
+                <div style={{ width: 28, height: 22, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                <div style={{ width: 70, height: 12, borderRadius: 4, background: "var(--line)" }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ width: 90, height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 12 }} />
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < 2 ? "1px solid var(--line)" : "none" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ width: "35%", height: 14, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                  <div style={{ width: "50%", height: 12, borderRadius: 4, background: "var(--line)" }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : error ? (
-        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
-          {error}
-        </div>
+        <ScreenMessage variant="error" message={error} onRetry={() => setReloadTick((t) => t + 1)} />
       ) : (
         <>
           <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
@@ -96,11 +133,9 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", marginBottom: 12 }}>Learners</div>
 
-          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden", maxHeight: 320, overflowY: "auto" }}>
             {analytics.learners.length === 0 ? (
-              <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-                No one has enrolled in this course yet.
-              </div>
+              <ScreenMessage bare message="No one has enrolled in this course yet." />
             ) : (
               analytics.learners.map((l, i) => (
                 <div key={l.enrollmentId} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < analytics.learners.length - 1 ? "1px solid var(--line)" : "none" }}>

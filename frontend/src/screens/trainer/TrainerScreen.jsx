@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Plus, Search, Trash2, X, BarChart3, BookOpen, Users, Milestone, UsersRound } from "lucide-react";
 
-import { CategoryDot, PageHeader } from "../../components/common/Primitives";
+import { CategoryDot, PageHeader, ScreenMessage } from "../../components/common/Primitives";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { TrainerCourseEditor } from "./TrainerCourseEditor";
 import { TeamTab } from "./TeamTab";
@@ -12,9 +12,16 @@ import { CourseAnalyticsView } from "./CourseAnalyticsView";
 export function TrainerScreen({
   courses,
   coursesLoading = false,
+  // #454 — the course list previously had no failure path: a fetch
+  // error left `courses` as [], rendering identically to a trainer who
+  // genuinely owns zero courses yet — no way to tell an outage from a
+  // real empty result, and no retry either way.
+  coursesError = false,
+  onRetryCourses,
   onSaveCourse,
   onDeleteCourse,
   onFetchQuizForEdit,
+  onFetchQuizQuestionCounts,
   onSaveQuiz,
   onFetchProvider,
   onFetchProfile,
@@ -25,6 +32,7 @@ export function TrainerScreen({
   onLeaveProvider,
   currentUserId,
   paths = [],
+  pathsLoading = false,
   onSavePath,
   onDeletePath,
   onFetchCourseAnalytics,
@@ -275,6 +283,7 @@ export function TrainerScreen({
         onCancel={() => setEditingId(null)}
         onSave={handleSave}
         onFetchQuizForEdit={onFetchQuizForEdit}
+        onFetchQuizQuestionCounts={onFetchQuizQuestionCounts}
         onSaveQuiz={onSaveQuiz}
         onFetchProvider={onFetchProvider}
         onFetchProfile={onFetchProfile}
@@ -331,7 +340,10 @@ export function TrainerScreen({
     // this to see if the score moves. If it does, the permanent fix would
     // be either delaying the animation until data is ready, or scoping
     // enc-page-enter away from data-heavy pages like this one.
-    <div className="enc-page-scaled" style={{ padding: "28px 32px", "--enc-page-base": "1080px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 28, "--enc-page-base": "1080px" }}>
       {/* #364 — was a hand-rolled 15px title ("Trainer studio") above this
           subtitle, duplicating AppTopbar's own title for this route at a
           size wildly inconsistent with every other page's 30px
@@ -517,10 +529,25 @@ export function TrainerScreen({
                 </div>
               ))}
             </div>
+          ) : coursesError ? (
+            // #454 — was no error path at all: a failed courses fetch left
+            // `courses` as [], rendering identically to "No courses yet" —
+            // same minHeight: 284 as that empty state so this swap can't
+            // cause the CLS the skeleton above was built to avoid.
+            <div style={{ boxSizing: "border-box", minHeight: 284, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ScreenMessage bare message="Couldn't load your courses — please try again." variant="error" onRetry={onRetryCourses} />
+            </div>
           ) : (
             <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
               {visibleCourses.map((c, i) => (
-                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < visibleCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
+                // (phone-buttons fix) — was a flat inline gap:14, same at
+                // every width; with 3 action buttons plus the title block
+                // all needing to fit in one row, that gap alone was
+                // already too much room to give up on a narrow phone
+                // before the buttons themselves are even considered.
+                // gap-2 (8px) below sm, back to the original 14px from sm
+                // up where there's always been enough width.
+                <div key={c.id} className="gap-2 sm:gap-3.5" style={{ display: "flex", alignItems: "center", padding: "14px 18px", borderBottom: i < visibleCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
                   <CategoryDot color={c.color} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{c.title || "(untitled course)"}</div>
@@ -528,14 +555,25 @@ export function TrainerScreen({
                   </div>
                   {canEditCourse(c) ? (
                     <>
-                      <button className="enc-btn enc-btn-ghost" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> Analytics</button>
-                      <button className="enc-btn enc-btn-ghost" onClick={() => setEditingId(c.id)}><Pencil size={14} /> Edit</button>
+                      {/* (phone-buttons fix) — 3 side-by-side labelled
+                          buttons (Analytics/Edit/Delete) needed more width
+                          than a phone screen could give this row alongside
+                          the title block, even after the row's own gap
+                          shrank above. Labels hide below sm (icon +
+                          aria-label only, same "icon-only needs an
+                          accessible name" convention #258 already applies
+                          elsewhere — see MarketingHeader's Log in button
+                          for the identical hidden-label pattern); full
+                          labels return from sm up. */}
+                      <button className="enc-btn enc-btn-ghost" aria-label="Analytics" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> <span className="hidden sm:inline">Analytics</span></button>
+                      <button className="enc-btn enc-btn-ghost" aria-label="Edit" onClick={() => setEditingId(c.id)}><Pencil size={14} /> <span className="hidden sm:inline">Edit</span></button>
                       <button
                         className="enc-btn enc-btn-ghost"
+                        aria-label="Delete"
                         style={{ color: "var(--coral)" }}
                         onClick={() => { setDeletingCourse(c); setDeleteError(null); }}
                       >
-                        <Trash2 size={14} /> Delete
+                        <Trash2 size={14} /> <span className="hidden sm:inline">Delete</span>
                       </button>
                     </>
                   ) : (
@@ -595,33 +633,58 @@ export function TrainerScreen({
             <button className="enc-btn enc-btn-gold" onClick={() => setEditingPathId("__new")}><Plus size={15} /> New path</button>
           </div>
 
+          {/* (461 — site-wide CLS audit) — `paths` (learningPaths in
+              App.jsx) had no loading flag threaded through at all, so
+              this list popped in from nothing the instant it resolved —
+              same class of bug as the other pages' un-reserved secondary
+              lists. pathsLoading now gates a matching-shape skeleton. */}
           <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
-            {paths.map((p, i) => (
-              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < paths.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{p.title || "(untitled path)"}</div>
-                  <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{p.courses.length} courses</div>
-                </div>
-                {canEditPath(p) ? (
-                  <>
-                    <button className="enc-btn enc-btn-ghost" onClick={() => setEditingPathId(p.id)}><Pencil size={14} /> Edit</button>
-                    <button
-                      className="enc-btn enc-btn-ghost"
-                      style={{ color: "var(--coral)" }}
-                      onClick={() => { setDeletingPath(p); setDeletePathError(null); }}
-                    >
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </>
-                ) : (
-                  <span style={{ fontSize: 12, color: "var(--slate-light)" }}>View only</span>
+            {pathsLoading ? (
+              <div aria-hidden="true">
+                {[0, 1].map((i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i === 0 ? "1px solid var(--line)" : "none" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ width: "40%", height: 14, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                      <div style={{ width: "25%", height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+                    </div>
+                    <div style={{ width: 64, height: 28, borderRadius: 8, background: "var(--line)" }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {paths.map((p, i) => (
+                  /* (phone-buttons fix) — same treatment as the course
+                     list row above: gap shrinks below sm, button labels
+                     hide (icon + aria-label only) below sm. */
+                  <div key={p.id} className="gap-2 sm:gap-3.5" style={{ display: "flex", alignItems: "center", padding: "14px 18px", borderBottom: i < paths.length - 1 ? "1px solid var(--line)" : "none" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{p.title || "(untitled path)"}</div>
+                      <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{p.courses.length} courses</div>
+                    </div>
+                    {canEditPath(p) ? (
+                      <>
+                        <button className="enc-btn enc-btn-ghost" aria-label="Edit" onClick={() => setEditingPathId(p.id)}><Pencil size={14} /> <span className="hidden sm:inline">Edit</span></button>
+                        <button
+                          className="enc-btn enc-btn-ghost"
+                          aria-label="Delete"
+                          style={{ color: "var(--coral)" }}
+                          onClick={() => { setDeletingPath(p); setDeletePathError(null); }}
+                        >
+                          <Trash2 size={14} /> <span className="hidden sm:inline">Delete</span>
+                        </button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 12, color: "var(--slate-light)" }}>View only</span>
+                    )}
+                  </div>
+                ))}
+                {paths.length === 0 && (
+                  <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+                    No learning paths yet — bundle 2 or more of your courses into one.
+                  </div>
                 )}
-              </div>
-            ))}
-            {paths.length === 0 && (
-              <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-                No learning paths yet — bundle 2 or more of your courses into one.
-              </div>
+              </>
             )}
           </div>
         </>

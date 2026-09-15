@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 
-import { PageHeader } from "../components/common/Primitives";
+import { PageHeader, ScreenMessage } from "../components/common/Primitives";
 
 // #231/#246 — global, opt-in leaderboard ranked by weekly learning points.
 // Fetch-on-mount with a cancelled guard, same shape as
@@ -22,6 +22,10 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // #454 — bumping this re-runs the fetch effect below, giving the
+  // error state below a working "Try again" button. Same reload-tick
+  // pattern App.jsx already uses for Dashboard's retryDashboard.
+  const [reloadTick, setReloadTick] = useState(0);
 
   // #348 — the current learner's own row, if they're opted in. Already
   // present in `entries` (isSelf), so this is just a lookup, not a
@@ -37,7 +41,14 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
         if (!cancelled) setEntries(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message || "Failed to load the leaderboard.");
+        // #454 — was `err.message || "Failed to load the leaderboard."`,
+        // rendering raw network/JS error text (e.g. "Failed to fetch")
+        // straight to the page in coral. Always the friendly fallback now;
+        // the fetch failure itself is still logged for debugging.
+        if (!cancelled) {
+          console.error("Failed to load leaderboard:", err);
+          setError("Couldn't load the leaderboard — please try again.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -46,30 +57,42 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadTick]);
 
   return (
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth, so this page grows (modestly, from its own 720 base) at
     // the same large breakpoint as the rest of the app.
-    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "720px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "720px" }}>
       {/* #364 — title dropped: this route is always reached logged-in
           (RequireAuth), so AppTopbar already shows "Leaderboard" as the
           page title. Subtitle stays — it's context, not a duplicate. */}
       <PageHeader subtitle="Ranked by learning points logged this week. Only learners who've opted in appear here." />
 
+      {/* (461 — site-wide CLS audit) — was a single centered "Loading
+          leaderboard…" line swapping to a rank list of unknowable length
+          (depends on how many learners have opted in) once resolved.
+          Skeleton now mirrors the real row shape, and the real list gets
+          a fixed max-height + internal scroll, same reasoning as
+          Dashboard's course lists and Course Analytics' learner list. */}
       {loading ? (
-        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-          Loading leaderboard…
+        <div aria-hidden="true" className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < 3 ? "1px solid var(--line)" : "none" }}>
+              <div style={{ width: 26, height: 13.5, borderRadius: 4, background: "var(--line)" }} />
+              <div style={{ width: 15 }} />
+              <div style={{ flex: 1, height: 13.5, borderRadius: 4, background: "var(--line)" }} />
+              <div style={{ width: 40, height: 13, borderRadius: 4, background: "var(--line)" }} />
+            </div>
+          ))}
         </div>
       ) : error ? (
-        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
-          {error}
-        </div>
+        <ScreenMessage variant="error" message={error} onRetry={() => setReloadTick((t) => t + 1)} />
       ) : entries.length === 0 ? (
-        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-          No one has opted in yet. Opt in from your dashboard to be the first.
-        </div>
+        <ScreenMessage message="No one has opted in yet. Opt in from your dashboard to be the first." />
       ) : (
         <>
           {/* #348 — "your rank" summary, so a learner can see where they
@@ -107,7 +130,7 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
             </div>
           )}
 
-          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden", maxHeight: 320, overflowY: "auto" }}>
             {entries.map((e, i) => {
               const medal = MEDAL_STYLE[e.rank];
               return (

@@ -3,7 +3,14 @@ import { LogIn } from "lucide-react";
 export function MarketingHeader({ onGo, onAuth }) {
   return (
     <header style={{ borderBottom: "1px solid var(--line)", background: "var(--paper-2)", position: "sticky", top: 0, zIndex: 20 }}>
-      <div className="px-4 md:px-7" style={{ maxWidth: 1160, margin: "0 auto", padding: "16px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* (tablet-padding fix) — px-4/md:px-7 were dead: the inline
+          `padding: "16px 0"` shorthand below set padding-left/right to 0
+          and, being inline, always won over those classes regardless of
+          breakpoint — so this header sat flush against the viewport edge
+          at every width below the 1160 maxWidth (which is most of
+          tablet). Horizontal padding now comes from the shared
+          .enc-outer-pad scale instead; only vertical stays inline. */}
+      <div className="enc-outer-pad" style={{ maxWidth: 1160, margin: "0 auto", paddingTop: 16, paddingBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         {/* #360 — was <div>/<span> with onClick: not real links/buttons,
             unreachable by keyboard. */}
         <div className="gap-4 md:gap-[34px]" style={{ display: "flex", alignItems: "center" }}>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, BookMarked, Plus, Trash2, Save, Video, ChevronDown, ChevronUp, HelpCircle, X } from "lucide-react";
+import { ChevronLeft, BookMarked, Plus, Trash2, Save, Video, ChevronDown, ChevronUp, HelpCircle, X, Clock } from "lucide-react";
 
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 
@@ -104,7 +104,7 @@ function normalizeLoadedQuestion(q) {
   return { ...q, type, acceptableAnswers: [""] };
 }
 
-export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEdit, onSaveQuiz, onFetchProvider, onFetchProfile, onFetchVideoDuration }) {
+export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEdit, onFetchQuizQuestionCounts, onSaveQuiz, onFetchProvider, onFetchProfile, onFetchVideoDuration }) {
 
   const [quizState, setQuizState] = useState({}); // { [moduleId]: { expanded, loading, loaded, questions, saving, error } }
 
@@ -228,19 +228,49 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // (module-estimate fix) — { [moduleId]: questionCount }, fetched once on
+  // mount for an existing course so moduleEstimate below has a real count
+  // for every module immediately, not just whichever ones the trainer
+  // happens to expand "Manage quiz" on. Superseded per-module the moment
+  // that module's quizState is populated (see moduleEstimate) — this is
+  // only ever the fallback for a module that hasn't been touched yet.
+  const [initialQuestionCounts, setInitialQuestionCounts] = useState({});
+
+  useEffect(() => {
+    if (!course) return; // new-course flow: no modules have real ids/quizzes yet
+    let cancelled = false;
+    onFetchQuizQuestionCounts(course.id)
+      .then((rows) => {
+        if (cancelled) return;
+        const byModuleId = {};
+        rows.forEach((r) => { byModuleId[r.moduleId] = r.questionCount; });
+        setInitialQuestionCounts(byModuleId);
+      })
+      .catch(() => {
+        // Preload is purely additive to the estimate — if it fails, the
+        // estimate just falls back to video-length-only until a trainer
+        // opens each module's "Manage quiz" panel manually, i.e. the
+        // pre-fix behavior. Not worth a form-blocking error over.
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // #275 — video length (when resolved) plus a flat per-question allowance
-  // for whatever quiz questions are currently loaded/authored for this
-  // module in quizState. For an existing course's module whose "Manage
-  // quiz" panel hasn't been opened this session, that count is 0 — an
-  // known, acceptable gap for a first pass (see the module comment on
-  // SECONDS_PER_QUESTION): the estimate simply improves once the trainer
-  // expands it, same as it does for a freshly authored one.
+  // for this module's quiz questions.
+  // (module-estimate fix) — question count now prefers quizState (the
+  // live, editable count once a trainer has opened this module's "Manage
+  // quiz" panel this session) and falls back to initialQuestionCounts (the
+  // real saved count, preloaded on mount above) otherwise — previously
+  // this silently read as 0 for every module until its panel was opened,
+  // regardless of how many quiz questions actually existed.
   function moduleEstimate(m) {
     const dur = videoDurations[quizKey(m)];
     const videoSeconds = dur?.status === "done" && dur.supported ? dur.seconds : 0;
-    const questionCount = (quizState[quizKey(m)]?.questions ?? []).filter(
-      (q) => q.question.trim().length > 0,
-    ).length;
+    const loadedQuestions = quizState[quizKey(m)]?.questions;
+    const questionCount = loadedQuestions
+      ? loadedQuestions.filter((q) => q.question.trim().length > 0).length
+      : (initialQuestionCounts[m.id] ?? 0);
     const quizSeconds = questionCount * SECONDS_PER_QUESTION;
     return {
       totalMinutes: (videoSeconds + quizSeconds) / 60,
@@ -671,7 +701,16 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth (also picks up margin:auto, which this page was missing —
     // same centering gap #204/#212 fixed on Dashboard/Learning).
-    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "760px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    /* #468 — was 760px, the same narrow "reading page" base as Privacy/
+       About/LearningPathEditor. But this isn't a reading page — it's the
+       form a trainer lands on straight from TrainerScreen (1080px), so
+       narrowing here made the page visibly shrink mid-flow. Raised to
+       match TrainerScreen; the field grid and module/FAQ rows below were
+       widened to use the extra room rather than just stretching as-is. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "1080px" }}>
       {/* #360 — was <div onClick>: not a real link/button. */}
       <button type="button" onClick={onCancel} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
@@ -686,8 +725,13 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             desktop, but the Provider field's helper text ("Couldn't
             resolve your name or provider...") and Hours' estimate text
             wrapped to several lines in a ~170px column on a phone.
-            Stacks to 1 column below md. */}
-        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
+            Stacks to 1 column below md.
+            #468 — 3rd column added at lg: 6 fields (Title/Provider/
+            Track/Level/Hours/Accent color) at the page's new 1080px
+            width left 2 columns uncomfortably wide; 3 columns keeps
+            each field a reasonable text-input width. Still 2 below lg
+            and 1 below md, unchanged from before. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           <div style={field}>
             <label style={label}>Title</label>
             <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="Course title" />
@@ -722,32 +766,6 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
           <div style={field}>
             <label style={label}>Hours</label>
             <input style={rowInput} type="number" min={0} step={HOURS_STEP} value={draft.hours} onChange={(e) => set("hours", e.target.value)} />
-            {/* #275 — additive suggestion, not a replacement: derived from
-                each module's video length + quiz question count below, but
-                the number field above stays manually editable either way
-                (e.g. for modules whose video source isn't YouTube).
-                #297 — this row used to disappear entirely once Hours
-                matched the estimate, which reads as the feature glitching
-                off (especially right after clicking "Use estimate" itself)
-                rather than as confirmation it worked. It now stays put and
-                switches to a green in-sync message instead. */}
-            {suggestedHours > 0 && (
-              hoursMatchesEstimate ? (
-                <div style={{ fontSize: 11.5, color: "var(--success)", fontWeight: 600, marginTop: 5 }}>
-                  ✓ Matching Encyclopedia's estimated time (~{formatMinutes(suggestedHours * 60)}).
-                </div>
-              ) : (
-                <div style={{ fontSize: 11.5, color: "var(--slate-light)", marginTop: 5 }}>
-                  Estimated from modules: ~{formatMinutes(suggestedHours * 60)} ({formatMinutes(totalEstimatedMinutes)} exact).{" "}
-                  <span
-                    onClick={() => set("hours", suggestedHours)}
-                    style={{ color: "var(--gold-dark)", fontWeight: 600, cursor: "pointer" }}
-                  >
-                    Use estimate
-                  </span>
-                </div>
-              )
-            )}
           </div>
           <div style={field}>
             <label style={label}>Accent color</label>
@@ -756,6 +774,61 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             </select>
           </div>
         </div>
+
+        {/* #275 — additive suggestion, not a replacement: derived from each
+            module's video length + quiz question count below, but the
+            Hours field above stays manually editable either way (e.g. for
+            modules whose video source isn't YouTube).
+            #297 — this used to disappear entirely once Hours matched the
+            estimate, which reads as the feature glitching off (especially
+            right after clicking "Use estimate" itself) rather than as
+            confirmation it worked. It stays put and switches to a green
+            in-sync message instead.
+            (module-estimate fix) — this used to live as small helper text
+            tucked under the Hours field in a narrow grid column, easy to
+            never notice even though it directly sets how many points
+            students earn for the course. Moved to a full-width banner with
+            its own visual weight (icon, tinted background, a real button
+            instead of a text link) so it's hard to miss instead of easy to
+            skip past on the way to typing a number in manually. */}
+        {suggestedHours > 0 && (
+          <div
+            className="enc-card"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 14px",
+              marginBottom: 16,
+              background: hoursMatchesEstimate ? "var(--success-tint)" : "var(--gold-tint)",
+              border: `1px solid ${hoursMatchesEstimate ? "var(--success)" : "var(--gold)"}`,
+            }}
+          >
+            <Clock size={16} color={hoursMatchesEstimate ? "var(--success)" : "var(--gold-dark)"} style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, fontSize: 13, lineHeight: 1.4 }}>
+              {hoursMatchesEstimate ? (
+                <span style={{ fontWeight: 600, color: "var(--success)" }}>
+                  ✓ Matches Encyclopedia's estimated module time (~{formatMinutes(suggestedHours * 60)}) — this is what sets student points for this course.
+                </span>
+              ) : (
+                <>
+                  <strong>Estimated course length: ~{formatMinutes(suggestedHours * 60)}</strong> ({formatMinutes(totalEstimatedMinutes)} exact, from module videos + quiz questions below) — worth using over a manual guess, since it's what sets student points.
+                </>
+              )}
+            </div>
+            {!hoursMatchesEstimate && (
+              <button
+                type="button"
+                className="enc-btn enc-btn-gold"
+                style={{ fontSize: 12.5, padding: "7px 14px", flexShrink: 0 }}
+                onClick={() => set("hours", suggestedHours)}
+              >
+                Use estimate
+              </button>
+            )}
+          </div>
+        )}
+
         <div style={field}>
           <label style={label}>Summary</label>
           <textarea style={{ ...rowInput, minHeight: 70, resize: "vertical" }} value={draft.blurb} onChange={(e) => set("blurb", e.target.value)} placeholder="One or two sentences a learner sees on the catalogue card." />
@@ -805,9 +878,16 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20, marginTop: 9 }}>{String(i + 1).padStart(2, "0")}</span>
                 <div style={{ flex: 1 }}>
-                  <input style={{ ...rowInput, marginBottom: 6 }} value={m.title} onChange={(e) => setModule(i, "title", e.target.value)} placeholder="Module title" />
-                  <input style={rowInput} value={m.videoUrl || ""} onChange={(e) => setModule(i, "videoUrl", e.target.value)}
-                    placeholder="Video embed URL (e.g. https://www.youtube.com/embed/...)" />
+                  {/* #468 — title and video URL used to stack full-width;
+                      at the page's new 1080px width that meant two
+                      ~1000px-wide single-line inputs. Side by side above
+                      md makes better use of the room; still stacks below
+                      md, same as before. */}
+                  <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8 }}>
+                    <input style={rowInput} value={m.title} onChange={(e) => setModule(i, "title", e.target.value)} placeholder="Module title" />
+                    <input style={rowInput} value={m.videoUrl || ""} onChange={(e) => setModule(i, "videoUrl", e.target.value)}
+                      placeholder="Video embed URL (e.g. https://www.youtube.com/embed/...)" />
+                  </div>
                   {/* #275 — computed time estimate for this module: video
                       length (YouTube only, for now) plus a flat allowance
                       per quiz question. Purely informational/additive — it
@@ -979,8 +1059,12 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>FAQ</div>
         {draft.faqs.map((f, i) => (
           <div key={f.id ?? `new-${i}`} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
-            <div style={{ flex: 1 }}>
-              <input style={{ ...rowInput, marginBottom: 6 }} value={f.question} onChange={(e) => setFaq(i, "question", e.target.value)} placeholder="Question" />
+            {/* #468 — question/answer side by side above md, same
+                reasoning as the module title/video URL row above:
+                stacked full-width fields got uncomfortably wide at the
+                page's new 1080px base. */}
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8, flex: 1 }}>
+              <input style={rowInput} value={f.question} onChange={(e) => setFaq(i, "question", e.target.value)} placeholder="Question" />
               <input style={rowInput} value={f.answer} onChange={(e) => setFaq(i, "answer", e.target.value)} placeholder="Answer" />
             </div>
             {/* #258 — real button (was a bare clickable icon). */}
@@ -1004,7 +1088,11 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         </div>
         {draft.credits.map((c, i) => (
           <div key={c.id ?? `new-${i}`} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <input style={rowInput} value={c.line} onChange={(e) => setCredit(i, e.target.value)} placeholder="e.g. Curriculum & instruction: ..." />
+            {/* #468 — a single short field (one credit line) has no
+                natural second field to pair with like the module/FAQ
+                rows above, so it's capped at a reading-line width
+                instead of stretching to the page's full 1080px. */}
+            <input style={{ ...rowInput, maxWidth: 640 }} value={c.line} onChange={(e) => setCredit(i, e.target.value)} placeholder="e.g. Curriculum & instruction: ..." />
             {/* #258 — real button (was a bare clickable icon). */}
             <button
               type="button"

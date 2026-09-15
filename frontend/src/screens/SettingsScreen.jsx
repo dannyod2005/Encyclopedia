@@ -140,7 +140,10 @@ export function SettingsScreen({
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth, so this form grows (modestly, from its own 640 base) at
     // the same large breakpoint as the rest of the app.
-    <div className="enc-page-enter enc-page-scaled" style={{ padding: "22px 32px", "--enc-page-base": "640px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 22, paddingBottom: 22, "--enc-page-base": "640px" }}>
       {/* #364 — was <PageHeader title="Account settings" />: AppTopbar
           already shows that same text as this route's h1, so this was a
           plain duplicate. */}

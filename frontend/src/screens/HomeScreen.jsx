@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ChevronRight, BookOpen, Sparkles, TrendingUp, Milestone, Trophy } from "lucide-react";
 
 import { TESTIMONIALS } from "../data/courses";
-import { Stars, EncyclopediaArch, CategoryDot, PageHeader } from "../components/common/Primitives";
+import { Stars, EncyclopediaArch, CategoryDot, PageHeader, ScreenMessage } from "../components/common/Primitives";
 import { MarketingHeader } from "../components/layout/MarketingHeader";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
 
@@ -36,9 +36,26 @@ export function HomeScreen({
   // mount). Used only to size a same-footprint skeleton for the two
   // course-grid sections below while that's in flight, so they don't pop
   // in at full height once the fetch resolves (a measured CLS finding).
-  // Not threaded anywhere else on this screen — Popular/Continue-learning
-  // etc. already render fine against an empty `courses`/`enrolled` array.
   loading = false,
+  // (461 follow-up) — enrolled/learningPaths each resolve on their own
+  // fetch, independently of `loading` (courses) above. Previously this
+  // screen just read `enrolled`/`learningPaths` directly, which default
+  // to [] in App.jsx until those fetches land — so the hero stat row
+  // read "0 in progress / 0 completed", the "Continue where you left
+  // off" card read "you haven't started a course yet", and "Learning
+  // paths to explore" simply didn't exist, all for a beat, before
+  // popping to whatever the real values turn out to be. Same class of
+  // bug as the rest of #461, just not caught in the original CLS-
+  // audit pass since none of these are driven by `courses`/`loading`.
+  enrolledLoading = false,
+  learningPathsLoading = false,
+  // #454 — Recommended/New on Encyclopedia/Popular this month all derive
+  // from `courses`; before this a fetch failure left them silently
+  // empty, indistinguishable from a learner who's genuinely seen
+  // everything. Learning paths (separate fetch) is deliberately not
+  // affected by this — same scoping as Catalogue's equivalent fix.
+  error = false,
+  onRetry,
 }) {
   const firstName = loggedIn ? getFirstName(getDisplayName(user)) : null;
   const inProgress = enrolled.filter((e) => e.status === "in-progress");
@@ -115,12 +132,18 @@ export function HomeScreen({
   // rankings anyway (see LeaderboardService), so there'd be nothing of
   // theirs to show here.
   const [leaderboardEntries, setLeaderboardEntries] = useState(null);
+  // (461 follow-up) — starts true only when there's actually something to
+  // fetch (opted in); an opted-out learner never shows a skeleton for a
+  // section that was never going to appear.
+  const [leaderboardLoading, setLeaderboardLoading] = useState(loggedIn && leaderboardOptIn);
   useEffect(() => {
     if (!loggedIn || !leaderboardOptIn || !onFetchLeaderboard) {
       setLeaderboardEntries(null);
+      setLeaderboardLoading(false);
       return;
     }
     let cancelled = false;
+    setLeaderboardLoading(true);
     onFetchLeaderboard()
       .then((data) => {
         if (!cancelled) setLeaderboardEntries(data);
@@ -128,6 +151,9 @@ export function HomeScreen({
       .catch((err) => {
         console.error("Failed to load leaderboard teaser:", err.message);
         if (!cancelled) setLeaderboardEntries(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLeaderboardLoading(false);
       });
     return () => {
       cancelled = true;
@@ -145,8 +171,19 @@ export function HomeScreen({
           <CategoryDot color={c.color} />
           <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{c.category}</span>
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, lineHeight: 1.3 }}>{c.title}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14 }}>{c.blurb}</div>
+        {/* (home-card-cls-fix) — line-clamped to the exact same 1/2-line
+            counts renderCourseCardSkeleton below hardcodes. Without this,
+            a real course's title/blurb wraps to however many lines its
+            actual text needs, which can exceed the skeleton's assumed
+            shape and grow the card (and the whole grid row) taller once
+            real content swaps in — a measured CLS source on Home even
+            when "Recommended for you" resolves non-empty, since it isn't
+            about the section appearing/disappearing but about the
+            skeleton-to-real-card height itself being unreliable. Clamping
+            both to the same line counts makes card height deterministic
+            regardless of copy length. */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.title}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.blurb}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Stars rating={c.rating} />
           <span style={{ fontSize: 12, color: "var(--slate-light)" }}>{c.hours}h</span>
@@ -177,6 +214,80 @@ export function HomeScreen({
     );
   }
 
+  // (recommended-empty CLS fix) — same-slot fallback for when `goal` is
+  // set but `recommended` resolves to zero matches (every un-enrolled
+  // course in that category has already been surfaced or enrolled in).
+  // Spans the full grid width and targets roughly the same footprint as
+  // one row of renderCourseCard/renderCourseCardSkeleton, so swapping in
+  // for the skeleton doesn't reproduce the same collapse-to-zero problem
+  // this fix exists to prevent — just with a smaller, acceptable delta
+  // instead of a full 3-card grid's height vanishing in one frame.
+  function renderRecommendedEmptyState() {
+    return (
+      <div
+        className="enc-card"
+        style={{
+          gridColumn: "1 / -1",
+          padding: 18,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          minHeight: 120,
+        }}
+      >
+        <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5 }}>
+          No new {goal} courses to recommend right now — you've covered what's here.
+        </div>
+        <button
+          type="button"
+          onClick={() => onGo("catalogue")}
+          style={{ marginTop: 10, alignSelf: "flex-start", font: "inherit", fontSize: 13.5, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
+          Browse full catalogue →
+        </button>
+      </div>
+    );
+  }
+
+  // (461 follow-up) — same-slot fallback for "New on Encyclopedia" so the
+  // section can't collapse to zero height the moment `courses` resolves
+  // with nothing left to surface (every course already recommended or
+  // enrolled in) — same reasoning as renderRecommendedEmptyState above.
+  function renderTrendingEmptyState() {
+    return (
+      <div
+        className="enc-card"
+        style={{ gridColumn: "1 / -1", padding: 18, display: "flex", alignItems: "center", minHeight: 120 }}
+      >
+        <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5 }}>
+          You're already enrolled in or recommended everything currently on Encyclopedia — check back soon for new courses.
+        </div>
+      </div>
+    );
+  }
+
+  // (461 follow-up) — same-slot fallback for "Learning paths to explore".
+  function renderPathsEmptyState() {
+    return (
+      <div className="enc-card" style={{ gridColumn: "1 / -1", padding: 18, display: "flex", alignItems: "center", minHeight: 96 }}>
+        <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5 }}>
+          No new learning paths to explore right now — you're enrolled in everything on offer.
+        </div>
+      </div>
+    );
+  }
+
+  function renderPathCardSkeleton(i) {
+    return (
+      <div key={i} className="enc-card" aria-hidden="true" style={{ padding: 18 }}>
+        <div style={{ width: "70%", height: 15.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+        <div style={{ width: "100%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+        <div style={{ width: "50%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 14 }} />
+        <div style={{ width: 60, height: 12, borderRadius: 4, background: "var(--line)" }} />
+      </div>
+    );
+  }
+
   return (
     <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
@@ -187,7 +298,10 @@ export function HomeScreen({
           Stacks to 1 column below md, same grid-cols-1 md:grid-cols-[...]
           pattern already used by Dashboard/Learning for asymmetric
           column splits. */}
-      <section className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]" style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 28px 40px", gap: 48, alignItems: "center" }}>
+      {/* (tablet-padding fix) — horizontal padding now comes from the
+          shared .enc-outer-pad scale instead of a flat 28px at every
+          width; vertical stays inline. */}
+      <section className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] enc-outer-pad" style={{ maxWidth: 1160, margin: "0 auto", paddingTop: 64, paddingBottom: 40, gap: 48, alignItems: "center" }}>
         {loggedIn ? (
           <div>
             <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>Welcome back</span>
@@ -209,9 +323,19 @@ export function HomeScreen({
               </button>
             </div>
             <div style={{ display: "flex", gap: 26, marginTop: 34 }}>
-              {[[String(inProgress.length), "in progress"], [String(complete.length), "completed"]].map(([n, l]) => (
+              {/* (461 follow-up) — was reading inProgress.length/complete.length
+                  straight off `enrolled`, which is [] until App.jsx's fetch
+                  resolves — so this always flashed "0 in progress / 0
+                  completed" first. Same digit-shaped placeholder while
+                  enrolledLoading, swapped for the real numbers once known;
+                  identical box size either way, so the row never moves. */}
+              {[[enrolledLoading ? null : String(inProgress.length), "in progress"], [enrolledLoading ? null : String(complete.length), "completed"]].map(([n, l]) => (
                 <div key={l}>
-                  <div style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 20 }}>{n}</div>
+                  {n === null ? (
+                    <div aria-hidden="true" style={{ width: 20, height: 20, borderRadius: 4, background: "var(--line)" }} />
+                  ) : (
+                    <div style={{ fontFamily: "var(--font-mono)", fontWeight: 500, fontSize: 20 }}>{n}</div>
+                  )}
                   <div style={{ fontSize: 12, color: "var(--slate-light)" }}>{l}</div>
                 </div>
               ))}
@@ -260,7 +384,22 @@ export function HomeScreen({
             {loggedIn ? "Continue where you left off" : "Popular right now"}
           </div>
           {loggedIn ? (
-            inProgress.length > 0 ? (
+            enrolledLoading ? (
+              // (461 follow-up) — matches the shape of the real
+              // inProgress row below (ring + title + subtitle line), so
+              // the card doesn't resize once `enrolled` resolves.
+              <div aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--line)", flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ width: "60%", height: 13.5, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                      <div style={{ width: "35%", height: 12, borderRadius: 4, background: "var(--line)" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : inProgress.length > 0 ? (
               // #360 — was <div onClick>: not focusable. No nested
               // interactive elements, so a plain <button> is enough.
               inProgress.slice(0, 3).map((e) => (
@@ -291,6 +430,27 @@ export function HomeScreen({
                 <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", color: "var(--gold-dark)", fontWeight: 600, background: "none", border: "none", padding: 0, cursor: "pointer" }}>browse the catalogue</button>.
               </div>
             )
+          ) : loading ? (
+            // (461 follow-up) — courses hasn't resolved yet, so this used
+            // to render courses.slice(0, 3) against an empty array and
+            // show nothing, then pop in 3 rows once the fetch landed.
+            // Matches the real row shape (icon box + title + subtitle).
+            <div aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--line)", flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ width: "55%", height: 13.5, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                    <div style={{ width: "35%", height: 12, borderRadius: 4, background: "var(--line)" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            // #454 — small teaser card, same bare/no-retry treatment as
+            // Dashboard's leaderboard teaser: the full grid below already
+            // offers a retry for this same fetch.
+            <ScreenMessage variant="error" bare padding={16} message="Couldn't load courses." />
           ) : (
             // #360 — was <div onClick>: not focusable.
             courses.slice(0, 3).map((c) => (
@@ -326,13 +486,32 @@ export function HomeScreen({
         // maxWidth, so this logged-in discovery section grows at the same
         // large breakpoint as the rest of the app. The shared marketing
         // hero above and the logged-out sections below are unaffected.
-        <section className="enc-page-scaled" style={{ "--enc-page-base": "1160px", padding: "20px 28px 56px" }}>
+        /* (tablet-padding fix) — horizontal padding now comes from the
+           shared .enc-outer-pad scale instead of a flat 28px at every
+           width; vertical stays inline. */
+        <section className="enc-page-scaled enc-outer-pad" style={{ "--enc-page-base": "1160px", paddingTop: 20, paddingBottom: 56 }}>
           {/* #367 — goal is known synchronously (part of the already-loaded
               profile), so a skeleton here only shows for a learner who's
               actually going to get a real "Recommended for you" section
               once `courses` resolves — not for one who'd never see this
-              section at all. */}
-          {(recommended.length > 0 || (loading && goal)) && (
+              section at all.
+              (recommended-empty CLS fix) — this used to be gated on
+              `recommended.length > 0 || (loading && goal)`, which reserved
+              skeleton height while loading but then unmounted the whole
+              block the instant `courses` resolved to zero matches —
+              collapsing a full 3-card grid's worth of height in one frame
+              and shoving "New on Encyclopedia" (and everything below it)
+              up to fill the gap. That was the actual measured CLS source
+              on Home (Lighthouse: 0.057 shift score on this section,
+              biggest single contributor to a 0.95 rather than perfect 1).
+              Gating on `goal` alone instead means whether this section
+              exists at all is decided synchronously, before first paint —
+              same as the skeleton-vs-real-card swap already being a
+              non-issue because renderCourseCardSkeleton is deliberately
+              sized to match renderCourseCard. The empty case now renders
+              a same-slot fallback message rather than nothing, so there's
+              no zero-height state for later content to collapse into. */}
+          {goal && (
             <div style={{ marginBottom: 32 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                 <Sparkles size={16} color="var(--gold-dark)" />
@@ -340,80 +519,150 @@ export function HomeScreen({
               </div>
               <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>Based on your {goal} goal.</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-                {loading ? [0, 1, 2].map(renderCourseCardSkeleton) : recommended.map(renderCourseCard)}
+                {loading
+                  ? [0, 1, 2].map(renderCourseCardSkeleton)
+                  : error
+                    ? (
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <ScreenMessage variant="error" message="Couldn't load recommendations." />
+                      </div>
+                    )
+                    : recommended.length > 0
+                      ? recommended.map(renderCourseCard)
+                      : renderRecommendedEmptyState()}
               </div>
             </div>
           )}
 
-          {(trending.length > 0 || loading) && (
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {/* #385 — one small accent touch: this section's heading
-                      icon uses the new --blue-dark (sampled from the logo,
-                      see global.css) instead of --gold-dark, so it reads as
-                      a distinct visual note from the Sparkles/Milestone
-                      icons on the sections above/below rather than all
-                      three looking identical. "View catalogue" stays gold
-                      since it's the interactive/clickable element here —
-                      --gold remains the one color reserved for anything
-                      CTA-shaped; --blue is only ever a static glyph. */}
-                  <TrendingUp size={16} color="var(--blue-dark)" />
-                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>New on Encyclopedia</span>
-                </div>
-                {/* #360 — was <span onClick>: not a real link/button. */}
-                <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", fontSize: 13.5, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>View catalogue →</button>
-              </div>
-              <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>Courses you haven't started yet.</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-                {loading ? [0, 1, 2].map(renderCourseCardSkeleton) : trending.map(renderCourseCard)}
-              </div>
-            </div>
-          )}
-
-          {pathsToExplore.length > 0 && (
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <Milestone size={16} color="var(--gold-dark)" />
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>Learning paths to explore</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 18 }}>
-                {/* #360 — was <div onClick>: not focusable. */}
-                {pathsToExplore.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className="enc-card"
-                    onClick={() => onOpenPath && onOpenPath(p)}
-                    disabled={!onOpenPath}
-                    style={{ padding: 18, width: "100%", textAlign: "left", font: "inherit", cursor: onOpenPath ? "pointer" : "default" }}
-                  >
-                    <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6 }}>{p.title}</div>
-                    {p.description && (
-                      <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14 }}>{p.description}</div>
-                    )}
-                    <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
-                      {(p.courses ?? []).length} course{(p.courses ?? []).length === 1 ? "" : "s"}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {myRank && (
-            <div className="enc-card" style={{ padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Trophy size={16} color="var(--gold-dark)" />
-                <span style={{ fontSize: 13.5 }}>
-                  You're <b>#{myRank.rank}</b> of {leaderboardEntries.length} on the leaderboard this week.
-                </span>
+          {/* (461 follow-up) — was gated on `trending.length > 0 || loading`,
+              which unmounted the whole section (collapsing 3 cards' worth
+              of height in one frame) the instant `courses` resolved with
+              nothing new left to surface — same collapse bug the
+              recommended-empty fix above already fixed once. Existence is
+              now decided synchronously (`loggedIn` alone, already true
+              inside this parent block), and the empty case gets a
+              same-slot fallback instead of vanishing. */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {/* #385 — one small accent touch: this section's heading
+                    icon uses the new --blue-dark (sampled from the logo,
+                    see global.css) instead of --gold-dark, so it reads as
+                    a distinct visual note from the Sparkles/Milestone
+                    icons on the sections above/below rather than all
+                    three looking identical. "View catalogue" stays gold
+                    since it's the interactive/clickable element here —
+                    --gold remains the one color reserved for anything
+                    CTA-shaped; --blue is only ever a static glyph. */}
+                <TrendingUp size={16} color="var(--blue-dark)" />
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>New on Encyclopedia</span>
               </div>
               {/* #360 — was <span onClick>: not a real link/button. */}
-              <button type="button" onClick={() => onGo("leaderboard")} style={{ font: "inherit", fontSize: 13, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer", whiteSpace: "nowrap" }}>
-                View leaderboard →
-              </button>
+              <button type="button" onClick={() => onGo("catalogue")} style={{ font: "inherit", fontSize: 13.5, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer" }}>View catalogue →</button>
             </div>
+            <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>Courses you haven't started yet.</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+              {loading
+                ? [0, 1, 2].map(renderCourseCardSkeleton)
+                : error
+                  ? (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <ScreenMessage variant="error" message="Couldn't load new courses." onRetry={onRetry} />
+                    </div>
+                  )
+                  : trending.length > 0
+                    ? trending.map(renderCourseCard)
+                    : renderTrendingEmptyState()}
+            </div>
+          </div>
+
+          {/* (461 follow-up) — same fix as above: was gated on
+              `pathsToExplore.length > 0`, which meant this section didn't
+              exist at all while `learningPaths` was still loading, then
+              popped in fully formed the moment it resolved non-empty (or
+              never appeared, giving no visual feedback either way).
+              `loggedIn` is enough to decide existence synchronously; a
+              skeleton covers the loading gap and a same-slot fallback
+              covers the genuinely-empty case. */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <Milestone size={16} color="var(--gold-dark)" />
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>Learning paths to explore</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 18 }}>
+              {learningPathsLoading
+                ? [0, 1].map(renderPathCardSkeleton)
+                : pathsToExplore.length > 0
+                  ? pathsToExplore.map((p) => (
+                      // #360 — was <div onClick>: not focusable.
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="enc-card"
+                        onClick={() => onOpenPath && onOpenPath(p)}
+                        disabled={!onOpenPath}
+                        style={{ padding: 18, width: "100%", textAlign: "left", font: "inherit", cursor: onOpenPath ? "pointer" : "default" }}
+                      >
+                        {/* (perf follow-up) — same line-clamp fix as
+                            Catalogue's equivalent path card: without this,
+                            a real path's title/description can wrap to
+                            however many lines its text needs, growing the
+                            card taller than renderPathCardSkeleton's fixed
+                            shape assumes. */}
+                        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.title}</div>
+                        {p.description && (
+                          <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</div>
+                        )}
+                        <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
+                          {(p.courses ?? []).length} course{(p.courses ?? []).length === 1 ? "" : "s"}
+                        </div>
+                      </button>
+                    ))
+                  : renderPathsEmptyState()}
+            </div>
+          </div>
+
+          {/* (461 follow-up) — existence is now decided synchronously on
+              `leaderboardOptIn` (already part of the loaded profile), same
+              as every other section on this page — not on whether the
+              teaser fetch has resolved yet. An opted-out learner still
+              sees nothing here (correct — this card is meaningless to
+              them), but an opted-in one now gets a skeleton instead of a
+              silent pop-in, and a same-slot message instead of the card
+              just vanishing if this week's rankings don't include them
+              yet (e.g. zero points logged so far this week). */}
+          {leaderboardOptIn && (
+            leaderboardLoading ? (
+              <div aria-hidden="true" className="enc-card" style={{ padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 4, background: "var(--line)" }} />
+                  <div style={{ width: 220, height: 13.5, borderRadius: 4, background: "var(--line)" }} />
+                </div>
+                <div style={{ width: 100, height: 13, borderRadius: 4, background: "var(--line)" }} />
+              </div>
+            ) : myRank ? (
+              <div className="enc-card" style={{ padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Trophy size={16} color="var(--gold-dark)" />
+                  <span style={{ fontSize: 13.5 }}>
+                    You're <b>#{myRank.rank}</b> of {leaderboardEntries.length} on the leaderboard this week.
+                  </span>
+                </div>
+                {/* #360 — was <span onClick>: not a real link/button. */}
+                <button type="button" onClick={() => onGo("leaderboard")} style={{ font: "inherit", fontSize: 13, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  View leaderboard →
+                </button>
+              </div>
+            ) : (
+              <div className="enc-card" style={{ padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <span style={{ fontSize: 13.5, color: "var(--slate)" }}>
+                  You're opted into the leaderboard — log some points this week to appear in the rankings.
+                </span>
+                <button type="button" onClick={() => onGo("leaderboard")} style={{ font: "inherit", fontSize: 13, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  View leaderboard →
+                </button>
+              </div>
+            )
           )}
         </section>
       )}
@@ -432,7 +681,10 @@ export function HomeScreen({
           from AppShell, which every page including this one now gets.) */}
       {!loggedIn && (
         <>
-          <section style={{ maxWidth: 1160, margin: "0 auto", padding: "20px 28px 56px" }}>
+          {/* (tablet-padding fix) — horizontal padding now comes from the
+              shared .enc-outer-pad scale instead of a flat 28px at every
+              width; vertical stays inline. */}
+          <section className="enc-outer-pad" style={{ maxWidth: 1160, margin: "0 auto", paddingTop: 20, paddingBottom: 56 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0 }}>Popular this month</h2>
               {/* #360 — was <span onClick>: not a real link/button. */}
@@ -445,7 +697,20 @@ export function HomeScreen({
                 (logged-in Recommended/Trending sections) and in
                 CatalogueScreen. */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-              {courses.slice(0, 3).map(renderCourseCard)}
+              {/* (461 follow-up) — same courses-hasn't-resolved-yet gap as
+                  the hero card above; this used to render an empty grid
+                  until `courses` landed. */}
+              {loading
+                ? [0, 1, 2].map(renderCourseCardSkeleton)
+                : error
+                  ? (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      {/* #454 — was an empty grid on a fetch failure, same
+                          as every other courses-derived section here. */}
+                      <ScreenMessage variant="error" message="Couldn't load courses." onRetry={onRetry} />
+                    </div>
+                  )
+                  : courses.slice(0, 3).map(renderCourseCard)}
             </div>
           </section>
 
@@ -459,7 +724,10 @@ export function HomeScreen({
               intensity (0.16/0.06 peak/mid alpha, down from an initial
               0.28/0.10 pass that read as too strong) were both tuned
               live against a running instance before landing here. */}
-          <section style={{ background: "radial-gradient(circle at 50% 75%, rgba(21,163,225,0.16) 0%, rgba(21,163,225,0.06) 40%, rgba(21,163,225,0) 70%), var(--ink)", padding: "56px 28px" }}>
+          {/* (tablet-padding fix) — horizontal padding now comes from the
+              shared .enc-outer-pad scale instead of a flat 28px at every
+              width; vertical stays inline. */}
+          <section className="enc-outer-pad" style={{ background: "radial-gradient(circle at 50% 75%, rgba(21,163,225,0.16) 0%, rgba(21,163,225,0.06) 40%, rgba(21,163,225,0) 70%), var(--ink)", paddingTop: 56, paddingBottom: 56 }}>
             <div style={{ maxWidth: 1160, margin: "0 auto" }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--paper)", marginBottom: 22 }}>What learners say</h2>
               {/* #392 — same fixed-3-column issue as "Popular this month"

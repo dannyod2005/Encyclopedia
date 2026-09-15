@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Check, Copy, RefreshCw, LogOut, X, Crown } from "lucide-react";
 
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { ScreenMessage } from "../../components/common/Primitives";
 
 const field = { marginBottom: 16 };
 const label = { display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--ink)", marginBottom: 6 };
@@ -18,6 +19,9 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState(null); // ProviderDetailDto | null (null = confirmed not a member, once loading is false)
   const [fetchError, setFetchError] = useState(null);
+  // #454 — bumping this re-runs the fetch effect below, so the fetch-
+  // failed state's "Try again" button actually does something.
+  const [reloadTick, setReloadTick] = useState(0);
 
   const [createName, setCreateName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -43,13 +47,20 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
     setFetchError(null);
     onFetchProvider()
       .then(setProvider)
-      .catch((err) => setFetchError(err.message))
+      .catch((err) => {
+        // #454 — was `err.message` rendered directly (raw network/JS
+        // error text, e.g. "Failed to fetch"); always the friendly
+        // fallback now.
+        console.error("Failed to load provider:", err);
+        setFetchError("Couldn't load your team — please try again.");
+      })
       .finally(() => setLoading(false));
-    // Fetch once on mount only — onFetchProvider is recreated on every
-    // App.jsx render (not memoized), same pattern as LearningScreen's
-    // per-tab fetch effects.
+    // Fetch on mount, and again whenever reloadTick changes (the #454
+    // retry button) — onFetchProvider is recreated on every App.jsx
+    // render (not memoized), same pattern as LearningScreen's per-tab
+    // fetch effects.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadTick]);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -126,19 +137,49 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   }
 
   if (loading) {
+    // (461 follow-up) — was a cramped single-line "Loading…" card with
+    // just a minHeight bump; upgraded to a real skeleton, but this is
+    // still necessarily an approximation: the real content afterward is
+    // one of two structurally different layouts (the two-card create/join
+    // form for a non-member, or the provider/member-list detail card for
+    // a member), and which one applies — plus, for the member case, how
+    // many rows the member list needs — genuinely isn't knowable until
+    // onFetchProvider resolves. Modeled on the member-detail layout (the
+    // richer of the two, and the one an established trainer is more
+    // likely to already be in) with a plausible 3-member list; a
+    // first-time trainer who resolves to the create/join form instead
+    // will see this skeleton shrink down to that shorter layout — a
+    // residual shift in that one case, but a far smaller and rarer one
+    // than the previous single line vs. either full layout.
     return (
-      <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-        Loading…
+      <div className="enc-card" aria-hidden="true" style={{ padding: 20, maxWidth: 640 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <div style={{ width: 150, height: 17, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+            <div style={{ width: 70, height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+          </div>
+          <div style={{ width: 76, height: 32, borderRadius: 8, background: "var(--line)" }} />
+        </div>
+        <div style={field}>
+          <div style={{ width: 80, height: 12.5, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+          <div style={{ height: 34, borderRadius: 8, background: "var(--line)" }} />
+        </div>
+        <div>
+          <div style={{ width: 60, height: 12.5, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+          <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ padding: "10px 12px", borderBottom: i < 2 ? "1px solid var(--line)" : "none" }}>
+                <div style={{ width: `${45 + i * 10}%`, height: 13, borderRadius: 4, background: "var(--line)" }} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (fetchError) {
-    return (
-      <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
-        {fetchError}
-      </div>
-    );
+    return <ScreenMessage variant="error" message={fetchError} onRetry={() => setReloadTick((t) => t + 1)} />;
   }
 
   if (!provider) {

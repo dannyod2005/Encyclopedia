@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { PlayCircle, CheckCircle2, Award, ChevronLeft, ChevronRight, Flame, Medal, Bookmark, Trophy, X } from "lucide-react";
+import { PlayCircle, CheckCircle2, Award, ChevronLeft, ChevronRight, Flame, Medal, Bookmark, Trophy, X, RotateCcw } from "lucide-react";
 
-import { EncyclopediaArch } from "../components/common/Primitives";
+import { EncyclopediaArch, ScreenMessage } from "../components/common/Primitives";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 /* ---------- Screen: Dashboard ---------- */
@@ -10,6 +10,15 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 // #296 — 1500, not 300: matches the recalibrated signup default (see
 // SettingsScreen's DAILY_GOAL_PRESETS comment for why).
 const DEFAULT_ACTIVITY_SUMMARY = { streak: 0, pointsThisWeek: 0, dailyGoalPoints: 1500, goalHitDays: 0, week: [] };
+
+// (461 — site-wide CLS audit) — shared between the loading skeleton and
+// the real notStarted/continuing/complete list content below, so the
+// left column's height is identical whether it's showing placeholders
+// or real rows, regardless of how many rows a given learner actually
+// has. ~4 rows' worth — enough to feel like a real list rather than a
+// cramped preview, without letting a learner with dozens of enrollments
+// grow the page indefinitely.
+const DASHBOARD_LIST_PANEL_HEIGHT = 340;
 
 // #398 — onGo added: Dashboard previously had no navigation callback at
 // all (HomeScreen's own onGo covers its logged-in "Continue" card, but
@@ -19,7 +28,7 @@ const DEFAULT_ACTIVITY_SUMMARY = { streak: 0, pointsThisWeek: 0, dailyGoalPoints
 // way from App.jsx, so any other section on this screen that turns out
 // to need navigation later can reuse it rather than inventing another
 // prop.
-export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], bookmarks = [], onToggleBookmark, onOpenCourse, onStartLearning, courses, onViewCertificate, onRetake, user, goal = null, activitySummary = DEFAULT_ACTIVITY_SUMMARY, loading = false, error = false, onRetry, calendarWeekOffset = 0, onPrevWeek, onNextWeek, leaderboardOptIn = false, onOpenLeaderboard, onGo }) {
+export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, pathEnrollments = [], pathEnrollmentsLoading = false, bookmarks = [], bookmarksLoading = false, onToggleBookmark, onOpenCourse, onStartLearning, courses, onViewCertificate, onRetake, user, goal = null, profileLoaded = true, activitySummary = DEFAULT_ACTIVITY_SUMMARY, activitySummaryLoading = false, loading = false, error = false, onRetry, calendarWeekOffset = 0, onPrevWeek, onNextWeek, leaderboardOptIn = false, onOpenLeaderboard, onGo }) {
   const firstName = getFirstName(getDisplayName(user));
   // #365 — was also shared with a plain Unenroll flow triggered from the
   // Not-started/Continue-learning cards below (kebab menu, then an
@@ -118,7 +127,10 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
   // (global.css) so >=1440px viewports get more usable width instead;
   // below that breakpoint this renders identically to before.
   return (
-    <div className="enc-page-enter enc-page-wide" style={{ padding: "28px 32px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-wide enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 28 }}>
       {/* #364 — was <PageHeader title="My learning" />: AppTopbar already
           shows that exact text as this route's h1, so this was a plain
           duplicate rather than added context (unlike Catalogue's
@@ -130,14 +142,35 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
           <div style={{ fontSize: 15, fontWeight: 600 }}>Good morning, {firstName}</div>
           {/* #107 — goal is null until a learner picks one via the
               onboarding modal (or if they skipped it); hidden entirely
-              rather than showing an empty/placeholder line. */}
-          {goal && (
+              once we actually know there isn't one.
+              (461 follow-up) — goal/leaderboardOptIn come from the same
+              profile fetch, which defaults goal to null and
+              leaderboardOptIn to false before it resolves (see App.jsx's
+              goalLoaded) — so a learner who *does* have a goal set used
+              to see this line pop in after a beat, same 0-default class
+              of bug. profileLoaded (App.jsx's goalLoaded) distinguishes
+              "not fetched yet" from "fetched, confirmed no goal" so this
+              only ever renders a skeleton for a learner who's actually
+              going to get a real line here. */}
+          {!profileLoaded ? (
+            <div aria-hidden="true" style={{ width: 130, height: 13, borderRadius: 4, background: "var(--line)", marginTop: 6 }} />
+          ) : goal ? (
             <div style={{ fontSize: 13, color: "var(--slate)", marginTop: 2 }}>Your goal: <b style={{ color: "var(--ink)" }}>{goal}</b></div>
-          )}
+          ) : null}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--gold-tint)", padding: "8px 14px", borderRadius: 100 }}>
           <Flame size={16} color="var(--gold-dark)" />
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gold-dark)" }}>{activitySummary.streak}-day streak</span>
+          {/* (461 follow-up) — activitySummary defaults to streak: 0 until
+              its own fetch resolves (see App.jsx's activitySummaryLoading),
+              independently of `loading` (courses/enrolled) above — so this
+              used to always flash "0-day streak" first. Same pill size
+              either way, just a placeholder bar instead of "0-day streak"
+              while unresolved. */}
+          {activitySummaryLoading ? (
+            <div aria-hidden="true" style={{ width: 70, height: 13, borderRadius: 4, background: "var(--gold-dark)", opacity: 0.3 }} />
+          ) : (
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gold-dark)" }}>{activitySummary.streak}-day streak</span>
+          )}
         </div>
       </div>
 
@@ -166,31 +199,43 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   </div>
                 ))}
               </div>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--line)", flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ width: "55%", height: 14.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
-                    <div style={{ width: "35%", height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+              {/* (461 — site-wide CLS audit) — DASHBOARD_LIST_PANEL_HEIGHT
+                  below, not just a loose 3-row estimate: notStarted/
+                  continuing/complete are three separate, independently
+                  variable-length lists that all render in this same
+                  column once loaded, so no fixed row count could ever
+                  approximate the real total. Capping both this skeleton
+                  and the real content (below) at the exact same height,
+                  with the real version scrolling internally past that
+                  point, means this column's height is identical in both
+                  states by construction — not by guessing a "typical"
+                  row count. */}
+              <div style={{ maxHeight: DASHBOARD_LIST_PANEL_HEIGHT, overflow: "hidden" }}>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--line)", flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ width: "55%", height: 14.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+                      <div style={{ width: "35%", height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+                    </div>
+                    <div style={{ width: 110, height: 44, borderRadius: 10, background: "var(--line)", flexShrink: 0 }} />
                   </div>
-                  <div style={{ width: 110, height: 44, borderRadius: 10, background: "var(--line)", flexShrink: 0 }} />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : error ? (
             // #289 — courses/enrolled failing (or just timing out — see
             // fetchWithTimeout in App.jsx) used to leave this stuck on the
             // "Loading…" branch above forever, since neither loading flag
             // ever resolved. Now that they always resolve, a real failure
-            // lands here instead: same card shape, but with an explicit
-            // "something went wrong" message and a retry button rather
-            // than silently showing nothing or requiring a full reload.
-            <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-              <div style={{ marginBottom: 14 }}>Couldn't load your learning — please try again.</div>
-              <button type="button" className="enc-btn enc-btn-gold" onClick={onRetry} style={{ cursor: "pointer" }}>
-                Try again
-              </button>
-            </div>
+            // lands here instead: a friendly message and a retry button
+            // rather than silently showing nothing or requiring a full
+            // reload.
+            // #454 — this was the original hand-rolled version of the
+            // pattern now shared via ScreenMessage (see Primitives.jsx) —
+            // every other screen's failed-to-load state now matches this
+            // one instead of drifting into its own styling/copy.
+            <ScreenMessage variant="error" message="Couldn't load your learning — please try again." onRetry={onRetry} />
           ) : (
           <>
           <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
@@ -209,6 +254,14 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             ))}
           </div>
 
+          {/* (461 — site-wide CLS audit) — notStarted/continuing/complete
+              are three independently variable-length lists; wrapping all
+              three in one fixed-height panel (same DASHBOARD_LIST_PANEL_HEIGHT
+              the loading skeleton above reserves) means this column's total
+              height never depends on how many rows a given learner actually
+              has — it scrolls internally past that point instead of growing
+              the page. */}
+          <div style={{ maxHeight: DASHBOARD_LIST_PANEL_HEIGHT, overflowY: "auto" }}>
           {notStarted.length > 0 && (
             <>
               {/* #rename-not-started-section-label — "Not started" read as
@@ -229,10 +282,19 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   // the natural place to leave it, matching how Udemy/
                   // Coursera keep it inside the course rather than on the
                   // list card).
-                  <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                  <div key={e.courseId} className="enc-card gap-2 sm:gap-4" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center" }}>
                     <EncyclopediaArch progress={0} size={44} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                      {/* (dashboard-phone fix) — was unbounded: with no
+                          overflow control, a long title didn't wrap
+                          cleanly inside this flex row's shrunk space, it
+                          spilled past its own box and visually collided
+                          with the Start button next to it. Truncating to
+                          one line with an ellipsis (same pattern as
+                          LearningScreen's grades-panel module names)
+                          keeps the row a fixed height and the button
+                          clear of it at any width. */}
+                      <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                       <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
                         {c.modules.length} module{c.modules.length === 1 ? "" : "s"} · not started yet
                       </div>
@@ -241,10 +303,17 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                         white text (enc-btn-primary), chosen after
                         comparing against gold-toned variants live on
                         this dashboard. Shared with the Resume button
-                        below. */}
+                        below.
+                        (dashboard-phone fix) — padding/font-size moved
+                        from a flat inline value to responsive Tailwind
+                        classes (inline styles can't respond to
+                        breakpoints) so this button is smaller on a phone,
+                        where the fixed 14px/28px padding at 15.5px bold
+                        text left too little room next to the title. Sizes
+                        from sm up are unchanged from the original. */}
                     <button
-                      className="enc-btn enc-btn-primary"
-                      style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
+                      className="enc-btn enc-btn-primary px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-[15.5px]"
+                      style={{ flexShrink: 0, fontWeight: 700, borderRadius: 10, gap: 8 }}
                       onClick={() => onStartLearning(c)}
                     >
                       Start <ChevronRight size={18} />
@@ -297,10 +366,15 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   return (
                     // #365 — same single-accent treatment as the Not-started
                     // row above.
-                    <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                    <div key={e.courseId} className="enc-card gap-2 sm:gap-4" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center" }}>
                       <EncyclopediaArch progress={e.progress} size={44} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                        {/* (dashboard-phone fix) — see the matching Start
+                            button/row above: unbounded title text could
+                            overflow its shrunk box and overlap the Resume
+                            button on a phone. Truncated to one line with
+                            an ellipsis instead. */}
+                        <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
                           {Math.round(e.progress * c.modules.length)} of {c.modules.length} modules · last opened {e.lastAccessed}
                         </div>
@@ -308,9 +382,13 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                           <div style={{ height: "100%", width: `${e.progress * 100}%`, background: "var(--gold)" }} />
                         </div>
                       </div>
+                      {/* (dashboard-phone fix) — same responsive
+                          padding/font-size as the Start button above (this
+                          is the button its own comment already calls out
+                          as sharing that styling). */}
                       <button
-                        className="enc-btn enc-btn-primary"
-                        style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
+                        className="enc-btn enc-btn-primary px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-[15.5px]"
+                        style={{ flexShrink: 0, fontWeight: 700, borderRadius: 10, gap: 8 }}
                         onClick={() => onStartLearning(c)}
                       >
                         Resume <ChevronRight size={18} />
@@ -327,15 +405,28 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             const c = courses.find((x) => x.id === e.courseId);
             if (!c) return null;
             return (
-              <div key={e.courseId} className="enc-card" style={{ padding: 16, marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+              <div key={e.courseId} className="enc-card gap-2 sm:gap-4" style={{ padding: 16, marginBottom: 12, display: "flex", alignItems: "center" }}>
                 <div style={{ width: 48, height: 30, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <CheckCircle2 size={22} color="var(--success)" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* (dashboard-phone fix) — same truncation as the
+                      Start/Resume rows above; this div was missing
+                      minWidth:0 too, so it couldn't shrink at all. */}
+                  <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>Completed {e.lastAccessed} · certificate issued</div>
                 </div>
-                <button className="enc-btn enc-btn-ghost" onClick={() => handleViewCertificate(e.id)}>View certificate</button>
+                {/* (dashboard-phone fix) — two labelled buttons
+                    (View certificate/Retake) needed more width than a
+                    phone row could give them next to the title. Labels
+                    hide below sm (icon + aria-label only, same
+                    icon-only-needs-an-accessible-name convention #258
+                    used elsewhere — see Trainer Studio's course-row
+                    buttons for the identical pattern); full labels
+                    return from sm up. */}
+                <button className="enc-btn enc-btn-ghost" aria-label="View certificate" onClick={() => handleViewCertificate(e.id)}>
+                  <Award size={14} /> <span className="hidden sm:inline">View certificate</span>
+                </button>
                 {/* #300 — was "Unenroll": a finished course's most likely
                     next action is doing it again, not leaving it, and
                     "unenroll" read oddly for something already completed.
@@ -345,15 +436,17 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                 {onRetake && (
                   <button
                     className="enc-btn enc-btn-ghost"
+                    aria-label="Retake"
                     style={{ color: "var(--coral)" }}
                     onClick={() => { setRetakingCourse({ enrollmentId: e.id, title: c.title }); setRetakeError(null); }}
                   >
-                    Retake
+                    <RotateCcw size={14} /> <span className="hidden sm:inline">Retake</span>
                   </button>
                 )}
               </div>
             );
           })}
+          </div>
           </>
           )}
         </div>
@@ -361,6 +454,11 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
         <div>
           <div className="enc-card" style={{ padding: 18, marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              {/* (461 follow-up) — monthLabel already falls back to the
+                  real current month/year (not a placeholder-looking
+                  string) when week[0] isn't in yet, so no skeleton needed
+                  here — swapping "September 2026" for the same real
+                  "September 2026" once data resolves isn't a shift. */}
               <span style={{ fontSize: 13.5, fontWeight: 600 }}>{monthLabel}</span>
               <div style={{ display: "flex", gap: 6 }}>
                 {/* #183 — pages the day grid to an adjacent 7-day week;
@@ -394,41 +492,88 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, textAlign: "center" }}>
               {days.map((d, i) => <div key={i} style={{ fontSize: 11, color: "var(--slate-light)" }}>{d}</div>)}
-              {activitySummary.week.map((day) => {
-                const isToday = day.date === todayKey;
-                return (
-                  <div key={day.date} style={{
-                    fontSize: 12, padding: "5px 0", borderRadius: 6,
-                    background: isToday ? "var(--gold)" : day.goalHit ? "var(--gold-tint)" : "transparent",
-                    // #385 — reverted to the original hardcoded #2B1E06 for
-                    // "today" alongside --gold's revert back to its warm
-                    // value (see the :root history note in global.css) —
-                    // this went var(--ink) -> white and back across the
-                    // accent's several changes this pass. Non-today cells
-                    // keep --ink, which holds comfortably on both
-                    // transparent and the restored --gold-tint.
-                    color: isToday ? "#2B1E06" : "var(--ink)", fontWeight: isToday ? 700 : 400,
-                  }}>{new Date(`${day.date}T00:00:00Z`).getUTCDate()}</div>
-                );
-              })}
+              {/* (461 follow-up) — activitySummary defaults to week: []
+                  until its own fetch resolves, independently of this
+                  screen's main `loading` flag, so this row rendered
+                  nothing at all for a beat and then popped in 7 day cells,
+                  growing the card and shifting the divider/"Daily goal"
+                  text/"This week" card below it — a real, user-visible
+                  shift Danny flagged directly. Same fix as everywhere else
+                  in #461: render 7 same-sized placeholder cells (identical
+                  padding/fontSize/border-radius to the real ones, just no
+                  background/text) whenever week data isn't in yet, so this
+                  row is exactly one cell tall from first paint regardless
+                  of fetch timing. */}
+              {activitySummary.week.length === 0
+                ? Array.from({ length: 7 }).map((_, i) => (
+                    <div
+                      key={i}
+                      aria-hidden="true"
+                      style={{ fontSize: 12, padding: "5px 0", borderRadius: 6 }}
+                    >
+                      &nbsp;
+                    </div>
+                  ))
+                : activitySummary.week.map((day) => {
+                    const isToday = day.date === todayKey;
+                    return (
+                      <div key={day.date} style={{
+                        fontSize: 12, padding: "5px 0", borderRadius: 6,
+                        background: isToday ? "var(--gold)" : day.goalHit ? "var(--gold-tint)" : "transparent",
+                        // #385 — reverted to the original hardcoded #2B1E06 for
+                        // "today" alongside --gold's revert back to its warm
+                        // value (see the :root history note in global.css) —
+                        // this went var(--ink) -> white and back across the
+                        // accent's several changes this pass. Non-today cells
+                        // keep --ink, which holds comfortably on both
+                        // transparent and the restored --gold-tint.
+                        color: isToday ? "#2B1E06" : "var(--ink)", fontWeight: isToday ? 700 : 400,
+                      }}>{new Date(`${day.date}T00:00:00Z`).getUTCDate()}</div>
+                    );
+                  })}
             </div>
             <hr className="enc-hairline" style={{ margin: "16px 0" }} />
             {/* #255 — used to be a click-to-edit pill picker right here;
                 editing now lives on the Account Settings screen (see
                 SettingsScreen's Preferences card), so this is just a
                 read-only reflection of the current value. */}
+            {/* (461 follow-up) — dailyGoalPoints already defaults to the
+                real signup default (1500), so no shift there, but
+                goalHitDays defaults to 0 and used to flash "0 of 7 days
+                hit this week" before resolving — a literal 0-default,
+                exactly the class of bug flagged. */}
             <div style={{ fontSize: 12.5, color: "var(--slate)" }}>
               Daily goal · {activitySummary.dailyGoalPoints} pts
             </div>
-            <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>{activitySummary.goalHitDays} of 7 days hit this week</div>
+            {activitySummaryLoading ? (
+              <div aria-hidden="true" style={{ width: 110, height: 12.5, borderRadius: 4, background: "var(--line)", marginTop: 4 }} />
+            ) : (
+              <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>{activitySummary.goalHitDays} of 7 days hit this week</div>
+            )}
           </div>
 
           <div className="enc-card" style={{ padding: 18 }}>
             <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>This week</div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 26, fontWeight: 500 }}>{activitySummary.pointsThisWeek}<span style={{ fontSize: 13, color: "var(--slate-light)" }}> pts</span></div>
+            {/* (461 follow-up) — pointsThisWeek defaults to 0 in
+                activitySummary until its own fetch resolves, same as
+                streak/goalHitDays above. */}
+            {activitySummaryLoading ? (
+              <div aria-hidden="true" style={{ width: 60, height: 26, borderRadius: 4, background: "var(--line)", marginBottom: 4 }} />
+            ) : (
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 26, fontWeight: 500 }}>{activitySummary.pointsThisWeek}<span style={{ fontSize: 13, color: "var(--slate-light)" }}> pts</span></div>
+            )}
             <div style={{ fontSize: 12, color: "var(--slate-light)" }}>learning points logged</div>
             <hr className="enc-hairline" style={{ margin: "16px 0" }} />
-            <div style={{ fontSize: 12.5, color: "var(--slate)" }}>Enrolled in {enrolledCourseCount} course{enrolledCourseCount === 1 ? "" : "s"}</div>
+            {/* (461 follow-up) — enrolledCourseCount derives from `enrolled`
+                (the same courses/enrolled fetch `loading` already gates the
+                left column on), so this read "Enrolled in 0 courses" every
+                time until that resolved — this card lives in the right
+                column, which wasn't gated on `loading` at all before. */}
+            {loading ? (
+              <div aria-hidden="true" style={{ width: 100, height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+            ) : (
+              <div style={{ fontSize: 12.5, color: "var(--slate)" }}>Enrolled in {enrolledCourseCount} course{enrolledCourseCount === 1 ? "" : "s"}</div>
+            )}
 
             {/* #231/#255 — the opt-in toggle itself moved to Account
                 Settings (see SettingsScreen's Preferences card); this stays
@@ -438,7 +583,16 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
             {/* #360 — was <div onClick>: not a real link/button, unreachable
                 by keyboard. Same fix as the identical control already
                 converted in Settings (#349). */}
-            {leaderboardOptIn && onOpenLeaderboard && (
+            {/* (461 follow-up) — leaderboardOptIn comes from the same
+                profile fetch as goal above, defaulting to false until it
+                resolves — same pop-in risk for an opted-in learner.
+                Gated on profileLoaded the same way. */}
+            {!profileLoaded ? (
+              <>
+                <hr className="enc-hairline" style={{ margin: "16px 0" }} />
+                <div aria-hidden="true" style={{ width: 120, height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+              </>
+            ) : leaderboardOptIn && onOpenLeaderboard ? (
               <>
                 <hr className="enc-hairline" style={{ margin: "16px 0" }} />
                 <button
@@ -450,15 +604,38 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   View leaderboard →
                 </button>
               </>
-            )}
+            ) : null}
           </div>
 
-          {/* #225 — small badges row/section, only shown once there's at
-              least one to show (no "no badges yet" placeholder — a
-              learner with none looks exactly like before this feature). */}
-          {badges.length > 0 && (
-            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Badges</div>
+          {/* (461 — site-wide CLS audit) — badges/skills/paths/saved all
+              used to follow a "hidden until non-empty" convention with no
+              loading skeleton at all: fine for a learner who never has
+              any (stays hidden forever, no transition to shift anything),
+              but for a learner who eventually gets real data, the card
+              popped in from zero height the instant the fetch resolved —
+              same class of bug as Home's "Recommended for you" collapse,
+              just inverted (growing in rather than collapsing out). Each
+              card below now always reserves the same slot: a skeleton
+              while its *Loading prop is true, real content once loaded,
+              or a same-slot empty message if it resolves with nothing —
+              never an abrupt appear/disappear after first paint. */}
+          <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Badges</div>
+            {badgesLoading ? (
+              <div aria-hidden="true" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[0, 1].map((i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--line)", flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ width: "50%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                      <div style={{ width: "75%", height: 11.5, borderRadius: 4, background: "var(--line)" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : badges.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>No badges earned yet.</div>
+            ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {/* #385 — badge-icon chips switched to --blue-tint/--blue-dark:
                     a standalone, non-interactive icon repeated in a list,
@@ -480,14 +657,24 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* #226 — same "hidden until non-empty" convention as the badges
-              card above it. */}
-          {skillsLearned.length > 0 && (
-            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Skills</div>
+          {/* #226 — skillsLearned is derived from `complete` (the same
+              enrolled/courses data the left column uses), so it follows
+              the shared `loading` prop rather than a dedicated flag of
+              its own. */}
+          <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Skills</div>
+            {loading ? (
+              <div aria-hidden="true" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {[52, 68, 44].map((w, i) => (
+                  <div key={i} style={{ width: w, height: 24, borderRadius: 999, background: "var(--line)" }} />
+                ))}
+              </div>
+            ) : skillsLearned.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Complete a course to start building your skills list.</div>
+            ) : (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {skillsLearned.map((s) => (
                   <span
@@ -498,18 +685,24 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   </span>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* #224 — same "hidden until non-empty" convention as badges/
-              skills above: completedCount/totalCount/status arrive
-              precomputed from the backend (see
-              LearningPathEnrollmentsService), so this is pure display,
-              same as how the course progress bars in the left column
-              never compute anything themselves either. */}
-          {pathEnrollments.length > 0 && (
-            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Learning paths</div>
+          {/* #224 — completedCount/totalCount/status arrive precomputed
+              from the backend (see LearningPathEnrollmentsService), so
+              this is pure display, same as how the course progress bars
+              in the left column never compute anything themselves either. */}
+          <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Learning paths</div>
+            {pathEnrollmentsLoading ? (
+              <div aria-hidden="true">
+                <div style={{ width: "60%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                <div style={{ width: "40%", height: 11.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+                <div style={{ height: 5, background: "var(--line)", borderRadius: 3 }} />
+              </div>
+            ) : pathEnrollments.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Not enrolled in any learning paths yet.</div>
+            ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {pathEnrollments.map((pe) => (
                   <div key={pe.id}>
@@ -530,17 +723,27 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* #230 — same "hidden until non-empty" convention as badges/
-              skills/paths above. Unbookmarking from here reuses the exact
-              same onToggleBookmark the Catalogue card's icon calls — this
+          {/* #230 — unbookmarking from here reuses the exact same
+              onToggleBookmark the Catalogue card's icon calls — this
               card is just another place that toggle is exposed, not a
               separate code path. */}
-          {savedCourses.length > 0 && (
-            <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Saved</div>
+          <div className="enc-card" style={{ padding: 18, marginTop: 16 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 12 }}>Saved</div>
+            {bookmarksLoading ? (
+              <div aria-hidden="true" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[0, 1].map((i) => (
+                  <div key={i}>
+                    <div style={{ width: "60%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                    <div style={{ width: "35%", height: 11.5, borderRadius: 4, background: "var(--line)" }} />
+                  </div>
+                ))}
+              </div>
+            ) : savedCourses.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>Nothing saved yet — bookmark a course from Catalogue to find it here.</div>
+            ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {savedCourses.map((c) => (
                   <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -573,8 +776,8 @@ export function DashboardScreen({ enrolled, badges = [], pathEnrollments = [], b
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

@@ -67,10 +67,54 @@
          unrelated placeholder-era serif. Same two weights (600/700) the
          Fraunces link already carried, since every var(--font-display)
          usage in src/ only ever asks for one of those two. -->
+    <!-- #461 — display=swap -> display=optional. The layout-shifts audit on
+         Dashboard's build-based Lighthouse run showed ~91% of its CLS
+         (0.092 of 0.101) on a single item: the whole .grid reflowing,
+         subItems cause "Web font loaded" x2 (Inter + IBM Plex Mono) — plus
+         two smaller "Web font loaded" shifts on the Saved/Learning paths
+         cards and the H1 title. That's swap doing exactly what it's
+         designed to do: paint the fallback font immediately, then swap to
+         the real one whenever it arrives, reflowing every line whose
+         metrics differ between the two. optional keeps the same instant
+         fallback paint, but gives the font a short window (~100ms, spec's
+         "font block period") to arrive from cache/network; if it doesn't
+         make that window, the browser commits to the fallback for the
+         rest of this page load instead of swapping in later — so there is
+         no swap-triggered reflow to shift anything, on any page, not just
+         Dashboard. Trade-off: on a cold cache the custom font may not
+         appear until the next navigation (once it's cached, later loads
+         get it within budget). Given "no layout shifts whatsoever" is the
+         explicit goal of #461, that trade is the right one here. -->
+    <!-- (perf follow-up) — a plain <link rel="stylesheet"> here blocks
+         initial render until this CSS downloads (Lighthouse's
+         render-blocking-requests audit measured ~270ms of the critical
+         path on this one request). The actual font *files* it references
+         were never render-blocking themselves (display=optional above
+         already means the fallback paints instantly regardless), so
+         there's no reason the tiny CSS file that just declares @font-face
+         rules should hold up first paint either. Standard preload+swap
+         trick: browser fetches this with as="style" priority (not
+         render-blocking), then the onload flips its own media from
+         "print" (matches nothing on this page, so it doesn't apply/block
+         while loading) to "all" once it's actually in hand. <noscript>
+         fallback covers the no-JS case, where onload never fires. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=optional"
+    />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=optional"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=optional"
+      />
+    </noscript>
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -112,9 +156,15 @@
         justify-content: center;
         background: #f5f0e3;
       }
+      /* (perf follow-up) — was 56x56 against /logo-icon.png (332x285,
+         66KB, downscaled 6x in the browser just to end up back at this
+         same 56px box). logo-icon-web.png already exists as a pre-cropped
+         web variant (75x64, 5.6KB — already used at 19x16 in the footer)
+         but isn't square (~1.17:1), so this box follows its native ratio
+         (56x48) rather than force-squashing it into 56x56. */
       #enc-loading-shell img {
         width: 56px;
-        height: 56px;
+        height: 48px;
         animation: enc-loading-pulse 1.4s ease-in-out infinite;
       }
       @keyframes enc-loading-pulse {
@@ -137,7 +187,16 @@
          the moment the real app is ready — no cleanup code needed here. -->
     <div id="root">
       <div id="enc-loading-shell" role="presentation">
-        <img src="/logo-icon.png" alt="" width="56" height="56" />
+        <!-- (perf follow-up) — was /logo-icon.png (332x285, 66KB): Lighthouse
+             flagged this as the single biggest "improve image delivery"
+             opportunity on the whole site (~65KB of avoidable download for
+             an image rendered at 56px), since the browser has to fetch and
+             decode the full 332px original just to shrink it into this
+             tiny box, before the real app JS has even started. Swapped for
+             the existing logo-icon-web.png crop (75x64, 5.6KB) — see the
+             matching width/height change in the <style> block above for
+             why the box itself moved from 56x56 to 56x48. -->
+        <img src="/logo-icon-web.png" alt="" width="56" height="48" />
       </div>
     </div>
     <script type="module" src="/src/index.jsx"></script>
