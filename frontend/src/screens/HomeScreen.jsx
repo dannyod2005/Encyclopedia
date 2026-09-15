@@ -177,6 +177,41 @@ export function HomeScreen({
     );
   }
 
+  // (recommended-empty CLS fix) — same-slot fallback for when `goal` is
+  // set but `recommended` resolves to zero matches (every un-enrolled
+  // course in that category has already been surfaced or enrolled in).
+  // Spans the full grid width and targets roughly the same footprint as
+  // one row of renderCourseCard/renderCourseCardSkeleton, so swapping in
+  // for the skeleton doesn't reproduce the same collapse-to-zero problem
+  // this fix exists to prevent — just with a smaller, acceptable delta
+  // instead of a full 3-card grid's height vanishing in one frame.
+  function renderRecommendedEmptyState() {
+    return (
+      <div
+        className="enc-card"
+        style={{
+          gridColumn: "1 / -1",
+          padding: 18,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          minHeight: 120,
+        }}
+      >
+        <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5 }}>
+          No new {goal} courses to recommend right now — you've covered what's here.
+        </div>
+        <button
+          type="button"
+          onClick={() => onGo("catalogue")}
+          style={{ marginTop: 10, alignSelf: "flex-start", font: "inherit", fontSize: 13.5, fontWeight: 600, color: "var(--gold-dark)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
+          Browse full catalogue →
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="enc-page-enter">
       {!loggedIn && <MarketingHeader onGo={onGo} onAuth={onAuth} />}
@@ -331,8 +366,24 @@ export function HomeScreen({
               profile), so a skeleton here only shows for a learner who's
               actually going to get a real "Recommended for you" section
               once `courses` resolves — not for one who'd never see this
-              section at all. */}
-          {(recommended.length > 0 || (loading && goal)) && (
+              section at all.
+              (recommended-empty CLS fix) — this used to be gated on
+              `recommended.length > 0 || (loading && goal)`, which reserved
+              skeleton height while loading but then unmounted the whole
+              block the instant `courses` resolved to zero matches —
+              collapsing a full 3-card grid's worth of height in one frame
+              and shoving "New on Encyclopedia" (and everything below it)
+              up to fill the gap. That was the actual measured CLS source
+              on Home (Lighthouse: 0.057 shift score on this section,
+              biggest single contributor to a 0.95 rather than perfect 1).
+              Gating on `goal` alone instead means whether this section
+              exists at all is decided synchronously, before first paint —
+              same as the skeleton-vs-real-card swap already being a
+              non-issue because renderCourseCardSkeleton is deliberately
+              sized to match renderCourseCard. The empty case now renders
+              a same-slot fallback message rather than nothing, so there's
+              no zero-height state for later content to collapse into. */}
+          {goal && (
             <div style={{ marginBottom: 32 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                 <Sparkles size={16} color="var(--gold-dark)" />
@@ -340,7 +391,11 @@ export function HomeScreen({
               </div>
               <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>Based on your {goal} goal.</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-                {loading ? [0, 1, 2].map(renderCourseCardSkeleton) : recommended.map(renderCourseCard)}
+                {loading
+                  ? [0, 1, 2].map(renderCourseCardSkeleton)
+                  : recommended.length > 0
+                    ? recommended.map(renderCourseCard)
+                    : renderRecommendedEmptyState()}
               </div>
             </div>
           )}
