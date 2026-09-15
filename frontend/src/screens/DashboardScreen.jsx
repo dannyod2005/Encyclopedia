@@ -11,14 +11,22 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 // SettingsScreen's DAILY_GOAL_PRESETS comment for why).
 const DEFAULT_ACTIVITY_SUMMARY = { streak: 0, pointsThisWeek: 0, dailyGoalPoints: 1500, goalHitDays: 0, week: [] };
 
-// (461 — site-wide CLS audit) — shared between the loading skeleton and
+// (461 — site-wide CLS audit, dashboard-scrollbar fix follow-up) — this
+// used to be a fixed 340px cap shared between the loading skeleton and
 // the real notStarted/continuing/complete list content below, so the
-// left column's height is identical whether it's showing placeholders
+// left column's height was identical whether it was showing placeholders
 // or real rows, regardless of how many rows a given learner actually
-// has. ~4 rows' worth — enough to feel like a real list rather than a
-// cramped preview, without letting a learner with dozens of enrollments
-// grow the page indefinitely.
-const DASHBOARD_LIST_PANEL_HEIGHT = 340;
+// had. That fixed height meant this panel was capped well short of the
+// right column's own height (badges/skills/saved/leaderboard teaser),
+// leaving unused space below it, and produced a visible internal
+// scrollbar as soon as the three lists combined passed 340px — common,
+// since that's three independently variable-length lists in one panel.
+// Replaced with a flex-based layout (see the left column wrapper below)
+// so the panel fills whatever height the right column actually drives
+// instead of a hardcoded number — the loading skeleton and real content
+// use the identical flex shape, so they still land on the same height as
+// each other (the CLS-audit guarantee this constant used to provide),
+// just no longer a fixed value.
 
 // #398 — onGo added: Dashboard previously had no navigation callback at
 // all (HomeScreen's own onGo covers its logged-in "Continue" card, but
@@ -177,7 +185,15 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
       {/* #104 — single column on mobile, 2fr/1fr from md up; column layout
           is the only breakpoint-dependent property here. */}
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr]" style={{ gap: 20 }}>
-        <div>
+        {/* (dashboard-scrollbar fix) — a grid item stretches to match the
+            row's height by default (align-items: stretch), so this column
+            is already as tall as the right column below once that column
+            is taller — the missing piece was that this div's own content
+            didn't use that extra height. display:flex + flexDirection:
+            column lets the list panel inside (flex:1, below) fill it,
+            instead of the panel stopping at a fixed height and leaving
+            unused space beneath it. */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {loading ? (
             // #367 — was a single short "Loading your learning…" card,
             // nowhere near the height of the real stat-cards + list-rows
@@ -189,7 +205,7 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
             // rows approximates a typical dashboard's footprint far closer
             // than a single line of text did, so the real content swapping
             // in doesn't move the page by nearly as much.
-            <div aria-hidden="true">
+            <div aria-hidden="true" style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="enc-card" style={{ flex: 1, minWidth: 140, padding: 16 }}>
@@ -199,18 +215,20 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                   </div>
                 ))}
               </div>
-              {/* (461 — site-wide CLS audit) — DASHBOARD_LIST_PANEL_HEIGHT
-                  below, not just a loose 3-row estimate: notStarted/
-                  continuing/complete are three separate, independently
-                  variable-length lists that all render in this same
-                  column once loaded, so no fixed row count could ever
-                  approximate the real total. Capping both this skeleton
-                  and the real content (below) at the exact same height,
-                  with the real version scrolling internally past that
-                  point, means this column's height is identical in both
-                  states by construction — not by guessing a "typical"
-                  row count. */}
-              <div style={{ maxHeight: DASHBOARD_LIST_PANEL_HEIGHT, overflow: "hidden" }}>
+              {/* (461 — site-wide CLS audit, dashboard-scrollbar fix
+                  follow-up) — notStarted/continuing/complete are three
+                  separate, independently variable-length lists that all
+                  render in this same column once loaded, so no fixed row
+                  count could ever approximate the real total. This panel
+                  and the real content's equivalent (below) both use
+                  flex:1 to fill whatever height the flex column above
+                  gives them, so the skeleton and real content still land
+                  on the same height as each other by construction — no
+                  longer a shared fixed pixel value, but the same
+                  mechanism applied identically to both. minHeight:0 is
+                  required for a flex child to actually shrink/scroll
+                  instead of forcing its content's full size upward. */}
+              <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
                     <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--line)", flexShrink: 0 }} />
@@ -254,14 +272,21 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
             ))}
           </div>
 
-          {/* (461 — site-wide CLS audit) — notStarted/continuing/complete
-              are three independently variable-length lists; wrapping all
-              three in one fixed-height panel (same DASHBOARD_LIST_PANEL_HEIGHT
-              the loading skeleton above reserves) means this column's total
-              height never depends on how many rows a given learner actually
-              has — it scrolls internally past that point instead of growing
-              the page. */}
-          <div style={{ maxHeight: DASHBOARD_LIST_PANEL_HEIGHT, overflowY: "auto" }}>
+          {/* (461 — site-wide CLS audit, dashboard-scrollbar fix follow-up)
+              — notStarted/continuing/complete are three independently
+              variable-length lists; wrapping all three in one panel means
+              this column's total height never depends on how many rows a
+              given learner actually has — it scrolls internally past that
+              point instead of growing the page. Was a fixed maxHeight
+              (340px) shared with the loading skeleton above; now flex:1
+              so it fills whatever height the right column's own content
+              actually drives (via the flex column wrapper higher up +
+              CSS Grid's default row-stretch behavior) instead of a
+              hardcoded number that left the panel shorter than the right
+              column and produced a scrollbar as soon as the three lists
+              combined passed 340px. enc-scroll-hidden keeps this
+              scrollable without showing a visible scrollbar. */}
+          <div className="enc-scroll-hidden" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           {notStarted.length > 0 && (
             <>
               {/* #rename-not-started-section-label — "Not started" read as

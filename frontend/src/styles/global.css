@@ -284,6 +284,15 @@ html, body {
 .enc-hairline{ border:none; border-top:1px solid var(--line); }
 .enc-scroll::-webkit-scrollbar{ width:6px; height:6px; }
 .enc-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
+/* (dashboard-scrollbar fix) — fully hides the scrollbar on an internally-
+   scrolling panel while leaving it scrollable (mouse wheel, trackpad,
+   touch, keyboard) — unlike .enc-scroll above, which still shows a thin
+   styled bar. All three rules are needed: the first two cover Firefox and
+   old Edge/IE (no ::-webkit-scrollbar equivalent there), the third covers
+   Chrome/Safari/new Edge. Dashboard's Start my learning/Continue learning/
+   Completed panel is the first user — see DashboardScreen.jsx. */
+.enc-scroll-hidden{ scrollbar-width:none; -ms-overflow-style:none; }
+.enc-scroll-hidden::-webkit-scrollbar{ display:none; }
 .enc-nav-item{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; font-size:14px; font-weight:500; color:var(--slate); cursor:pointer; transition:background .15s; }
 .enc-nav-item:hover{ background:#FFFFFF10; }
 .enc-nav-item.active{ background:var(--paper-2); color:var(--ink); }
