@@ -145,8 +145,19 @@ export function HomeScreen({
           <CategoryDot color={c.color} />
           <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{c.category}</span>
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, lineHeight: 1.3 }}>{c.title}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14 }}>{c.blurb}</div>
+        {/* (home-card-cls-fix) — line-clamped to the exact same 1/2-line
+            counts renderCourseCardSkeleton below hardcodes. Without this,
+            a real course's title/blurb wraps to however many lines its
+            actual text needs, which can exceed the skeleton's assumed
+            shape and grow the card (and the whole grid row) taller once
+            real content swaps in — a measured CLS source on Home even
+            when "Recommended for you" resolves non-empty, since it isn't
+            about the section appearing/disappearing but about the
+            skeleton-to-real-card height itself being unreliable. Clamping
+            both to the same line counts makes card height deterministic
+            regardless of copy length. */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.title}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.blurb}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Stars rating={c.rating} />
           <span style={{ fontSize: 12, color: "var(--slate-light)" }}>{c.hours}h</span>
