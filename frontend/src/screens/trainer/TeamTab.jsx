@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Check, Copy, RefreshCw, LogOut, X, Crown } from "lucide-react";
 
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { ScreenMessage } from "../../components/common/Primitives";
 
 const field = { marginBottom: 16 };
 const label = { display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--ink)", marginBottom: 6 };
@@ -18,6 +19,9 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState(null); // ProviderDetailDto | null (null = confirmed not a member, once loading is false)
   const [fetchError, setFetchError] = useState(null);
+  // #454 — bumping this re-runs the fetch effect below, so the fetch-
+  // failed state's "Try again" button actually does something.
+  const [reloadTick, setReloadTick] = useState(0);
 
   const [createName, setCreateName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -43,13 +47,20 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
     setFetchError(null);
     onFetchProvider()
       .then(setProvider)
-      .catch((err) => setFetchError(err.message))
+      .catch((err) => {
+        // #454 — was `err.message` rendered directly (raw network/JS
+        // error text, e.g. "Failed to fetch"); always the friendly
+        // fallback now.
+        console.error("Failed to load provider:", err);
+        setFetchError("Couldn't load your team — please try again.");
+      })
       .finally(() => setLoading(false));
-    // Fetch once on mount only — onFetchProvider is recreated on every
-    // App.jsx render (not memoized), same pattern as LearningScreen's
-    // per-tab fetch effects.
+    // Fetch on mount, and again whenever reloadTick changes (the #454
+    // retry button) — onFetchProvider is recreated on every App.jsx
+    // render (not memoized), same pattern as LearningScreen's per-tab
+    // fetch effects.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadTick]);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -168,11 +179,7 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   }
 
   if (fetchError) {
-    return (
-      <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
-        {fetchError}
-      </div>
-    );
+    return <ScreenMessage variant="error" message={fetchError} onRetry={() => setReloadTick((t) => t + 1)} />;
   }
 
   if (!provider) {

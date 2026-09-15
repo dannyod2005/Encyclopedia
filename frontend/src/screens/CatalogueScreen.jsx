@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Milestone, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 
-import { Stars, CategoryDot, PageHeader, iconButtonHitArea } from "../components/common/Primitives";
+import { Stars, CategoryDot, PageHeader, iconButtonHitArea, ScreenMessage } from "../components/common/Primitives";
 import { MarketingHeader } from "../components/layout/MarketingHeader";
 
 // #190 — a curated row, not a dumping ground for every course in the
@@ -41,6 +41,12 @@ export function CatalogueScreen({
   enrolledIds,
   courses,
   loading = false,
+  // #454 — courses previously had no failure path here at all: a fetch
+  // error left `courses` as [] forever, which rendered identically to a
+  // genuine "no courses match your search" — same grey text, no way to
+  // tell an outage from a real empty result, no retry either way.
+  error = false,
+  onRetry,
   goal = null,
   learningPaths = [],
   onOpenPath,
@@ -434,6 +440,13 @@ export function CatalogueScreen({
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
                 {Array.from({ length: RECOMMENDED_LIMIT }).map((_, i) => renderCourseCardSkeleton(i))}
               </div>
+            ) : error ? (
+              // #454 — `recommended` derives from `courses`, so a courses
+              // fetch failure used to render this exactly like a genuine
+              // "you've covered everything" empty state — misleading, and
+              // not what actually happened. No retry here: the main grid
+              // below already offers one for the same underlying fetch.
+              <ScreenMessage variant="error" bare message="Couldn't load recommendations." />
             ) : recommended.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
                 {recommended.map(renderCourseCard)}
@@ -451,10 +464,15 @@ export function CatalogueScreen({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
             {Array.from({ length: 6 }).map((_, i) => renderCourseCardSkeleton(i))}
           </div>
+        ) : error ? (
+          // #454 — was no error state at all: a failed courses fetch left
+          // `courses`/`filtered` as [], rendering identically to the
+          // genuine "No courses match" empty state right below — no way
+          // to tell an outage from a real empty result, and no retry
+          // either way.
+          <ScreenMessage variant="error" message="Couldn't load the catalogue — please try again." onRetry={onRetry} />
         ) : filtered.length === 0 ? (
-          <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-            No courses match "{search}".
-          </div>
+          <ScreenMessage message={`No courses match "${search}".`} />
         ) : (
           <>
             {/* (perf follow-up) — was `filtered.map(renderCourseCard)`,

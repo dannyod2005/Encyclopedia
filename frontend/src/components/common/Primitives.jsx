@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star, AlertTriangle } from "lucide-react";
 /* ---------- small pieces ---------- */
 
 // #444 — shared hit-area expansion for icon-only buttons (bookmark
@@ -74,6 +74,58 @@ export function CategoryDot({ color }) {
 // the <h1> on `title` being present rather than always rendering it —
 // an empty h1 would still take up a line of height even with no text,
 // which defeats the point of dropping the duplicate.
+// #454 — shared "nothing to show" block for every data-fetching screen.
+// Before this, the same two situations rendered inconsistently (or, on
+// Catalogue, identically) across the app: Leaderboard showed a raw
+// err.message in orange on fetch failure ("Failed to fetch" straight
+// from the network layer), while Catalogue had no error state at all —
+// a genuine outage and "no courses match your search" both rendered as
+// the same grey "no results" text, with no way to tell them apart and
+// no retry either way. Two variants, one shared shape:
+//  - variant="error": the fetch failed. `message` must always be a
+//    written, human fallback (e.g. "Couldn't load the leaderboard —
+//    please try again.") — callers should never pass err.message
+//    straight through, since that can read like raw JS/network text
+//    instead of something a learner or trainer would understand. A
+//    small AlertTriangle marks it as a failure without turning the
+//    whole block red/alarming; a "Try again" button appears whenever
+//    the caller passes onRetry (some fetches — e.g. a background
+//    teaser — aren't worth exposing a retry for).
+//  - variant="empty" (default): the fetch succeeded, there's just
+//    nothing to show. No icon, no retry button — there's nothing to
+//    retry.
+// `bare` drops the enc-card wrapper/padding for use inside a container
+// that's already an enc-card (e.g. one of Dashboard's side cards),
+// so this never nests a card-in-a-card.
+export function ScreenMessage({ variant = "empty", message, onRetry, padding = 40, bare = false }) {
+  const isError = variant === "error";
+  const content = (
+    <>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, marginBottom: onRetry ? 14 : 0 }}>
+        {isError && <AlertTriangle size={18} color="var(--coral)" />}
+        <div>{message}</div>
+      </div>
+      {onRetry && (
+        <button type="button" className="enc-btn enc-btn-gold" onClick={onRetry} style={{ cursor: "pointer" }}>
+          Try again
+        </button>
+      )}
+    </>
+  );
+  if (bare) {
+    return (
+      <div style={{ padding, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+        {content}
+      </div>
+    );
+  }
+  return (
+    <div className="enc-card" style={{ padding, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+      {content}
+    </div>
+  );
+}
+
 export function PageHeader({ title, subtitle }) {
   if (!title && !subtitle) return null;
   return (

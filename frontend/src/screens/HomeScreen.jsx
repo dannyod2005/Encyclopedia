@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ChevronRight, BookOpen, Sparkles, TrendingUp, Milestone, Trophy } from "lucide-react";
 
 import { TESTIMONIALS } from "../data/courses";
-import { Stars, EncyclopediaArch, CategoryDot, PageHeader } from "../components/common/Primitives";
+import { Stars, EncyclopediaArch, CategoryDot, PageHeader, ScreenMessage } from "../components/common/Primitives";
 import { MarketingHeader } from "../components/layout/MarketingHeader";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
 
@@ -49,6 +49,13 @@ export function HomeScreen({
   // audit pass since none of these are driven by `courses`/`loading`.
   enrolledLoading = false,
   learningPathsLoading = false,
+  // #454 — Recommended/New on Encyclopedia/Popular this month all derive
+  // from `courses`; before this a fetch failure left them silently
+  // empty, indistinguishable from a learner who's genuinely seen
+  // everything. Learning paths (separate fetch) is deliberately not
+  // affected by this — same scoping as Catalogue's equivalent fix.
+  error = false,
+  onRetry,
 }) {
   const firstName = loggedIn ? getFirstName(getDisplayName(user)) : null;
   const inProgress = enrolled.filter((e) => e.status === "in-progress");
@@ -436,6 +443,11 @@ export function HomeScreen({
                 </div>
               ))}
             </div>
+          ) : error ? (
+            // #454 — small teaser card, same bare/no-retry treatment as
+            // Dashboard's leaderboard teaser: the full grid below already
+            // offers a retry for this same fetch.
+            <ScreenMessage variant="error" bare padding={16} message="Couldn't load courses." />
           ) : (
             // #360 — was <div onClick>: not focusable.
             courses.slice(0, 3).map((c) => (
@@ -503,9 +515,15 @@ export function HomeScreen({
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
                 {loading
                   ? [0, 1, 2].map(renderCourseCardSkeleton)
-                  : recommended.length > 0
-                    ? recommended.map(renderCourseCard)
-                    : renderRecommendedEmptyState()}
+                  : error
+                    ? (
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <ScreenMessage variant="error" message="Couldn't load recommendations." />
+                      </div>
+                    )
+                    : recommended.length > 0
+                      ? recommended.map(renderCourseCard)
+                      : renderRecommendedEmptyState()}
               </div>
             </div>
           )}
@@ -540,9 +558,15 @@ export function HomeScreen({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
               {loading
                 ? [0, 1, 2].map(renderCourseCardSkeleton)
-                : trending.length > 0
-                  ? trending.map(renderCourseCard)
-                  : renderTrendingEmptyState()}
+                : error
+                  ? (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <ScreenMessage variant="error" message="Couldn't load new courses." onRetry={onRetry} />
+                    </div>
+                  )
+                  : trending.length > 0
+                    ? trending.map(renderCourseCard)
+                    : renderTrendingEmptyState()}
             </div>
           </div>
 
@@ -667,7 +691,17 @@ export function HomeScreen({
               {/* (461 follow-up) — same courses-hasn't-resolved-yet gap as
                   the hero card above; this used to render an empty grid
                   until `courses` landed. */}
-              {loading ? [0, 1, 2].map(renderCourseCardSkeleton) : courses.slice(0, 3).map(renderCourseCard)}
+              {loading
+                ? [0, 1, 2].map(renderCourseCardSkeleton)
+                : error
+                  ? (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      {/* #454 — was an empty grid on a fetch failure, same
+                          as every other courses-derived section here. */}
+                      <ScreenMessage variant="error" message="Couldn't load courses." onRetry={onRetry} />
+                    </div>
+                  )
+                  : courses.slice(0, 3).map(renderCourseCard)}
             </div>
           </section>
 

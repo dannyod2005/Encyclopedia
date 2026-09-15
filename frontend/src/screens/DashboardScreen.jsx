@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { PlayCircle, CheckCircle2, Award, ChevronLeft, ChevronRight, Flame, Medal, Bookmark, Trophy, X } from "lucide-react";
 
-import { EncyclopediaArch } from "../components/common/Primitives";
+import { EncyclopediaArch, ScreenMessage } from "../components/common/Primitives";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 /* ---------- Screen: Dashboard ---------- */
@@ -225,15 +225,14 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
             // fetchWithTimeout in App.jsx) used to leave this stuck on the
             // "Loading…" branch above forever, since neither loading flag
             // ever resolved. Now that they always resolve, a real failure
-            // lands here instead: same card shape, but with an explicit
-            // "something went wrong" message and a retry button rather
-            // than silently showing nothing or requiring a full reload.
-            <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-              <div style={{ marginBottom: 14 }}>Couldn't load your learning — please try again.</div>
-              <button type="button" className="enc-btn enc-btn-gold" onClick={onRetry} style={{ cursor: "pointer" }}>
-                Try again
-              </button>
-            </div>
+            // lands here instead: a friendly message and a retry button
+            // rather than silently showing nothing or requiring a full
+            // reload.
+            // #454 — this was the original hand-rolled version of the
+            // pattern now shared via ScreenMessage (see Primitives.jsx) —
+            // every other screen's failed-to-load state now matches this
+            // one instead of drifting into its own styling/copy.
+            <ScreenMessage variant="error" message="Couldn't load your learning — please try again." onRetry={onRetry} />
           ) : (
           <>
           <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
