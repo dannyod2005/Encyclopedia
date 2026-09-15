@@ -58,9 +58,22 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
           page title. Subtitle stays — it's context, not a duplicate. */}
       <PageHeader subtitle="Ranked by learning points logged this week. Only learners who've opted in appear here." />
 
+      {/* (461 — site-wide CLS audit) — was a single centered "Loading
+          leaderboard…" line swapping to a rank list of unknowable length
+          (depends on how many learners have opted in) once resolved.
+          Skeleton now mirrors the real row shape, and the real list gets
+          a fixed max-height + internal scroll, same reasoning as
+          Dashboard's course lists and Course Analytics' learner list. */}
       {loading ? (
-        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-          Loading leaderboard…
+        <div aria-hidden="true" className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < 3 ? "1px solid var(--line)" : "none" }}>
+              <div style={{ width: 26, height: 13.5, borderRadius: 4, background: "var(--line)" }} />
+              <div style={{ width: 15 }} />
+              <div style={{ flex: 1, height: 13.5, borderRadius: 4, background: "var(--line)" }} />
+              <div style={{ width: 40, height: 13, borderRadius: 4, background: "var(--line)" }} />
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
@@ -107,7 +120,7 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
             </div>
           )}
 
-          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden", maxHeight: 320, overflowY: "auto" }}>
             {entries.map((e, i) => {
               const medal = MEDAL_STYLE[e.rank];
               return (

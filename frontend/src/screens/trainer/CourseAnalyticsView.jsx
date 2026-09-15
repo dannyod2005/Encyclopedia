@@ -54,9 +54,35 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
       </div>
       <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 20 }}>Learner progress and quiz performance for this course.</div>
 
+      {/* (461 — site-wide CLS audit) — was a single centered "Loading
+          analytics…" line swapping to 3 stat cards + a variable-length
+          learner list once resolved — same mismatch class as the other
+          pages. Skeleton now mirrors the real stat-card shape, and the
+          learner list gets the same fixed-height/scroll treatment as
+          Dashboard's course lists (learner count is as unknowable ahead
+          of time as any other enrollment-driven list in this app). */}
       {loading ? (
-        <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-          Loading analytics…
+        <div aria-hidden="true">
+          <div style={{ display: "flex", gap: 14, marginBottom: 22, flexWrap: "wrap" }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="enc-card" style={stat}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--line)", marginBottom: 10 }} />
+                <div style={{ width: 28, height: 22, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                <div style={{ width: 70, height: 12, borderRadius: 4, background: "var(--line)" }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ width: 90, height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 12 }} />
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < 2 ? "1px solid var(--line)" : "none" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ width: "35%", height: 14, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+                  <div style={{ width: "50%", height: 12, borderRadius: 4, background: "var(--line)" }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : error ? (
         <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
@@ -96,7 +122,7 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", marginBottom: 12 }}>Learners</div>
 
-          <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden", maxHeight: 320, overflowY: "auto" }}>
             {analytics.learners.length === 0 ? (
               <div style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
                 No one has enrolled in this course yet.

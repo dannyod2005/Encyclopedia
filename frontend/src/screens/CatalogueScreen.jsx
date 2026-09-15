@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Milestone, Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 
 import { Stars, CategoryDot, PageHeader, iconButtonHitArea } from "../components/common/Primitives";
@@ -18,6 +18,20 @@ const RECOMMENDED_LIMIT = 6;
 // limit/pattern as RECOMMENDED_LIMIT above — two grid rows by default,
 // with an explicit "Show all" toggle rather than silently hiding paths.
 const LEARNING_PATHS_LIMIT = 6;
+
+// (perf follow-up) — this page's main grid was the last one in the app
+// still rendering every matching course in a single pass (up to all 40
+// in the seed catalogue), unlike Home (RECOMMENDED_LIMIT/TRENDING_LIMIT-
+// capped), Dashboard (fixed-height scroll panels), or Trainer Studio
+// (already paginated — see its own COURSES_PAGE_SIZE). Lighthouse's
+// Performance score sat at 89-90 here specifically while every other
+// page cleared 90+ once the CLS work landed, and this was the one
+// concrete, page-specific difference: ~700+ DOM nodes (each card's own
+// markup plus a 5-SVG Stars component) all painted in one pass is real
+// main-thread work, not something a loading-state fix touches. Same
+// page-size + scroll-triggered-growth pattern as TrainerScreen.jsx's
+// COURSES_PAGE_SIZE, reused here rather than invented fresh.
+const COURSES_PAGE_SIZE = 20;
 
 export function CatalogueScreen({
   loggedIn,
@@ -65,6 +79,39 @@ export function CatalogueScreen({
     const base = `${n} ${trackLabel}${n === 1 ? "" : "s"}`;
     return query ? `${base} matching "${search.trim()}".` : `${base}.`;
   })();
+
+  // (perf follow-up) — same client-side pagination as TrainerScreen.jsx's
+  // course list: `filtered` is already-loaded in-memory data (not worth a
+  // paginated re-fetch), so this just caps how many cards mount at once
+  // and grows the cap as the sentinel row scrolls into view.
+  const [visibleCourseCount, setVisibleCourseCount] = useState(COURSES_PAGE_SIZE);
+  const loadMoreRef = useRef(null);
+
+  // A new search term or category chip should always restart pagination
+  // at the top rather than keeping whatever page was scrolled to under
+  // the previous (now-irrelevant) filtered list.
+  useEffect(() => {
+    setVisibleCourseCount(COURSES_PAGE_SIZE);
+  }, [search, filter]);
+
+  const visibleCourses = filtered.slice(0, visibleCourseCount);
+  const hasMoreCourses = filtered.length > visibleCourseCount;
+
+  useEffect(() => {
+    if (!hasMoreCourses) return;
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCourseCount((n) => n + COURSES_PAGE_SIZE);
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreCourses, filtered.length]);
 
   // #190 — goal-category match, the "simplest, no new data needed" signal
   // from the issue. Deliberately doesn't touch `filtered`/the main grid at
@@ -148,9 +195,13 @@ export function CatalogueScreen({
             )}
           </div>
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{c.title}</div>
+        {/* (461 — site-wide CLS audit) — same fix as Home's course cards:
+            line-clamped to the skeleton's assumed 1/2-line shape below, so
+            a longer real title/blurb can't grow this card (and its grid
+            row) taller than what the loading state reserved. */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.title}</div>
         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 10 }}>{c.provider}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 16, flex: 1 }}>{c.blurb}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 16, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.blurb}</div>
         <hr className="enc-hairline" style={{ margin: "0 0 12px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Stars rating={c.rating} />
@@ -191,6 +242,25 @@ export function CatalogueScreen({
     );
   }
 
+  // (461 follow-up) — same shape as renderPathCard, for the Learning
+  // paths section's own loading state (previously this section had no
+  // loading state at all — see the render restructure below).
+  function renderPathCardSkeleton(i) {
+    return (
+      <div key={i} className="enc-card" aria-hidden="true" style={{ padding: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 13, height: 13, borderRadius: 3, background: "var(--line)" }} />
+            <div style={{ width: 60, height: 11, borderRadius: 4, background: "var(--line)" }} />
+          </div>
+        </div>
+        <div style={{ width: "75%", height: 15.5, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+        <div style={{ width: "100%", height: 13, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+        <div style={{ width: "55%", height: 13, borderRadius: 4, background: "var(--line)" }} />
+      </div>
+    );
+  }
+
   // #224 — a slimmer card than renderCourseCard: no rating/hours/level
   // line since a path doesn't carry any of its own (those are per-course),
   // just how many courses it bundles plus whatever description the
@@ -210,8 +280,17 @@ export function CatalogueScreen({
           </div>
           {isEnrolled && <span className="enc-badge" style={{ background: "var(--success-tint)", color: "var(--success)" }}>Enrolled</span>}
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>{p.title}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, flex: 1 }}>{p.description}</div>
+        {/* (perf follow-up) — line-clamped to the exact 1/2-line shape
+            renderPathCardSkeleton assumes below (75%/100%/55% width bars),
+            same reasoning as renderCourseCard's title/blurb clamp above:
+            without this, a real path's title/description wraps to
+            however many lines its actual text needs, which can grow this
+            card taller than the skeleton reserved — Lighthouse's
+            layout-shift audit flagged exactly this (the hr divider right
+            after this section moving once real path data replaced the
+            skeleton). */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.title}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</div>
       </button>
     );
   }
@@ -281,75 +360,124 @@ export function CatalogueScreen({
           </div>
         </div>
 
+        {/* (461 follow-up) — this used to be one big `loading ? (only a
+            6-card main-grid skeleton) : (Paths + Recommended + main grid)`
+            split. That meant Paths and Recommended had zero reserved
+            height during the courses fetch (only the main grid did), so
+            the moment `loading` flipped false they could pop in above the
+            main grid — pushing it down a full section's height in one
+            frame — and Paths additionally could pop in *again* later if
+            `pathsLoading` was still true at that point (its own,
+            independent fetch). Restructured so Paths/Recommended/main
+            grid are three always-present blocks, each owning its own
+            loading → real-or-same-slot-empty-state transition, so nothing
+            here ever renders at zero height only to grow, or at full
+            height only to collapse. */}
+
+        {/* #224 — "Learning paths": its own section, entirely separate
+            from the course search/category filter above (a path isn't a
+            course, so it doesn't belong in that grid or its filter
+            predicate).
+            #344 — capped at LEARNING_PATHS_LIMIT with an explicit "Show
+            all" toggle, so a large batch of paths doesn't fill the whole
+            viewport above the course grid. */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Learning paths</div>
+          <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>
+            Guided, multi-course sequences curated by trainers.
+          </div>
+          {pathsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+              {Array.from({ length: LEARNING_PATHS_LIMIT }).map((_, i) => renderPathCardSkeleton(i))}
+            </div>
+          ) : learningPaths.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+                {visiblePaths.map(renderPathCard)}
+              </div>
+              {learningPaths.length > LEARNING_PATHS_LIMIT && (
+                <button
+                  type="button"
+                  onClick={() => setPathsExpanded((v) => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4, marginTop: 14,
+                    background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit",
+                    fontSize: 13, fontWeight: 600, color: "var(--gold-dark)",
+                  }}
+                >
+                  {pathsExpanded
+                    ? <>Show fewer paths <ChevronUp size={14} /></>
+                    : <>Show all {learningPaths.length} paths <ChevronDown size={14} /></>}
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="enc-card" style={{ padding: 18, fontSize: 13.5, color: "var(--slate-light)" }}>
+              No learning paths published yet — check back soon.
+            </div>
+          )}
+          <hr className="enc-hairline" style={{ margin: "28px 0 0" }} />
+        </div>
+
+        {/* #190 — "Recommended for you": additive, above the untouched
+            full grid below. Hidden entirely (synchronously, no shift —
+            `goal`/`hasActiveFilter` are both already known before first
+            paint) once search/filter narrows the view, or for any
+            learner/trainer with no goal set. */}
+        {goal && !hasActiveFilter && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Recommended for you</div>
+            <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>
+              Based on your {goal} goal.
+            </div>
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+                {Array.from({ length: RECOMMENDED_LIMIT }).map((_, i) => renderCourseCardSkeleton(i))}
+              </div>
+            ) : recommended.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+                {recommended.map(renderCourseCard)}
+              </div>
+            ) : (
+              <div className="enc-card" style={{ padding: 18, fontSize: 13.5, color: "var(--slate-light)" }}>
+                No new {goal} courses to recommend right now — you've covered what's here.
+              </div>
+            )}
+            <hr className="enc-hairline" style={{ margin: "28px 0 0" }} />
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-            {[0, 1, 2, 3, 4, 5].map(renderCourseCardSkeleton)}
+            {Array.from({ length: 6 }).map((_, i) => renderCourseCardSkeleton(i))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
+            No courses match "{search}".
           </div>
         ) : (
           <>
-            {/* #224 — "Learning paths": its own section, entirely separate
-                from the course search/category filter above (a path isn't
-                a course, so it doesn't belong in that grid or its filter
-                predicate). Hidden while paths are still loading or there
-                simply aren't any yet.
-                #344 — capped at LEARNING_PATHS_LIMIT (same pattern as
-                Recommended below) with an explicit "Show all" toggle, so a
-                large batch of paths doesn't fill the whole viewport above
-                the course grid. */}
-            {!pathsLoading && learningPaths.length > 0 && (
-              <div style={{ marginBottom: 32 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Learning paths</div>
-                <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>
-                  Guided, multi-course sequences curated by trainers.
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-                  {visiblePaths.map(renderPathCard)}
-                </div>
-                {learningPaths.length > LEARNING_PATHS_LIMIT && (
-                  <button
-                    type="button"
-                    onClick={() => setPathsExpanded((v) => !v)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 4, marginTop: 14,
-                      background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit",
-                      fontSize: 13, fontWeight: 600, color: "var(--gold-dark)",
-                    }}
-                  >
-                    {pathsExpanded
-                      ? <>Show fewer paths <ChevronUp size={14} /></>
-                      : <>Show all {learningPaths.length} paths <ChevronDown size={14} /></>}
-                  </button>
-                )}
-                <hr className="enc-hairline" style={{ margin: "28px 0 0" }} />
-              </div>
-            )}
-
-            {/* #190 — "Recommended for you": additive, above the untouched
-                full grid below. Hidden entirely once search/filter narrows
-                the view, or for any learner/trainer with no goal set. */}
-            {recommended.length > 0 && (
-              <div style={{ marginBottom: 32 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Recommended for you</div>
-                <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>
-                  Based on your {goal} goal.
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-                  {recommended.map(renderCourseCard)}
-                </div>
-                <hr className="enc-hairline" style={{ margin: "28px 0 0" }} />
-              </div>
-            )}
-
-            {filtered.length === 0 ? (
-              <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-                No courses match "{search}".
-              </div>
-            ) : (
-              // #104 — column count is the only breakpoint-dependent property
-              // (1 up to sm, 2 from sm, 3 from md), so it's the only thing on
-              // Tailwind classes; gap stays inline like everywhere else.
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
-                {filtered.map(renderCourseCard)}
+            {/* (perf follow-up) — was `filtered.map(renderCourseCard)`,
+                mounting every matching course (up to all 40 in the seed
+                catalogue) in one pass — the one page in the app still
+                doing this, and the concrete reason its Lighthouse
+                Performance score sat at 89-90 while every other page
+                cleared 90+. Same slice-to-visibleCourseCount +
+                scroll-sentinel pattern as TrainerScreen.jsx's course
+                list.
+                #104 — column count is the only breakpoint-dependent
+                property (1 up to sm, 2 from sm, 3 from md), so it's the
+                only thing on Tailwind classes; gap stays inline like
+                everywhere else. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+              {visibleCourses.map(renderCourseCard)}
+            </div>
+            {hasMoreCourses && (
+              <div
+                ref={loadMoreRef}
+                style={{ padding: "14px 0", textAlign: "center", fontSize: 12.5, color: "var(--slate-light)" }}
+              >
+                Loading more…
               </div>
             )}
           </>

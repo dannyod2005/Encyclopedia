@@ -126,9 +126,43 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
   }
 
   if (loading) {
+    // (461 follow-up) — was a cramped single-line "Loading…" card with
+    // just a minHeight bump; upgraded to a real skeleton, but this is
+    // still necessarily an approximation: the real content afterward is
+    // one of two structurally different layouts (the two-card create/join
+    // form for a non-member, or the provider/member-list detail card for
+    // a member), and which one applies — plus, for the member case, how
+    // many rows the member list needs — genuinely isn't knowable until
+    // onFetchProvider resolves. Modeled on the member-detail layout (the
+    // richer of the two, and the one an established trainer is more
+    // likely to already be in) with a plausible 3-member list; a
+    // first-time trainer who resolves to the create/join form instead
+    // will see this skeleton shrink down to that shorter layout — a
+    // residual shift in that one case, but a far smaller and rarer one
+    // than the previous single line vs. either full layout.
     return (
-      <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-        Loading…
+      <div className="enc-card" aria-hidden="true" style={{ padding: 20, maxWidth: 640 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <div style={{ width: 150, height: 17, borderRadius: 4, background: "var(--line)", marginBottom: 8 }} />
+            <div style={{ width: 70, height: 12.5, borderRadius: 4, background: "var(--line)" }} />
+          </div>
+          <div style={{ width: 76, height: 32, borderRadius: 8, background: "var(--line)" }} />
+        </div>
+        <div style={field}>
+          <div style={{ width: 80, height: 12.5, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+          <div style={{ height: 34, borderRadius: 8, background: "var(--line)" }} />
+        </div>
+        <div>
+          <div style={{ width: 60, height: 12.5, borderRadius: 4, background: "var(--line)", marginBottom: 6 }} />
+          <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ padding: "10px 12px", borderBottom: i < 2 ? "1px solid var(--line)" : "none" }}>
+                <div style={{ width: `${45 + i * 10}%`, height: 13, borderRadius: 4, background: "var(--line)" }} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
