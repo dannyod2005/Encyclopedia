@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { PlayCircle, CheckCircle2, Award, ChevronLeft, ChevronRight, Flame, Medal, Bookmark, Trophy, X } from "lucide-react";
+import { PlayCircle, CheckCircle2, Award, ChevronLeft, ChevronRight, Flame, Medal, Bookmark, Trophy, X, RotateCcw } from "lucide-react";
 
 import { EncyclopediaArch, ScreenMessage } from "../components/common/Primitives";
 import { getDisplayName, getFirstName } from "../lib/userDisplay";
@@ -282,10 +282,19 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                   // the natural place to leave it, matching how Udemy/
                   // Coursera keep it inside the course rather than on the
                   // list card).
-                  <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                  <div key={e.courseId} className="enc-card gap-2 sm:gap-4" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center" }}>
                     <EncyclopediaArch progress={0} size={44} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                      {/* (dashboard-phone fix) — was unbounded: with no
+                          overflow control, a long title didn't wrap
+                          cleanly inside this flex row's shrunk space, it
+                          spilled past its own box and visually collided
+                          with the Start button next to it. Truncating to
+                          one line with an ellipsis (same pattern as
+                          LearningScreen's grades-panel module names)
+                          keeps the row a fixed height and the button
+                          clear of it at any width. */}
+                      <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                       <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
                         {c.modules.length} module{c.modules.length === 1 ? "" : "s"} · not started yet
                       </div>
@@ -294,10 +303,17 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                         white text (enc-btn-primary), chosen after
                         comparing against gold-toned variants live on
                         this dashboard. Shared with the Resume button
-                        below. */}
+                        below.
+                        (dashboard-phone fix) — padding/font-size moved
+                        from a flat inline value to responsive Tailwind
+                        classes (inline styles can't respond to
+                        breakpoints) so this button is smaller on a phone,
+                        where the fixed 14px/28px padding at 15.5px bold
+                        text left too little room next to the title. Sizes
+                        from sm up are unchanged from the original. */}
                     <button
-                      className="enc-btn enc-btn-primary"
-                      style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
+                      className="enc-btn enc-btn-primary px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-[15.5px]"
+                      style={{ flexShrink: 0, fontWeight: 700, borderRadius: 10, gap: 8 }}
                       onClick={() => onStartLearning(c)}
                     >
                       Start <ChevronRight size={18} />
@@ -350,10 +366,15 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                   return (
                     // #365 — same single-accent treatment as the Not-started
                     // row above.
-                    <div key={e.courseId} className="enc-card" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+                    <div key={e.courseId} className="enc-card gap-2 sm:gap-4" style={{ padding: "12px 16px", marginBottom: 12, display: "flex", alignItems: "center" }}>
                       <EncyclopediaArch progress={e.progress} size={44} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                        {/* (dashboard-phone fix) — see the matching Start
+                            button/row above: unbounded title text could
+                            overflow its shrunk box and overlap the Resume
+                            button on a phone. Truncated to one line with
+                            an ellipsis instead. */}
+                        <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
                           {Math.round(e.progress * c.modules.length)} of {c.modules.length} modules · last opened {e.lastAccessed}
                         </div>
@@ -361,9 +382,13 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                           <div style={{ height: "100%", width: `${e.progress * 100}%`, background: "var(--gold)" }} />
                         </div>
                       </div>
+                      {/* (dashboard-phone fix) — same responsive
+                          padding/font-size as the Start button above (this
+                          is the button its own comment already calls out
+                          as sharing that styling). */}
                       <button
-                        className="enc-btn enc-btn-primary"
-                        style={{ flexShrink: 0, padding: "14px 28px", fontSize: 15.5, fontWeight: 700, borderRadius: 10, gap: 8 }}
+                        className="enc-btn enc-btn-primary px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-[15.5px]"
+                        style={{ flexShrink: 0, fontWeight: 700, borderRadius: 10, gap: 8 }}
                         onClick={() => onStartLearning(c)}
                       >
                         Resume <ChevronRight size={18} />
@@ -380,15 +405,28 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
             const c = courses.find((x) => x.id === e.courseId);
             if (!c) return null;
             return (
-              <div key={e.courseId} className="enc-card" style={{ padding: 16, marginBottom: 12, display: "flex", alignItems: "center", gap: 16 }}>
+              <div key={e.courseId} className="enc-card gap-2 sm:gap-4" style={{ padding: 16, marginBottom: 12, display: "flex", alignItems: "center" }}>
                 <div style={{ width: 48, height: 30, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <CheckCircle2 size={22} color="var(--success)" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.title}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* (dashboard-phone fix) — same truncation as the
+                      Start/Resume rows above; this div was missing
+                      minWidth:0 too, so it couldn't shrink at all. */}
+                  <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>Completed {e.lastAccessed} · certificate issued</div>
                 </div>
-                <button className="enc-btn enc-btn-ghost" onClick={() => handleViewCertificate(e.id)}>View certificate</button>
+                {/* (dashboard-phone fix) — two labelled buttons
+                    (View certificate/Retake) needed more width than a
+                    phone row could give them next to the title. Labels
+                    hide below sm (icon + aria-label only, same
+                    icon-only-needs-an-accessible-name convention #258
+                    used elsewhere — see Trainer Studio's course-row
+                    buttons for the identical pattern); full labels
+                    return from sm up. */}
+                <button className="enc-btn enc-btn-ghost" aria-label="View certificate" onClick={() => handleViewCertificate(e.id)}>
+                  <Award size={14} /> <span className="hidden sm:inline">View certificate</span>
+                </button>
                 {/* #300 — was "Unenroll": a finished course's most likely
                     next action is doing it again, not leaving it, and
                     "unenroll" read oddly for something already completed.
@@ -398,10 +436,11 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                 {onRetake && (
                   <button
                     className="enc-btn enc-btn-ghost"
+                    aria-label="Retake"
                     style={{ color: "var(--coral)" }}
                     onClick={() => { setRetakingCourse({ enrollmentId: e.id, title: c.title }); setRetakeError(null); }}
                   >
-                    Retake
+                    <RotateCcw size={14} /> <span className="hidden sm:inline">Retake</span>
                   </button>
                 )}
               </div>
