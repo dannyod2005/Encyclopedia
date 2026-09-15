@@ -127,7 +127,10 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
   // (global.css) so >=1440px viewports get more usable width instead;
   // below that breakpoint this renders identically to before.
   return (
-    <div className="enc-page-enter enc-page-wide" style={{ padding: "28px 32px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-wide enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 28 }}>
       {/* #364 — was <PageHeader title="My learning" />: AppTopbar already
           shows that exact text as this route's h1, so this was a plain
           duplicate rather than added context (unlike Catalogue's

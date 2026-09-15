@@ -63,7 +63,10 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
     // maxWidth, so this page grows (modestly, from its own 720 base) at
     // the same large breakpoint as the rest of the app.
-    <div className="enc-page-enter enc-page-scaled" style={{ padding: "28px 32px 60px", "--enc-page-base": "720px" }}>
+    /* (tablet-padding fix) — horizontal padding now comes from the
+       shared .enc-outer-pad scale instead of a flat 32px at every
+       width; vertical stays inline. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "720px" }}>
       {/* #364 — title dropped: this route is always reached logged-in
           (RequireAuth), so AppTopbar already shows "Leaderboard" as the
           page title. Subtitle stays — it's context, not a duplicate. */}
