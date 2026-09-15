@@ -24,6 +24,7 @@ import { UpsertQuizDto } from '../quiz/dto/upsert-quiz.dto';
 import { QuizOption } from '../quiz/entities/quiz-option.entity';
 import { QuizQuestionEditResponseDto } from '../quiz/dto/quiz-question-edit-response.dto';
 import { ModuleQuizResultDto } from '../quiz/dto/module-quiz-result.dto';
+import { ModuleQuizQuestionCountDto } from '../quiz/dto/module-quiz-question-count.dto';
 import {
   ActivityService,
   POINTS_PER_MINUTE,
@@ -406,6 +407,49 @@ export class ModulesService {
         total: moduleQuestions.length,
       };
     });
+  }
+
+  // (module-estimate fix) — lightweight per-module question count for
+  // TrainerCourseEditor's time estimate, which needs this for every module
+  // as soon as the edit form loads (previously it stayed at 0 until a
+  // trainer opened each module's "Manage quiz" panel, since that's the only
+  // thing that ever fetched question data). Deliberately count-only, not
+  // the full quiz payload getQuizForEdit returns per module — one query for
+  // the whole course instead of N, since the form needs this for every
+  // module up front, not just whichever one a trainer happens to expand.
+  // Same modules-then-questions shape as getQuizResultsForCourse above,
+  // minus the submissions half (this is authoring data, not a specific
+  // learner's results).
+  async getQuizQuestionCountsForCourse(
+    courseId: string,
+  ): Promise<ModuleQuizQuestionCountDto[]> {
+    const modules = await this.modulesRepo.find({
+      where: { course: { id: courseId } },
+      order: { position: 'ASC' },
+    });
+
+    if (modules.length === 0) {
+      return [];
+    }
+
+    const moduleIds = modules.map((m) => m.id);
+    const questions = await this.quizQuestionsRepo.find({
+      where: { module: { id: In(moduleIds) } },
+      relations: { module: true },
+    });
+
+    const countByModuleId = new Map<string, number>();
+    for (const q of questions) {
+      countByModuleId.set(
+        q.module.id,
+        (countByModuleId.get(q.module.id) ?? 0) + 1,
+      );
+    }
+
+    return modules.map((module) => ({
+      moduleId: module.id,
+      questionCount: countByModuleId.get(module.id) ?? 0,
+    }));
   }
 
   // #124 — called once per module focus from the frontend (fire-and-forget,
