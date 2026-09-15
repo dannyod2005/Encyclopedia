@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 
-import { PageHeader } from "../components/common/Primitives";
+import { PageHeader, ScreenMessage } from "../components/common/Primitives";
 
 // #231/#246 — global, opt-in leaderboard ranked by weekly learning points.
 // Fetch-on-mount with a cancelled guard, same shape as
@@ -22,6 +22,10 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // #454 — bumping this re-runs the fetch effect below, giving the
+  // error state below a working "Try again" button. Same reload-tick
+  // pattern App.jsx already uses for Dashboard's retryDashboard.
+  const [reloadTick, setReloadTick] = useState(0);
 
   // #348 — the current learner's own row, if they're opted in. Already
   // present in `entries` (isSelf), so this is just a lookup, not a
@@ -37,7 +41,14 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
         if (!cancelled) setEntries(data);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message || "Failed to load the leaderboard.");
+        // #454 — was `err.message || "Failed to load the leaderboard."`,
+        // rendering raw network/JS error text (e.g. "Failed to fetch")
+        // straight to the page in coral. Always the friendly fallback now;
+        // the fetch failure itself is still logged for debugging.
+        if (!cancelled) {
+          console.error("Failed to load leaderboard:", err);
+          setError("Couldn't load the leaderboard — please try again.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -46,7 +57,7 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadTick]);
 
   return (
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
@@ -76,13 +87,9 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
           ))}
         </div>
       ) : error ? (
-        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--coral)", textAlign: "center" }}>
-          {error}
-        </div>
+        <ScreenMessage variant="error" message={error} onRetry={() => setReloadTick((t) => t + 1)} />
       ) : entries.length === 0 ? (
-        <div className="enc-card" style={{ padding: 24, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
-          No one has opted in yet. Opt in from your dashboard to be the first.
-        </div>
+        <ScreenMessage message="No one has opted in yet. Opt in from your dashboard to be the first." />
       ) : (
         <>
           {/* #348 — "your rank" summary, so a learner can see where they

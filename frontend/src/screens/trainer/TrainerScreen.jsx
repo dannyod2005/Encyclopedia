@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Pencil, Plus, Search, Trash2, X, BarChart3, BookOpen, Users, Milestone, UsersRound } from "lucide-react";
 
-import { CategoryDot, PageHeader } from "../../components/common/Primitives";
+import { CategoryDot, PageHeader, ScreenMessage } from "../../components/common/Primitives";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { TrainerCourseEditor } from "./TrainerCourseEditor";
 import { TeamTab } from "./TeamTab";
@@ -12,6 +12,12 @@ import { CourseAnalyticsView } from "./CourseAnalyticsView";
 export function TrainerScreen({
   courses,
   coursesLoading = false,
+  // #454 — the course list previously had no failure path: a fetch
+  // error left `courses` as [], rendering identically to a trainer who
+  // genuinely owns zero courses yet — no way to tell an outage from a
+  // real empty result, and no retry either way.
+  coursesError = false,
+  onRetryCourses,
   onSaveCourse,
   onDeleteCourse,
   onFetchQuizForEdit,
@@ -517,6 +523,14 @@ export function TrainerScreen({
                   <div style={{ width: 70, height: 28, borderRadius: 6, background: "var(--line)" }} />
                 </div>
               ))}
+            </div>
+          ) : coursesError ? (
+            // #454 — was no error path at all: a failed courses fetch left
+            // `courses` as [], rendering identically to "No courses yet" —
+            // same minHeight: 284 as that empty state so this swap can't
+            // cause the CLS the skeleton above was built to avoid.
+            <div style={{ boxSizing: "border-box", minHeight: 284, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ScreenMessage bare message="Couldn't load your courses — please try again." variant="error" onRetry={onRetryCourses} />
             </div>
           ) : (
             <div className="enc-card" style={{ padding: 0, overflow: "hidden" }}>

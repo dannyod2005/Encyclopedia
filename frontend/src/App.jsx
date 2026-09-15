@@ -3,6 +3,7 @@ import {
   BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation, useSearchParams
 } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
+import { ScreenMessage } from "./components/common/Primitives";
 import { supabase } from "./lib/supabaseClient";
 import { useAuth } from "./context/AuthContext";
 
@@ -192,7 +193,7 @@ function RequireTrainer({ role, children }) {
 }
 
 /* ---------- Learning screen wrapper: resolves :courseId -> course object ---------- */
-function LearningRoute({ courses, enrolled, coursesLoading, enrolledLoading, onSaveProgress, onSubmitRating, onLogModuleView, onFetchQuiz, onSubmitQuiz, onFetchQuizResults, onFetchNote, onSaveNote, onFetchPosts, onCreatePost, onEditPost, currentUserId, onUnenrol }) {
+function LearningRoute({ courses, enrolled, coursesLoading, enrolledLoading, coursesError = false, enrolledError = false, onRetry, onSaveProgress, onSubmitRating, onLogModuleView, onFetchQuiz, onSubmitQuiz, onFetchQuizResults, onFetchNote, onSaveNote, onFetchPosts, onCreatePost, onEditPost, currentUserId, onUnenrol }) {
   const { courseId } = useParams();
   const navigate = useNavigate();
   // #229 — a notification click-through lands here as
@@ -219,6 +220,19 @@ function LearningRoute({ courses, enrolled, coursesLoading, enrolledLoading, onS
       return (
         <div className="enc-card" style={{ padding: 40, fontSize: 13.5, color: "var(--slate-light)", textAlign: "center" }}>
           Loading course…
+        </div>
+      );
+    }
+    // #454 — was a blind redirect to /dashboard here whenever the course
+    // wasn't found once loading settled — including when it wasn't found
+    // because the underlying courses/enrolled fetch had actually failed,
+    // not because the course genuinely doesn't exist. That silently
+    // bounced a learner away with no explanation on a real outage. Now a
+    // fetch failure gets its own message + retry instead of the redirect.
+    if (coursesError || enrolledError) {
+      return (
+        <div style={{ padding: "28px 32px", maxWidth: 640, margin: "0 auto" }}>
+          <ScreenMessage variant="error" message="Couldn't load this course — please try again." onRetry={onRetry} />
         </div>
       );
     }
@@ -1894,6 +1908,13 @@ export function EncyclopediaPrototype() {
                   loading={coursesLoading}
                   enrolledLoading={enrolledLoading}
                   learningPathsLoading={learningPathsLoading}
+                  // #454 — Recommended/New on Encyclopedia/Popular this
+                  // month all derive from `courses`; a fetch failure used
+                  // to leave them silently empty, indistinguishable from
+                  // genuinely having nothing left to show. Same shared
+                  // coursesError/retryDashboard pair reused elsewhere.
+                  error={coursesError}
+                  onRetry={retryDashboard}
                 />
               </AppShell>
             ) : (
@@ -1907,7 +1928,7 @@ export function EncyclopediaPrototype() {
               // <main> — a <main> in there too would nest two on that
               // path, which is invalid.
               <main>
-                <HomeScreen onGo={(key) => navigate(key === "home" ? "/" : `/${key}`)} onAuth={openAuth} courses={courses} loggedIn={loggedIn} user={user} enrolled={enrolled} loading={coursesLoading} />
+                <HomeScreen onGo={(key) => navigate(key === "home" ? "/" : `/${key}`)} onAuth={openAuth} courses={courses} loggedIn={loggedIn} user={user} enrolled={enrolled} loading={coursesLoading} error={coursesError} onRetry={retryDashboard} />
               </main>
             )
           }
@@ -1925,6 +1946,15 @@ export function EncyclopediaPrototype() {
                 enrolledIds={enrolledIds}
                 courses={courses}
                 loading={coursesLoading}
+                // #454 — Catalogue had no error state at all before this:
+                // a real fetch failure rendered identically to "no courses
+                // match your search" (both just the empty-grid message).
+                // Reuses the same coursesError/retryDashboard pair
+                // Dashboard's own retry already drives — it's a shared
+                // "try the courses fetch again" trigger, not something
+                // Dashboard-specific, despite the name.
+                error={coursesError}
+                onRetry={retryDashboard}
                 goal={learnerGoal}
                 learningPaths={learningPaths}
                 onOpenPath={setSelectedPath}
@@ -2049,6 +2079,14 @@ export function EncyclopediaPrototype() {
                   enrolled={enrolled}
                   coursesLoading={coursesLoading}
                   enrolledLoading={enrolledLoading}
+                  // #454 — without these, a real fetch failure here looked
+                  // identical to "this course doesn't exist" and silently
+                  // bounced the learner back to /dashboard with no
+                  // explanation. Same shared error/retry pair reused
+                  // elsewhere for this data.
+                  coursesError={coursesError}
+                  enrolledError={enrolledError}
+                  onRetry={retryDashboard}
                   onSaveProgress={saveProgress}
                   onSubmitRating={submitRating}
                   onLogModuleView={logModuleView}
@@ -2077,6 +2115,13 @@ export function EncyclopediaPrototype() {
                   <TrainerScreen
                     courses={courses}
                     coursesLoading={coursesLoading}
+                    // #454 — Trainer Studio's course list had no failure
+                    // path either: a fetch error just left it empty,
+                    // rendering identically to a trainer with zero courses.
+                    // Same shared coursesError/retryDashboard pair Catalogue
+                    // and Dashboard already reuse for this.
+                    coursesError={coursesError}
+                    onRetryCourses={retryDashboard}
                     onSaveCourse={saveCourse}
                     onDeleteCourse={deleteCourse}
                     onFetchQuizForEdit={fetchQuizForEdit}
