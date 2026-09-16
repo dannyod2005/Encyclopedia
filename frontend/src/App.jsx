@@ -104,6 +104,30 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   );
 }
 
+// (perf: defer secondary fetches) — App.jsx fires ~9 authenticated fetches
+// on every logged-in mount regardless of which route is actually showing,
+// all racing for the same handful of connections/CPU as the LCP-critical
+// work (the current route's JS chunk + its own render). Most of that data
+// (courses/enrollments/learning-paths/profiles-me) genuinely is needed
+// broadly — profiles/me in particular gates the sidebar's Trainer nav item,
+// so deferring it would risk a visible nav flash. But notifications/badges/
+// bookmarks/activity-summary only ever feed a topbar dropdown or a couple
+// of Dashboard cards that already render their own loading skeleton while
+// this is in flight (see the CLS-audit comments beside each) — nothing
+// about first paint depends on them. Wrapping their fetch-kickoff in this
+// lets the browser finish the LCP-critical work first and only spends
+// bandwidth/CPU on these once it's idle (or after one frame, on Safari/
+// older browsers with no requestIdleCallback), rather than opening 9
+// connections in the same instant.
+function deferToIdle(fn) {
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    const id = window.requestIdleCallback(fn, { timeout: 2000 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = setTimeout(fn, 0);
+  return () => clearTimeout(id);
+}
+
 /* ---------- Layout shell (sidebar + topbar) for logged-in app routes ---------- */
 function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notifications, unreadCount, onOpenNotification }) {
   const location = useLocation();
@@ -274,6 +298,41 @@ export function EncyclopediaPrototype() {
   const { user, session, loading: authLoading, passwordRecovery, clearPasswordRecovery } = useAuth();
   const loggedIn = !!user;
   const role = user?.user_metadata?.role || "learner";
+
+  // (perf: #479) — the `if (authLoading) return <Loading…>` further down
+  // blocks the entire <Routes>/<Suspense> tree from rendering until
+  // Supabase's getSession() resolves, which means the React.lazy()
+  // import() for whichever screen matches the current URL doesn't fire
+  // until then either — Lighthouse's network dependency tree for /about
+  // showed exactly this: the route's JS chunk request landing after the
+  // auth-gated data-fetch cascade instead of alongside it. Rather than
+  // restructure the auth gate itself (higher risk — touches every route's
+  // logged-in/logged-out branching, could cause a flash of wrong content,
+  // not something to land without a real build/test pass), this kicks off
+  // the same dynamic import() manually in an effect, which — like every
+  // other effect in this component — runs on mount regardless of what the
+  // render below returns. Vite's module loader dedupes by URL, so this
+  // shares its result with React.lazy's own resolution once render
+  // finally reaches that Route rather than causing a second fetch; it
+  // just starts the network request several hundred ms to a few seconds
+  // earlier, in parallel with the auth check instead of serially after
+  // it. Reads window.location.pathname once on mount (not the `location`
+  // from useLocation() above, and no dependency array beyond []) —
+  // this only needs the URL as it stood on first paint; normal in-app
+  // navigation to a not-yet-visited lazy route doesn't have this problem,
+  // since nothing blocks that click from reaching <Suspense>. Home/
+  // Dashboard aren't listed — they aren't React.lazy() (see the imports
+  // at the top of this file), so there's no separate chunk to prefetch.
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/privacy")) import("./screens/PrivacyScreen");
+    else if (path.startsWith("/about")) import("./screens/AboutScreen");
+    else if (path.startsWith("/catalogue")) import("./screens/CatalogueScreen");
+    else if (path.startsWith("/leaderboard")) import("./screens/LeaderboardScreen");
+    else if (path.startsWith("/settings")) import("./screens/SettingsScreen");
+    else if (path.startsWith("/learning")) import("./screens/LearningScreen");
+    else if (path.startsWith("/trainer")) import("./screens/trainer/TrainerScreen");
+  }, []);
 
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [enrolled, setEnrolled] = useState([]);
@@ -478,19 +537,22 @@ export function EncyclopediaPrototype() {
     }
 
     setBadgesLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/badges/me`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/badges/me`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setBadges)
-      .catch((err) => {
-        console.error("Failed to load badges:", err.message);
-        setBadges([]);
-      })
-      .finally(() => setBadgesLoading(false));
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setBadges)
+        .catch((err) => {
+          console.error("Failed to load badges:", err.message);
+          setBadges([]);
+        })
+        .finally(() => setBadgesLoading(false));
+    });
   }, [loggedIn, session]);
 
   // #229 — forum-reply notifications, for the topbar bell. Same
@@ -506,18 +568,21 @@ export function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setNotifications)
-      .catch((err) => {
-        console.error("Failed to load notifications:", err.message);
-        setNotifications([]);
-      });
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setNotifications)
+        .catch((err) => {
+          console.error("Failed to load notifications:", err.message);
+          setNotifications([]);
+        });
+    });
   }, [loggedIn, session]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -556,19 +621,22 @@ export function EncyclopediaPrototype() {
     }
 
     setBookmarksLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setBookmarks)
-      .catch((err) => {
-        console.error("Failed to load bookmarks:", err.message);
-        setBookmarks([]);
-      })
-      .finally(() => setBookmarksLoading(false));
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setBookmarks)
+        .catch((err) => {
+          console.error("Failed to load bookmarks:", err.message);
+          setBookmarks([]);
+        })
+        .finally(() => setBookmarksLoading(false));
+    });
   }, [loggedIn, session]);
 
   const bookmarkedIds = bookmarks.map((b) => b.courseId);
@@ -674,16 +742,25 @@ export function EncyclopediaPrototype() {
     // keeps streak/pointsThisWeek/goalHitDays pinned to the real
     // current week regardless, so those don't flicker as the calendar is
     // browsed.
-    fetch(`${import.meta.env.VITE_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    // Also covers the weekOffset-paging re-fetch, not just the initial
+    // mount — requestIdleCallback only actually delays when the main
+    // thread is genuinely busy (e.g. right after page load, which is the
+    // case this exists for); once the user has clicked a calendar arrow
+    // the thread is idle again almost immediately, so paging doesn't feel
+    // any less responsive.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setActivitySummary)
-      .catch((err) => console.error("Failed to load activity summary:", err.message))
-      .finally(() => setActivitySummaryLoading(false));
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setActivitySummary)
+        .catch((err) => console.error("Failed to load activity summary:", err.message))
+        .finally(() => setActivitySummaryLoading(false));
+    });
   }, [loggedIn, session, calendarWeekOffset]);
 
   // #107 — learner's goal (profiles.goal), replacing the old LEARNER.goal

@@ -32,7 +32,22 @@ export function MarketingHeader({ onGo, onAuth }) {
               the box before the image decodes, instead of reflowing the
               header once it loads. */}
           <button type="button" onClick={() => onGo("home")} style={{ font: "inherit", display: "flex", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-            <img src="/logo-full-web.png" alt="Encyclopedia" width={144} height={26} style={{ height: 26, width: 144, display: "block" }} />
+            {/* (perf: LCP fix) — fetchPriority="high": this is the LCP
+                element on the logged-out marketing pages (home, about,
+                privacy), and was discovered late since it sits behind the
+                JS bundle with no priority hint. See AppTopbar.jsx and
+                index.html for the rest of this fix.
+                (perf: #480) — <picture>+WebP wrap: same fix as AppTopbar's
+                logos, see that file's comment for the full reasoning.
+                logo-full-web.png/.webp regenerated via
+                frontend/scripts/optimize-logo-assets.mjs at 288x52 (2x
+                this element's 144x26 — its largest usage across the 3
+                sites this file appears in), down from the previous
+                666x120. */}
+            <picture>
+              <source srcSet="/logo-full-web.webp" type="image/webp" />
+              <img src="/logo-full-web.png" alt="Encyclopedia" width={144} height={26} style={{ height: 26, width: 144, display: "block" }} fetchPriority="high" />
+            </picture>
           </button>
           {/* #392 — this row (logo + nav + two auth buttons, all in one
               unwrapping flex line) overflowed horizontally below ~600px:
