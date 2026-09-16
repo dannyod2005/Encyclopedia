@@ -64,8 +64,15 @@
          at sm+ in AppTopbar and unconditionally in MarketingHeader, i.e.
          nearly every real viewport; the sub-sm icon swap in AppTopbar
          (logo-icon-web.png) is small/already-cached-adjacent enough not to
-         be worth a second preload request competing for bandwidth here. -->
-    <link rel="preload" as="image" href="/logo-full-web.png" fetchpriority="high" />
+         be worth a second preload request competing for bandwidth here.
+         (perf: #480) — href/type updated to the .webp file: AppTopbar and
+         MarketingHeader now wrap this image in <picture><source type=
+         "image/webp">, so WebP (not the .png fallback) is what actually
+         gets requested in any browser that reaches this preload's
+         intended audience — pointing the preload at the file that won't
+         really be used would just waste the bandwidth this is meant to
+         save. -->
+    <link rel="preload" as="image" href="/logo-full-web.webp" type="image/webp" fetchpriority="high" />
     <!-- #367 — Fraunces was requested at weights 500/600/700, but a grep
          across every var(--font-display) usage in src/ shows only 600 and
          700 are ever actually applied — weight 500 was dead weight in the
