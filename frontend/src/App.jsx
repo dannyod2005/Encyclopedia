@@ -299,6 +299,41 @@ export function EncyclopediaPrototype() {
   const loggedIn = !!user;
   const role = user?.user_metadata?.role || "learner";
 
+  // (perf: #479) — the `if (authLoading) return <Loading…>` further down
+  // blocks the entire <Routes>/<Suspense> tree from rendering until
+  // Supabase's getSession() resolves, which means the React.lazy()
+  // import() for whichever screen matches the current URL doesn't fire
+  // until then either — Lighthouse's network dependency tree for /about
+  // showed exactly this: the route's JS chunk request landing after the
+  // auth-gated data-fetch cascade instead of alongside it. Rather than
+  // restructure the auth gate itself (higher risk — touches every route's
+  // logged-in/logged-out branching, could cause a flash of wrong content,
+  // not something to land without a real build/test pass), this kicks off
+  // the same dynamic import() manually in an effect, which — like every
+  // other effect in this component — runs on mount regardless of what the
+  // render below returns. Vite's module loader dedupes by URL, so this
+  // shares its result with React.lazy's own resolution once render
+  // finally reaches that Route rather than causing a second fetch; it
+  // just starts the network request several hundred ms to a few seconds
+  // earlier, in parallel with the auth check instead of serially after
+  // it. Reads window.location.pathname once on mount (not the `location`
+  // from useLocation() above, and no dependency array beyond []) —
+  // this only needs the URL as it stood on first paint; normal in-app
+  // navigation to a not-yet-visited lazy route doesn't have this problem,
+  // since nothing blocks that click from reaching <Suspense>. Home/
+  // Dashboard aren't listed — they aren't React.lazy() (see the imports
+  // at the top of this file), so there's no separate chunk to prefetch.
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/privacy")) import("./screens/PrivacyScreen");
+    else if (path.startsWith("/about")) import("./screens/AboutScreen");
+    else if (path.startsWith("/catalogue")) import("./screens/CatalogueScreen");
+    else if (path.startsWith("/leaderboard")) import("./screens/LeaderboardScreen");
+    else if (path.startsWith("/settings")) import("./screens/SettingsScreen");
+    else if (path.startsWith("/learning")) import("./screens/LearningScreen");
+    else if (path.startsWith("/trainer")) import("./screens/trainer/TrainerScreen");
+  }, []);
+
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [enrolled, setEnrolled] = useState([]);
   const [badges, setBadges] = useState([]);
