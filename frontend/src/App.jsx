@@ -148,7 +148,17 @@ function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notif
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    // (dvh-resize fix) — 100vh -> 100dvh: this row, .enc-root (global.css)
+    // wrapping it, and AppSidebar's <aside> nested inside it each compute
+    // their own full-viewport-height box independently. vh is a static
+    // snapshot that can desync from the real viewport during a
+    // continuous live-drag resize (width changes never hit this — none
+    // of the three depend on width — but height changes do), so if even
+    // one of the three lags a frame behind the others mid-drag their
+    // boxes end up misaligned, which is what made the sidebar/topbar
+    // struggle to reach the full page height specifically on height
+    // resizes. dvh tracks the real current viewport instead.
+    <div style={{ display: "flex", minHeight: "100dvh" }}>
       {showSidebar && (
         <AppSidebar
           screen={screen}
@@ -1952,7 +1962,9 @@ export function EncyclopediaPrototype() {
 
   if (authLoading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+      // (dvh-resize fix) — 100vh -> 100dvh, same reasoning as the shell
+      // row above.
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh" }}>
         <div style={{ fontSize: 13, color: "var(--slate-light)" }}>Loading…</div>
       </div>
     );
@@ -1966,7 +1978,9 @@ export function EncyclopediaPrototype() {
           with the authLoading state above it. */}
       <React.Suspense
         fallback={
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+          // (dvh-resize fix) — 100vh -> 100dvh, same reasoning as the
+          // shell row above.
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh" }}>
             <div style={{ fontSize: 13, color: "var(--slate-light)" }}>Loading…</div>
           </div>
         }

@@ -101,7 +101,22 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
         // and the gradient is painted once into it rather than repainted
         // per frame — the transition itself is unchanged, only how
         // cheaply the browser can run it.
-        style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100vh", willChange: "transform" }}
+        // (dvh-resize fix) — 100vh -> 100dvh: this <aside>, App.jsx's flex
+        // row it sits inside, and .enc-root (global.css) wrapping that
+        // row each compute their own full-viewport-height box
+        // independently. vh is a static snapshot that can desync from
+        // the real viewport during a continuous live-drag resize (width
+        // changes never hit this — none of the three depend on width —
+        // but height changes do), so if even one of the three lags a
+        // frame behind the others mid-drag, their boxes end up
+        // misaligned, which is what made the sidebar/topbar struggle to
+        // reach the full page height specifically on height resizes.
+        // dvh tracks the real current viewport instead. Notably, this is
+        // the same element #418 (above) already flagged as doing real
+        // main-thread work during a live resize drag — consistent with
+        // this being the element most exposed to exactly that kind of
+        // resize-timing issue.
+        style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100dvh", willChange: "transform" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 10px 22px" }}>
           {/* #258 — real button (not a bare clickable icon) so this is
