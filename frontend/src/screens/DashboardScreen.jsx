@@ -320,8 +320,15 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                           keeps the row a fixed height and the button
                           clear of it at any width. */}
                       <div style={{ fontSize: 14.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                      {/* (dashboard-card-encouraging-subtitle) — "not started
+                          yet" undercut the "Start my learning" section
+                          header's own deliberately inviting rename (see the
+                          comment above this section) by sitting right next
+                          to the Start button and reading as a mild guilt-trip
+                          instead of an invitation. Client-requested copy
+                          swap, same tone as that earlier rename. */}
                       <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
-                        {c.modules.length} module{c.modules.length === 1 ? "" : "s"} · not started yet
+                        {c.modules.length} module{c.modules.length === 1 ? "" : "s"} · ready to learn
                       </div>
                     </div>
                     {/* #restyle-dashboard-start-button — dark ink fill,
