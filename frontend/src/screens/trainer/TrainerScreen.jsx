@@ -554,28 +554,42 @@ export function TrainerScreen({
                     <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{c.provider} · {c.modules.length} modules · {c.hours}h</div>
                   </div>
                   {canEditCourse(c) ? (
-                    <>
-                      {/* (phone-buttons fix) — 3 side-by-side labelled
-                          buttons (Analytics/Edit/Delete) needed more width
-                          than a phone screen could give this row alongside
-                          the title block, even after the row's own gap
-                          shrank above. Labels hide below sm (icon +
-                          aria-label only, same "icon-only needs an
-                          accessible name" convention #258 already applies
-                          elsewhere — see MarketingHeader's Log in button
-                          for the identical hidden-label pattern); full
-                          labels return from sm up. */}
-                      <button className="enc-btn enc-btn-ghost" aria-label="Analytics" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> <span className="hidden sm:inline">Analytics</span></button>
-                      <button className="enc-btn enc-btn-ghost" aria-label="Edit" onClick={() => setEditingId(c.id)}><Pencil size={14} /> <span className="hidden sm:inline">Edit</span></button>
+                    // (phone-buttons fix) — 3 side-by-side labelled
+                    // buttons (Analytics/Edit/Delete) needed more width
+                    // than a phone screen could give this row alongside
+                    // the title block, even after the row's own gap
+                    // shrank above. Labels hide below sm (icon +
+                    // aria-label only, same "icon-only needs an
+                    // accessible name" convention #258 already applies
+                    // elsewhere — see MarketingHeader's Log in button
+                    // for the identical hidden-label pattern); full
+                    // labels return from sm up.
+                    // (phone-buttons-2row fix) — icon-only still meant 3
+                    // buttons side by side competing with the title block
+                    // for width, and once a longer title wrapped to 2+
+                    // lines the row felt dominated by the button cluster.
+                    // Below sm this wrapper switches from a single row to
+                    // a 2-column grid — Analytics spans both columns on
+                    // its own row, Edit/Delete split the row beneath it
+                    // evenly — so the cluster only ever needs ~2 buttons'
+                    // worth of width instead of 3, at the cost of height
+                    // instead (which this row already has more give on,
+                    // being the one growing with the title anyway). sm+
+                    // reverts to the original single-row flex with full
+                    // labels, col-span-2 has no effect outside a grid so
+                    // it's harmless left on there.
+                    <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-3.5" style={{ flexShrink: 0 }}>
+                      <button className="enc-btn enc-btn-ghost col-span-2 justify-center" aria-label="Analytics" onClick={() => setViewingAnalyticsId(c.id)}><BarChart3 size={14} /> <span className="hidden sm:inline">Analytics</span></button>
+                      <button className="enc-btn enc-btn-ghost justify-center" aria-label="Edit" onClick={() => setEditingId(c.id)}><Pencil size={14} /> <span className="hidden sm:inline">Edit</span></button>
                       <button
-                        className="enc-btn enc-btn-ghost"
+                        className="enc-btn enc-btn-ghost justify-center"
                         aria-label="Delete"
                         style={{ color: "var(--coral)" }}
                         onClick={() => { setDeletingCourse(c); setDeleteError(null); }}
                       >
                         <Trash2 size={14} /> <span className="hidden sm:inline">Delete</span>
                       </button>
-                    </>
+                    </div>
                   ) : (
                     // #155 — not this trainer's course (no ownerId/providerId
                     // match): no Edit/Delete, and deliberately no click-through

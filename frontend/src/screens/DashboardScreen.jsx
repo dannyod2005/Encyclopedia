@@ -193,7 +193,27 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
             column lets the list panel inside (flex:1, below) fill it,
             instead of the panel stopping at a fixed height and leaving
             unused space beneath it. */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* (grid-blowout fix) — this column is a CSS Grid item (parent:
+            grid grid-cols-1 md:grid-cols-[2fr_1fr] above), and grid items
+            default to min-width/min-height: auto, which resolves to the
+            item's own *content's* min-content size, not 0 — every
+            "scroll internally instead of growing the page" trick further
+            down this column (flex:1 + minHeight:0 + overflowY:auto on the
+            course-list panel below) only works once the item itself stops
+            being forced open by that default. Without minWidth/minHeight:0
+            here, the column's automatic minimum is the full unscrolled
+            height of every "Start my learning"/"Continue learning"/
+            "Completed" row combined (unbounded by how many courses a
+            learner has), so the grid row — and the whole page — stretched
+            to fit that instead of clipping, which is what made the right
+            column look pressed against the edge with no padding
+            (min-width:auto let this column's content push past its 2fr
+            share on narrow tablet widths, squeezing the 1fr column) and
+            made the page stretch taller than the viewport on refresh once
+            real content replaced the loading skeleton (sidebar/topbar
+            correctly track 100dvh of the real viewport; this column didn't
+            have a matching ceiling). */}
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
           {loading ? (
             // #367 — was a single short "Loading your learning…" card,
             // nowhere near the height of the real stat-cards + list-rows
@@ -454,10 +474,25 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                     hide below sm (icon + aria-label only, same
                     icon-only-needs-an-accessible-name convention #258
                     used elsewhere — see Trainer Studio's course-row
-                    buttons for the identical pattern); full labels
-                    return from sm up. */}
+                    buttons for the identical pattern).
+                    (dashboard-tablet-buttons fix) — sm (640px) was too
+                    low a bar here specifically: unlike Trainer Studio's
+                    row (which spans nearly the full page), this row sits
+                    inside Dashboard's left grid column, which is only
+                    ~2/3 of the page's content width from md up — so at
+                    tablet viewports (iPad Mini 768, Surface Pro 960) the
+                    actual row width was still phone-like even though the
+                    viewport itself had cleared sm.
+                    (dashboard-tablet-buttons fix, round 2) — lg (1024px)
+                    still wasn't enough: iPad Pro 13 (1024-1366) falls
+                    just past lg but its own 2/3-column share still barely
+                    shows any course-title text once both labels return.
+                    Raised again to a dedicated wide (1440px) breakpoint —
+                    same threshold global.css already uses to grow the
+                    page's own max-width, i.e. actual large-desktop room,
+                    not just "past the biggest common tablet." */}
                 <button className="enc-btn enc-btn-ghost" aria-label="View certificate" onClick={() => handleViewCertificate(e.id)}>
-                  <Award size={14} /> <span className="hidden sm:inline">View certificate</span>
+                  <Award size={14} /> <span className="hidden wide:inline">View certificate</span>
                 </button>
                 {/* #300 — was "Unenroll": a finished course's most likely
                     next action is doing it again, not leaving it, and
@@ -472,7 +507,7 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                     style={{ color: "var(--coral)" }}
                     onClick={() => { setRetakingCourse({ enrollmentId: e.id, title: c.title }); setRetakeError(null); }}
                   >
-                    <RotateCcw size={14} /> <span className="hidden sm:inline">Retake</span>
+                    <RotateCcw size={14} /> <span className="hidden wide:inline">Retake</span>
                   </button>
                 )}
               </div>

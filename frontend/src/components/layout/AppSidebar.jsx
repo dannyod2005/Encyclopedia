@@ -3,13 +3,13 @@ import { getDisplayName, getInitials } from "../../lib/userDisplay";
 
 /* ---------- Logged-in app shell ---------- */
 
-// #104/#218 — off-canvas on mobile (< md), a sticky in-flow sidebar on
-// md+. mobileOpen/onCloseMobile only matter below md; the md: classes
+// #104/#218 — off-canvas on mobile (< nav), a sticky in-flow sidebar on
+// nav+. mobileOpen/onCloseMobile only matter below nav; the nav: classes
 // below override the mobile fixed/off-canvas positioning back to a
 // normal flex item that also stays pinned to the viewport top while the
-// page content scrolls (md:sticky + md:top-0), rather than #104's
+// page content scrolls (nav:sticky + nav:top-0), rather than #104's
 // original md:static, which let the sidebar scroll away with the page
-// on any content taller than one screen (#218). md:self-start stops the
+// on any content taller than one screen (#218). nav:self-start stops the
 // flex row's default align-items: stretch from forcing the aside's box
 // to match the (possibly much taller) main content's height — without
 // it, "sticky" has nothing to stick within because the box is already
@@ -17,6 +17,11 @@ import { getDisplayName, getInitials } from "../../lib/userDisplay";
 // classes (the one thing inline style={{}} genuinely can't express —
 // media queries); everything else (color, padding, layout) stays as the
 // existing inline styles, unchanged.
+// (sidebar-breakpoint fix) — switched from Tailwind's default md
+// (768px) to a dedicated nav breakpoint (880px, see tailwind.config.js):
+// 768px is also iPad Mini's own portrait width, so the persistent
+// sidebar was landing right on that device's exact size instead of
+// clearly on one side of it, leaving too little content width there.
 export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mobileOpen = false, onCloseMobile }) {
   const displayName = getDisplayName(user);
   const initials = getInitials(displayName);
@@ -42,13 +47,13 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
       {/* Backdrop: mobile only, tap to dismiss. Never rendered on md+. */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-black/40 nav:hidden"
           onClick={onCloseMobile}
           aria-hidden="true"
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 md:sticky md:top-0 md:self-start md:translate-x-0 md:z-auto ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 nav:sticky nav:top-0 nav:self-start nav:translate-x-0 nav:z-auto ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
         // #385 — history of this background: dark --ink with --paper
         // text (original) -> light --sidebar-bg with the plain logo on
         // it, because the logo had no contrast on dark (outline/chip
@@ -101,17 +106,32 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
         // and the gradient is painted once into it rather than repainted
         // per frame — the transition itself is unchanged, only how
         // cheaply the browser can run it.
-        style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100vh", willChange: "transform" }}
+        // (dvh-resize fix) — 100vh -> 100dvh: this <aside>, App.jsx's flex
+        // row it sits inside, and .enc-root (global.css) wrapping that
+        // row each compute their own full-viewport-height box
+        // independently. vh is a static snapshot that can desync from
+        // the real viewport during a continuous live-drag resize (width
+        // changes never hit this — none of the three depend on width —
+        // but height changes do), so if even one of the three lags a
+        // frame behind the others mid-drag, their boxes end up
+        // misaligned, which is what made the sidebar/topbar struggle to
+        // reach the full page height specifically on height resizes.
+        // dvh tracks the real current viewport instead. Notably, this is
+        // the same element #418 (above) already flagged as doing real
+        // main-thread work during a live resize drag — consistent with
+        // this being the element most exposed to exactly that kind of
+        // resize-timing issue.
+        style={{ width: 220, flexShrink: 0, background: "radial-gradient(circle at 50% 100%, rgba(21,163,225,0.28) 0%, rgba(21,163,225,0.10) 40%, rgba(21,163,225,0) 70%), var(--sidebar-bg)", color: "var(--sidebar-fg)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100dvh", willChange: "transform" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 10px 22px" }}>
           {/* #258 — real button (not a bare clickable icon) so this is
               keyboard-reachable and announces as "Close menu" to screen
               readers, same reasoning as the nav buttons below (#219).
               #283 — display used to live in the inline `style`, which
-              always beat the md:hidden below regardless of screen width
+              always beat the nav:hidden below regardless of screen width
               (inline styles outrank non-!important classes), leaving this
               visible and clickable on desktop too, even though the
-              sidebar itself is permanently open there via md:translate-x-0
+              sidebar itself is permanently open there via nav:translate-x-0
               below — so clicking it looked like it "did nothing." Moving
               display into the className fixes the same specificity issue
               as AppTopbar's hamburger button.
@@ -124,7 +144,7 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
             type="button"
             aria-label="Close menu"
             onClick={onCloseMobile}
-            className="cursor-pointer inline-flex md:hidden"
+            className="cursor-pointer inline-flex nav:hidden"
             style={{ background: "none", border: "none", padding: 0, lineHeight: 0 }}
           >
             <X size={18} color="var(--sidebar-fg)" />

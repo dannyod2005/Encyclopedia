@@ -148,7 +148,17 @@ function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notif
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    // (dvh-resize fix) — 100vh -> 100dvh: this row, .enc-root (global.css)
+    // wrapping it, and AppSidebar's <aside> nested inside it each compute
+    // their own full-viewport-height box independently. vh is a static
+    // snapshot that can desync from the real viewport during a
+    // continuous live-drag resize (width changes never hit this — none
+    // of the three depend on width — but height changes do), so if even
+    // one of the three lags a frame behind the others mid-drag their
+    // boxes end up misaligned, which is what made the sidebar/topbar
+    // struggle to reach the full page height specifically on height
+    // resizes. dvh tracks the real current viewport instead.
+    <div style={{ display: "flex", minHeight: "100dvh" }}>
       {showSidebar && (
         <AppSidebar
           screen={screen}
@@ -185,8 +195,20 @@ function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notif
             "Document does not have a main landmark" finding). AppSidebar's
             nav and AppTopbar above are their own landmarks (nav/header
             equivalents), so <main> here marks the one remaining region —
-            the actual page content — without wrapping those too. */}
-        <main style={{ flex: 1, minWidth: 0 }}>
+            the actual page content — without wrapping those too.
+            (leaderboard-height fix) — #347 (above) already relies on this
+            flex:1 to grow and fill leftover space so Footer lands at the
+            true bottom, but flex items default min-height to auto (their
+            own content's size), not 0 — so on a page shorter than the
+            available space, this could grow to fill it (flex-grow never
+            needed minHeight:0), but on a page whose content landed just
+            over that available space, it couldn't shrink back down to
+            fit either, forcing the whole column taller than the viewport
+            and Footer below the fold — visible as leftover whitespace
+            elsewhere on the page alongside a forced scrollbar. Same bug
+            class as the earlier Dashboard grid-column fix, just here it
+            blocked shrinking instead of blocking scrolling. */}
+        <main style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
           {children}
         </main>
         {/* #337 — site-wide footer, rendered once here so every routed
@@ -1952,7 +1974,9 @@ export function EncyclopediaPrototype() {
 
   if (authLoading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+      // (dvh-resize fix) — 100vh -> 100dvh, same reasoning as the shell
+      // row above.
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh" }}>
         <div style={{ fontSize: 13, color: "var(--slate-light)" }}>Loading…</div>
       </div>
     );
@@ -1966,7 +1990,9 @@ export function EncyclopediaPrototype() {
           with the authLoading state above it. */}
       <React.Suspense
         fallback={
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+          // (dvh-resize fix) — 100vh -> 100dvh, same reasoning as the
+          // shell row above.
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh" }}>
             <div style={{ fontSize: 13, color: "var(--slate-light)" }}>Loading…</div>
           </div>
         }

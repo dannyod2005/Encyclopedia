@@ -695,7 +695,13 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
   // visibility on every input/select using this style object. The
   // shared input:focus-visible rule in global.css now supplies a
   // visible outline instead.
-  const rowInput = { fontFamily: "var(--font-body)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13, width: "100%", background: "var(--paper-2)" };
+  // (quiz-row-phone fix) — minWidth:0 added: this is a shared style object
+  // reused across plain full-width labeled fields (where it's a no-op)
+  // and the quiz question row below (where the input sits in a flex row
+  // next to a select+button and needs to actually shrink below an
+  // <input>'s browser-default intrinsic minimum instead of forcing the
+  // row wider than its container).
+  const rowInput = { fontFamily: "var(--font-body)", border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", fontSize: 13, width: "100%", minWidth: 0, background: "var(--paper-2)" };
 
   return (
     // #336 — shared .enc-page-scaled primitive instead of a hardcoded
@@ -933,15 +939,51 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                       <>
                         {(qState.questions ?? []).map((q, qIndex) => (
                           <div key={q.id ?? `newq-${qIndex}`} style={{ marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--line)" }}>
-                            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
-                              <input
-                                style={rowInput}
-                                value={q.question}
-                                onChange={(e) => setQuestionText(quizKey(m), qIndex, e.target.value)}
-                                placeholder={`Question ${qIndex + 1}`}
-                              />
+                            {/* (quiz-row-phone fix) — on very small phones this
+                                row (question text + type dropdown + delete,
+                                all side by side) squeezed the input down to
+                                just a couple visible characters. Restructured
+                                to 2 lines below sm instead of 3: question +
+                                delete stay paired on line 1 (the inner
+                                wrapper div is a real flex row there), type
+                                dropdown gets its own full-width line 2. From
+                                sm up, the inner wrapper switches to
+                                display:contents (renders no box of its own),
+                                so its children rejoin the outer row as true
+                                siblings of the select — restoring the
+                                original single-row layout exactly, with
+                                order-2/order-3 putting select and delete back
+                                in their original visual positions (input,
+                                select, button) since display:contents alone
+                                would otherwise reorder them to DOM order
+                                (input, button, select). Width/margin
+                                overrides can't live in the shared inline
+                                `style` (inline always beats a responsive
+                                class, same specificity issue documented on
+                                AppTopbar's hamburger button) so they're
+                                Tailwind classes instead. */}
+                            <div className="flex flex-col sm:flex-row" style={{ gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
+                              <div className="flex w-full sm:contents" style={{ gap: 8, alignItems: "center" }}>
+                                <input
+                                  style={rowInput}
+                                  value={q.question}
+                                  onChange={(e) => setQuestionText(quizKey(m), qIndex, e.target.value)}
+                                  placeholder={`Question ${qIndex + 1}`}
+                                />
+                                {/* #258 — real button (was a bare clickable icon). */}
+                                <button
+                                  type="button"
+                                  aria-label={`Remove question ${qIndex + 1}`}
+                                  onClick={() => removeQuestion(quizKey(m), qIndex)}
+                                  className="sm:order-3 mt-0 sm:mt-[9px]"
+                                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", flexShrink: 0, display: "inline-flex", lineHeight: 0 }}
+                                >
+                                  <Trash2 size={15} color="var(--slate-light)" />
+                                </button>
+                              </div>
                               <select
-                                style={{ ...rowInput, width: "auto", flexShrink: 0 }}
+                                className="w-full sm:w-auto sm:order-2"
+                                style={{ ...rowInput, width: undefined, flexShrink: 0 }}
                                 value={q.type}
                                 onChange={(e) => setQuestionType(quizKey(m), qIndex, e.target.value)}
                                 title="Question type"
@@ -949,15 +991,6 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                                 <option value="mcq">Multiple choice</option>
                                 <option value="short_answer">Short answer</option>
                               </select>
-                              {/* #258 — real button (was a bare clickable icon). */}
-                              <button
-                                type="button"
-                                aria-label={`Remove question ${qIndex + 1}`}
-                                onClick={() => removeQuestion(quizKey(m), qIndex)}
-                                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", marginTop: 9, flexShrink: 0, display: "inline-flex", lineHeight: 0 }}
-                              >
-                                <Trash2 size={15} color="var(--slate-light)" />
-                              </button>
                             </div>
                             {q.type === "short_answer" ? (
                               <>

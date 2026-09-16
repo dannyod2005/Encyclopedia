@@ -405,7 +405,13 @@ export function HomeScreen({
               inProgress.slice(0, 3).map((e) => (
                 <button key={e.id} type="button" onClick={() => onGo(`learning/${e.courseId}`)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderRadius: 10, width: "100%", textAlign: "left", font: "inherit", background: "none", border: "none", cursor: "pointer" }}>
                   <EncyclopediaArch progress={e.progress} size={40} />
-                  <div style={{ flex: 1 }}>
+                  {/* (home-continue-card fix) — flex items default to
+                      min-width:auto; without minWidth:0 this column
+                      couldn't shrink below its content's own minimum,
+                      which at the narrower widths this card now renders
+                      at (see the sidebar-breakpoint fix) could crowd the
+                      chevron/edge rather than wrapping the title. */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 600 }}>{e.course?.title ?? "Untitled course"}</div>
                     <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
                       {Math.round(e.progress * (e.course?.modules?.length ?? 0))} of {e.course?.modules?.length ?? 0} modules
@@ -462,7 +468,9 @@ export function HomeScreen({
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--gold-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <BookOpen size={17} color="var(--gold-dark)" />
                 </div>
-                <div style={{ flex: 1 }}>
+                {/* (home-continue-card fix) — same minWidth:0 as the
+                    logged-in branch above. */}
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.title}</div>
                   <div style={{ fontSize: 12, color: "var(--slate-light)" }}>{c.provider}</div>
                 </div>
