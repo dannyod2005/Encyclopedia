@@ -104,6 +104,30 @@ function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   );
 }
 
+// (perf: defer secondary fetches) — App.jsx fires ~9 authenticated fetches
+// on every logged-in mount regardless of which route is actually showing,
+// all racing for the same handful of connections/CPU as the LCP-critical
+// work (the current route's JS chunk + its own render). Most of that data
+// (courses/enrollments/learning-paths/profiles-me) genuinely is needed
+// broadly — profiles/me in particular gates the sidebar's Trainer nav item,
+// so deferring it would risk a visible nav flash. But notifications/badges/
+// bookmarks/activity-summary only ever feed a topbar dropdown or a couple
+// of Dashboard cards that already render their own loading skeleton while
+// this is in flight (see the CLS-audit comments beside each) — nothing
+// about first paint depends on them. Wrapping their fetch-kickoff in this
+// lets the browser finish the LCP-critical work first and only spends
+// bandwidth/CPU on these once it's idle (or after one frame, on Safari/
+// older browsers with no requestIdleCallback), rather than opening 9
+// connections in the same instant.
+function deferToIdle(fn) {
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    const id = window.requestIdleCallback(fn, { timeout: 2000 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = setTimeout(fn, 0);
+  return () => clearTimeout(id);
+}
+
 /* ---------- Layout shell (sidebar + topbar) for logged-in app routes ---------- */
 function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notifications, unreadCount, onOpenNotification }) {
   const location = useLocation();
@@ -478,19 +502,22 @@ export function EncyclopediaPrototype() {
     }
 
     setBadgesLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/badges/me`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/badges/me`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setBadges)
-      .catch((err) => {
-        console.error("Failed to load badges:", err.message);
-        setBadges([]);
-      })
-      .finally(() => setBadgesLoading(false));
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setBadges)
+        .catch((err) => {
+          console.error("Failed to load badges:", err.message);
+          setBadges([]);
+        })
+        .finally(() => setBadgesLoading(false));
+    });
   }, [loggedIn, session]);
 
   // #229 — forum-reply notifications, for the topbar bell. Same
@@ -506,18 +533,21 @@ export function EncyclopediaPrototype() {
       return;
     }
 
-    fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setNotifications)
-      .catch((err) => {
-        console.error("Failed to load notifications:", err.message);
-        setNotifications([]);
-      });
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setNotifications)
+        .catch((err) => {
+          console.error("Failed to load notifications:", err.message);
+          setNotifications([]);
+        });
+    });
   }, [loggedIn, session]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -556,19 +586,22 @@ export function EncyclopediaPrototype() {
     }
 
     setBookmarksLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/bookmarks`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setBookmarks)
-      .catch((err) => {
-        console.error("Failed to load bookmarks:", err.message);
-        setBookmarks([]);
-      })
-      .finally(() => setBookmarksLoading(false));
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setBookmarks)
+        .catch((err) => {
+          console.error("Failed to load bookmarks:", err.message);
+          setBookmarks([]);
+        })
+        .finally(() => setBookmarksLoading(false));
+    });
   }, [loggedIn, session]);
 
   const bookmarkedIds = bookmarks.map((b) => b.courseId);
@@ -674,16 +707,25 @@ export function EncyclopediaPrototype() {
     // keeps streak/pointsThisWeek/goalHitDays pinned to the real
     // current week regardless, so those don't flicker as the calendar is
     // browsed.
-    fetch(`${import.meta.env.VITE_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+    // (perf: defer secondary fetches) — see deferToIdle's comment above.
+    // Also covers the weekOffset-paging re-fetch, not just the initial
+    // mount — requestIdleCallback only actually delays when the main
+    // thread is genuinely busy (e.g. right after page load, which is the
+    // case this exists for); once the user has clicked a calendar arrow
+    // the thread is idle again almost immediately, so paging doesn't feel
+    // any less responsive.
+    return deferToIdle(() => {
+      fetch(`${import.meta.env.VITE_API_URL}/activity/summary?weekOffset=${calendarWeekOffset}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      .then(setActivitySummary)
-      .catch((err) => console.error("Failed to load activity summary:", err.message))
-      .finally(() => setActivitySummaryLoading(false));
+        .then((res) => {
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+          return res.json();
+        })
+        .then(setActivitySummary)
+        .catch((err) => console.error("Failed to load activity summary:", err.message))
+        .finally(() => setActivitySummaryLoading(false));
+    });
   }, [loggedIn, session, calendarWeekOffset]);
 
   // #107 — learner's goal (profiles.goal), replacing the old LEARNER.goal

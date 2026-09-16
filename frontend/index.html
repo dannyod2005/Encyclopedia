@@ -52,6 +52,20 @@
          src/, just the HTML-side equivalent. -->
     <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
     <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
+    <!-- (perf: LCP fix) — Lighthouse flagged the header logo (AppTopbar/
+         MarketingHeader's logo-full-web.png) as the LCP element on several
+         routes, with a ~1.9s "resource load delay" before the browser even
+         requested it: this app is fully client-rendered (see #456 above),
+         so the <img> itself isn't discoverable until the JS bundle has
+         downloaded, parsed, and rendered the header. Preloading it here
+         means the browser starts fetching the actual image during initial
+         HTML parse, in parallel with the JS bundle, instead of serially
+         after it. Only the full wordmark is preloaded — it's what renders
+         at sm+ in AppTopbar and unconditionally in MarketingHeader, i.e.
+         nearly every real viewport; the sub-sm icon swap in AppTopbar
+         (logo-icon-web.png) is small/already-cached-adjacent enough not to
+         be worth a second preload request competing for bandwidth here. -->
+    <link rel="preload" as="image" href="/logo-full-web.png" fetchpriority="high" />
     <!-- #367 — Fraunces was requested at weights 500/600/700, but a grep
          across every var(--font-display) usage in src/ shows only 600 and
          700 are ever actually applied — weight 500 was dead weight in the
