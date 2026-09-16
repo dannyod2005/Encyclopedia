@@ -112,9 +112,15 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           that width back for the title; full wordmark returns from sm up,
           where there's always been enough room. display isn't set inline
           on either — that would beat the sm:hidden/sm:block classes
-          regardless of width, the same bug MarketingHeader's padding had. */}
-      <img src="/logo-icon-web.png" alt="Encyclopedia" width={28} height={24} className="block sm:hidden" style={{ height: 24, width: 28, flexShrink: 0 }} />
-      <img src="/logo-full-web.png" alt="Encyclopedia" width={133} height={24} className="hidden sm:block" style={{ height: 24, width: 133, flexShrink: 0 }} />
+          regardless of width, the same bug MarketingHeader's padding had.
+          (perf: LCP fix) — fetchPriority="high" on both: this logo is the
+          Lighthouse-measured LCP element on several routes (e.g. /about
+          for logged-in visitors), and was being discovered/fetched late
+          because it sits behind the JS bundle with no priority hint —
+          see the index.html preload comment for the other half of this
+          fix. */}
+      <img src="/logo-icon-web.png" alt="Encyclopedia" width={28} height={24} className="block sm:hidden" style={{ height: 24, width: 28, flexShrink: 0 }} fetchPriority="high" />
+      <img src="/logo-full-web.png" alt="Encyclopedia" width={133} height={24} className="hidden sm:block" style={{ height: 24, width: 133, flexShrink: 0 }} fetchPriority="high" />
       {/* #385 — reverted to plain --line: the blue tint tried here read
           as a washed-out gray rather than a deliberate blue (a 1px hairline
           is too thin/translucent to carry visible hue against white), and
