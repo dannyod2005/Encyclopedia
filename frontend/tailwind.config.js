@@ -18,6 +18,34 @@ module.exports = {
   },
   theme: {
     extend: {
+      // (sidebar-breakpoint fix) — the persistent-vs-toggle sidebar
+      // switch (AppSidebar.jsx, AppTopbar.jsx) used Tailwind's default
+      // `md` (768px), which is also iPad Mini's own portrait width —
+      // landing it right on the boundary rather than clearly on one
+      // side of it, so the persistent 220px sidebar + topbar hamburger
+      // both applied there, leaving noticeably less content width than
+      // intended and causing Catalogue/Home/Trainer Studio content to
+      // overflow or crowd at that exact size. A dedicated `nav`
+      // breakpoint (880px, comfortably clear of 768 and still well
+      // under Surface Pro 10's 960px, which wasn't reported as a
+      // problem here) lets the sidebar/topbar switch move independently
+      // of the many other, unrelated md: usages across the app (grid
+      // columns, spacing, hide/show) — changing the shared `md` value
+      // itself would have shifted all of those too.
+      screens: {
+        nav: '880px',
+        // (dashboard-tablet-buttons fix) — Dashboard's Completed-course
+        // row (View certificate/Retake) sits inside Dashboard's left grid
+        // column (~2/3 of page width from md up), so even iPad Pro 13
+        // (1024-1366, comfortably past lg's 1024px) still doesn't have
+        // real room for full-text labels there — the column's own width
+        // is what matters, not the viewport's. 1440 matches the same
+        // breakpoint global.css's .enc-page-wide/.enc-page-scaled already
+        // use to grow the page's own max-width, i.e. genuine large-
+        // desktop territory rather than any tablet, including the
+        // biggest ones.
+        wide: '1440px',
+      },
       // Mapped straight to the CSS custom properties already defined in
       // src/styles/global.css, so Tailwind classes (bg-ink, text-gold,
       // border-line, etc.) always match the existing design tokens

@@ -66,7 +66,24 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
     /* (tablet-padding fix) — horizontal padding now comes from the
        shared .enc-outer-pad scale instead of a flat 32px at every
        width; vertical stays inline. */
-    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ paddingTop: 28, paddingBottom: 60, "--enc-page-base": "720px" }}>
+    /* (leaderboard-height fix, round 2) — the flat paddingBottom (first
+       60, then 18) never actually let the footer land at the true
+       bottom of a tall viewport: AppShell's <main> (App.jsx) is flex:1
+       in the sidebar column but has no minHeight:0, so on a page whose
+       own content is shorter than the leftover space, main couldn't
+       shrink to exactly that leftover amount — it kept growing to at
+       least this page's own natural content height, occasionally still
+       coming up short of the real viewport and forcing a scrollbar with
+       Footer half below the fold, even while whitespace was visible
+       above it. Fixed at the source (App.jsx gets minHeight:0 on
+       <main>) and completed here: this root is now itself a flex column
+       filling main's now-correctly-resolved height (minHeight:"100%"),
+       with a flex-grow spacer (below, after the list) standing in for
+       the flat paddingBottom — it absorbs whatever leftover space
+       main actually has, so Footer lands exactly at the bottom on
+       devices with room to spare, and collapses to the same 18px floor
+       as the personal-rank card's own marginBottom on devices without. */
+    <div className="enc-page-enter enc-page-scaled enc-outer-pad" style={{ display: "flex", flexDirection: "column", minHeight: "100%", paddingTop: 28, "--enc-page-base": "720px" }}>
       {/* #364 — title dropped: this route is always reached logged-in
           (RequireAuth), so AppTopbar already shows "Leaderboard" as the
           page title. Subtitle stays — it's context, not a duplicate. */}
@@ -130,7 +147,32 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
             </div>
           )}
 
-          <div className="enc-card" style={{ padding: 0, overflow: "hidden", maxHeight: 320, overflowY: "auto" }}>
+          {/* (leaderboard-height fix) — was a flat 320px, well short of
+              even the 10 test accounts already opted in, so the list
+              scrolled internally while the whitespace below it (down to
+              the page's own 60px paddingBottom) made the page look like
+              it had barely any data. With the seed accounts staying
+              opted in indefinitely, 10 rows is a realistic steady-state
+              floor rather than an edge case, so sized to fit exactly 10
+              rather than a number chosen to look good empty. Row heights
+              aren't uniform (medal rows — ranks 1-3 — render 16px
+              padding + the 17px trophy icon; plain rows render 14px
+              padding + a 13.5px text line) plus a 1px border-bottom
+              between each of the 9 gaps: 3*(32+17) + 7*(28+16.2) + 9 ≈
+              468px.
+              (leaderboard-height fix, round 3) — no marginBottom here
+              anymore: Footer itself (Footer.jsx) already adds a fixed
+              marginTop:40 before its own top border, same as every other
+              page in the app relies on for breathing room above it. This
+              card was stacking an extra 18px on top of that (58px total
+              fixed space before Footer's visible edge), which was
+              exactly enough on 1-2 borderline viewport heights to force
+              a scrollbar that wouldn't otherwise have been needed. The
+              flex-grow spacer below now owns 100% of the variable
+              trailing space with a floor of 0 (down from 18), so those
+              heights get every spare pixel back; Footer's own 40px still
+              provides the same visual separation every other page gets. */}
+          <div className="enc-card" style={{ padding: 0, overflow: "hidden", maxHeight: 468, overflowY: "auto" }}>
             {entries.map((e, i) => {
               const medal = MEDAL_STYLE[e.rank];
               return (
@@ -163,6 +205,15 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
           </div>
         </>
       )}
+      {/* (leaderboard-height fix, round 2/3) — flex-grow spacer standing
+          in for the old flat paddingBottom, floor 0 (see round 3's
+          comment on the list card above for why it's 0 and not 18):
+          grows to fill whatever's left of this column's (now correctly
+          shrink/grow-able) height and shrinks back to nothing when there
+          isn't any — rendered unconditionally (outside the loading/
+          error/empty-state branch above) so every state gets the same
+          consistent behavior, not just the populated list. */}
+      <div style={{ flex: 1 }} aria-hidden="true" />
     </div>
   );
 }

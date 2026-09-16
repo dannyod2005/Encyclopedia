@@ -195,8 +195,20 @@ function AppShell({ loggedIn, role, onLogout, title, children, user, goal, notif
             "Document does not have a main landmark" finding). AppSidebar's
             nav and AppTopbar above are their own landmarks (nav/header
             equivalents), so <main> here marks the one remaining region —
-            the actual page content — without wrapping those too. */}
-        <main style={{ flex: 1, minWidth: 0 }}>
+            the actual page content — without wrapping those too.
+            (leaderboard-height fix) — #347 (above) already relies on this
+            flex:1 to grow and fill leftover space so Footer lands at the
+            true bottom, but flex items default min-height to auto (their
+            own content's size), not 0 — so on a page shorter than the
+            available space, this could grow to fill it (flex-grow never
+            needed minHeight:0), but on a page whose content landed just
+            over that available space, it couldn't shrink back down to
+            fit either, forcing the whole column taller than the viewport
+            and Footer below the fold — visible as leftover whitespace
+            elsewhere on the page alongside a forced scrollbar. Same bug
+            class as the earlier Dashboard grid-column fix, just here it
+            blocked shrinking instead of blocking scrolling. */}
+        <main style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
           {children}
         </main>
         {/* #337 — site-wide footer, rendered once here so every routed

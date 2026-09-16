@@ -11,11 +11,16 @@ const TYPE_ICON = {
   course_completed: CheckCircle2,
 };
 
-// #104 — hamburger is mobile-only (md:hidden); on md+ this renders nothing
-// and the topbar is pixel-identical to before this issue.
-// #105 — sticky below md so it (and the hamburger) stays reachable while
-// scrolling long screens like Catalogue/Trainer studio on mobile; md+ is
+// #104 — hamburger is mobile-only (nav:hidden); on nav+ this renders
+// nothing and the topbar is pixel-identical to before this issue.
+// #105 — sticky below nav so it (and the hamburger) stays reachable while
+// scrolling long screens like Catalogue/Trainer studio on mobile; nav+ is
 // back to normal static flow, unchanged from before.
+// (sidebar-breakpoint fix) — nav (880px, see tailwind.config.js) instead
+// of Tailwind's default md (768px): 768 is also iPad Mini's own portrait
+// width, so the hamburger/sticky switch here (and AppSidebar's matching
+// switch) landed right on that device's exact size rather than clearly
+// past it.
 // #229 — bell icon + unread badge on the right, first anchored-dropdown UI
 // in this app (everything else — AuthModal, CourseDetailModal, etc. — is a
 // full centered modal with its own backdrop). A small, glanceable list
@@ -48,16 +53,26 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
   }
 
   return (
-    <div className="sticky top-0 z-20 md:static md:z-auto" style={{ display: "flex", alignItems: "center", gap: 14, padding: "18px 32px", borderBottom: "1px solid var(--line)", background: "var(--paper-2)" }}>
+    /* (topbar-logo-gap fix) — was a uniform flex `gap: 14` between every
+       item in this row. That gap is provably even in the DOM (a single
+       `gap` value can't itself be asymmetric), but visually the space
+       from the logo to the divider still read as bigger than the space
+       from the hamburger to the logo — tight enough on the narrowest
+       phones to force titles like "Privacy & GDPR" onto a 2nd line.
+       Swapped to explicit per-item marginRight below so that one gap
+       specifically (logo -> divider) can be pulled in without touching
+       the others; see the logo picture elements' own comments for the
+       actual values. */
+    <div className="sticky top-0 z-20 nav:static nav:z-auto" style={{ display: "flex", alignItems: "center", padding: "18px 32px", borderBottom: "1px solid var(--line)", background: "var(--paper-2)" }}>
       {/* #258 — real button, same reasoning as AppSidebar's own close
           button right above it: a bare icon with onClick is invisible to
           both keyboard and screen-reader users.
           #283 — display used to live in the inline `style`, which (having
           higher specificity than any non-!important class) always beat
-          the md:hidden below regardless of screen width, leaving this
+          the nav:hidden below regardless of screen width, leaving this
           visible on desktop too. Moving it into the className alongside
-          md:hidden keeps both display rules as Tailwind utilities, so
-          Tailwind's own mobile-first cascade order (md:hidden compiles
+          nav:hidden keeps both display rules as Tailwind utilities, so
+          Tailwind's own mobile-first cascade order (nav:hidden compiles
           after the base utilities) decides which wins instead of the
           inline style unconditionally overriding it. */}
       {onMenuClick && (
@@ -65,8 +80,8 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           type="button"
           aria-label="Open menu"
           onClick={onMenuClick}
-          className="cursor-pointer inline-flex md:hidden"
-          style={{ background: "none", border: "none", padding: 0, lineHeight: 0 }}
+          className="cursor-pointer inline-flex nav:hidden"
+          style={{ background: "none", border: "none", padding: 0, lineHeight: 0, marginRight: 14 }}
         >
           <Menu size={22} color="var(--ink)" />
         </button>
@@ -130,11 +145,18 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           browsers without WebP support. fetchPriority carries over to
           the fallback <img> — that's the element the browser actually
           measures/paints, same as before this wrap. */}
-      <picture>
+      {/* (topbar-logo-gap fix) — marginRight 6 here (vs. 14 everywhere
+          else in this row) is the actual fix for the logo-to-divider
+          gap reading larger than the hamburger-to-logo gap: the
+          <picture> element itself is the flex item this margin applies
+          to, so it's set here rather than on the row's shared gap. Both
+          the icon and wordmark variants get it, since either one can be
+          the visible logo depending on width. */}
+      <picture style={{ marginRight: 6 }}>
         <source srcSet="/logo-icon-web.webp" type="image/webp" />
         <img src="/logo-icon-web.png" alt="Encyclopedia" width={28} height={24} className="block sm:hidden" style={{ height: 24, width: 28, flexShrink: 0 }} fetchPriority="high" />
       </picture>
-      <picture>
+      <picture style={{ marginRight: 6 }}>
         <source srcSet="/logo-full-web.webp" type="image/webp" />
         <img src="/logo-full-web.png" alt="Encyclopedia" width={133} height={24} className="hidden sm:block" style={{ height: 24, width: 133, flexShrink: 0 }} fetchPriority="high" />
       </picture>
@@ -144,7 +166,7 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           it was adding to a "the more blue touches, the colder it looks"
           effect the client flagged — see AppSidebar.jsx's radial-glow
           comment for where that blue touch moved to instead. */}
-      <div style={{ width: 1, height: 24, background: "var(--line)", flexShrink: 0 }} aria-hidden="true" />
+      <div style={{ width: 1, height: 24, background: "var(--line)", flexShrink: 0, marginRight: 14 }} aria-hidden="true" />
       {/* #392 — flex items default to min-width:auto, which for text
           content means "at least as wide as the longest unbreakable
           word" — so a single long word like "Leaderboard" refused to
@@ -158,10 +180,22 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           room for every current page title on one line — this is
           deliberately a small-screen-only fix, not a lower ceiling for
           titles in general. */}
-      <h1 className="min-w-0 break-words md:break-normal" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: 0, flex: 1 }}>{title}</h1>
+      {/* (long-title fix) — a long course title (e.g. "Product Analytics
+          Fundamentals") passed through as this route's title could wrap
+          to 3-4 lines on the narrowest phones, ballooning the topbar's
+          height. line-clamp caps it at 3 lines with an ellipsis as a
+          hard visual ceiling regardless of source length; the real fix
+          (a character limit at course creation, tracked separately) still
+          matters since an ellipsis mid-title isn't a great reader
+          experience, but this stops today's existing titles from ever
+          blowing out the topbar in the meantime. */}
+      <h1 className="min-w-0 break-words md:break-normal" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: 0, flex: 1, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{title}</h1>
 
       {onOpenNotification && (
-        <div ref={containerRef} style={{ position: "relative" }}>
+        // (topbar-logo-gap fix) — marginLeft replaces the row's removed
+        // uniform gap for this one spot (h1 is flex:1, so it has no
+        // trailing edge of its own to carry a marginRight).
+        <div ref={containerRef} style={{ position: "relative", marginLeft: 14 }}>
           {/* #258 — real button + aria-expanded (the panel it controls is a
               relative-positioned popover, not a native <details>/<dialog>,
               so aria-expanded is what tells AT whether it's currently
