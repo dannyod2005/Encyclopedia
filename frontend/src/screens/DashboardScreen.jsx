@@ -193,7 +193,27 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
             column lets the list panel inside (flex:1, below) fill it,
             instead of the panel stopping at a fixed height and leaving
             unused space beneath it. */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* (grid-blowout fix) — this column is a CSS Grid item (parent:
+            grid grid-cols-1 md:grid-cols-[2fr_1fr] above), and grid items
+            default to min-width/min-height: auto, which resolves to the
+            item's own *content's* min-content size, not 0 — every
+            "scroll internally instead of growing the page" trick further
+            down this column (flex:1 + minHeight:0 + overflowY:auto on the
+            course-list panel below) only works once the item itself stops
+            being forced open by that default. Without minWidth/minHeight:0
+            here, the column's automatic minimum is the full unscrolled
+            height of every "Start my learning"/"Continue learning"/
+            "Completed" row combined (unbounded by how many courses a
+            learner has), so the grid row — and the whole page — stretched
+            to fit that instead of clipping, which is what made the right
+            column look pressed against the edge with no padding
+            (min-width:auto let this column's content push past its 2fr
+            share on narrow tablet widths, squeezing the 1fr column) and
+            made the page stretch taller than the viewport on refresh once
+            real content replaced the loading skeleton (sidebar/topbar
+            correctly track 100dvh of the real viewport; this column didn't
+            have a matching ceiling). */}
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
           {loading ? (
             // #367 — was a single short "Loading your learning…" card,
             // nowhere near the height of the real stat-cards + list-rows
