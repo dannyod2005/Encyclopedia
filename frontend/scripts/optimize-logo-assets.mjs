@@ -38,22 +38,41 @@ const targets = [
   { src: "logo-icon.png", base: "logo-icon-web", width: 56, height: 48 },
 ];
 
+// (topbar-logo-padding fix) — AppTopbar's icon logo renders in a fixed
+// 28x24 display box right between the hamburger and the divider, with a
+// uniform 14px flex `gap` supposedly spacing it evenly from both — but
+// the gap to the hamburger read visibly smaller than the gap to the
+// divider on narrow phones, tight enough to be forcing page titles like
+// "Privacy & GDPR" to wrap onto a 2nd line that width should have had
+// room for. A uniform flex gap can't itself produce that asymmetry;
+// masters kept as source-of-truth PSDs/exports often carry a few px of
+// transparent margin around the actual glyph that isn't equal on every
+// side (same category of issue MarketingHeader.jsx's comment already
+// documented for logo-full.png's ~12/10px top/bottom canvas padding,
+// just on the horizontal axis here instead) — that bakes directly into
+// the resized output since `fit: "inside"` preserves whatever margin is
+// already in the source. .trim() strips any such boring/transparent
+// border from each master before resizing, so the glyph fills its box
+// symmetrically regardless of what margin the source file happened to
+// have, rather than guessing at a manual crop.
 for (const { src, base, width, height } of targets) {
   const input = path.join(PUBLIC_DIR, src);
   const webpOut = path.join(PUBLIC_DIR, `${base}.webp`);
   const pngOut = path.join(PUBLIC_DIR, `${base}.png`);
 
   await sharp(input)
+    .trim()
     .resize(width, height, { fit: "inside" })
     .webp({ quality: 90 })
     .toFile(webpOut);
 
   await sharp(input)
+    .trim()
     .resize(width, height, { fit: "inside" })
     .png({ quality: 90, compressionLevel: 9 })
     .toFile(pngOut);
 
-  console.log(`Generated ${base}.webp and ${base}.png at ${width}x${height} (from ${src})`);
+  console.log(`Generated ${base}.webp and ${base}.png at ${width}x${height} (from ${src}, trimmed)`);
 }
 
 console.log("\nDone. Check the file sizes in frontend/public/ — each should now be a few KB rather than 40+.");

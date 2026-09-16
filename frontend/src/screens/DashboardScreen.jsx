@@ -474,10 +474,25 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                     hide below sm (icon + aria-label only, same
                     icon-only-needs-an-accessible-name convention #258
                     used elsewhere — see Trainer Studio's course-row
-                    buttons for the identical pattern); full labels
-                    return from sm up. */}
+                    buttons for the identical pattern).
+                    (dashboard-tablet-buttons fix) — sm (640px) was too
+                    low a bar here specifically: unlike Trainer Studio's
+                    row (which spans nearly the full page), this row sits
+                    inside Dashboard's left grid column, which is only
+                    ~2/3 of the page's content width from md up — so at
+                    tablet viewports (iPad Mini 768, Surface Pro 960) the
+                    actual row width was still phone-like even though the
+                    viewport itself had cleared sm.
+                    (dashboard-tablet-buttons fix, round 2) — lg (1024px)
+                    still wasn't enough: iPad Pro 13 (1024-1366) falls
+                    just past lg but its own 2/3-column share still barely
+                    shows any course-title text once both labels return.
+                    Raised again to a dedicated wide (1440px) breakpoint —
+                    same threshold global.css already uses to grow the
+                    page's own max-width, i.e. actual large-desktop room,
+                    not just "past the biggest common tablet." */}
                 <button className="enc-btn enc-btn-ghost" aria-label="View certificate" onClick={() => handleViewCertificate(e.id)}>
-                  <Award size={14} /> <span className="hidden sm:inline">View certificate</span>
+                  <Award size={14} /> <span className="hidden wide:inline">View certificate</span>
                 </button>
                 {/* #300 — was "Unenroll": a finished course's most likely
                     next action is doing it again, not leaving it, and
@@ -492,7 +507,7 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                     style={{ color: "var(--coral)" }}
                     onClick={() => { setRetakingCourse({ enrollmentId: e.id, title: c.title }); setRetakeError(null); }}
                   >
-                    <RotateCcw size={14} /> <span className="hidden sm:inline">Retake</span>
+                    <RotateCcw size={14} /> <span className="hidden wide:inline">Retake</span>
                   </button>
                 )}
               </div>

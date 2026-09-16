@@ -15,8 +15,10 @@ const RECOMMENDED_LIMIT = 6;
 // A batch of learning paths (e.g. 9) used to fill the whole viewport
 // above the fold, same underlying problem #344 fixed for the search bar
 // (it just moved search above this section instead of capping it). Same
-// limit/pattern as RECOMMENDED_LIMIT above — two grid rows by default,
-// with an explicit "Show all" toggle rather than silently hiding paths.
+// limit/pattern as RECOMMENDED_LIMIT above, with an explicit "Show all"
+// toggle rather than silently hiding paths. (Was tuned to exactly two
+// grid rows at the old 3-column layout; now three rows at 2 columns —
+// see the (catalogue-paths-width fix) comment below for why.)
 const LEARNING_PATHS_LIMIT = 6;
 
 // (perf follow-up) — this page's main grid was the last one in the app
@@ -170,12 +172,23 @@ export function CatalogueScreen({
           aria-label={`Open ${c.title}`}
           style={{ position: "absolute", inset: 0, background: "none", border: "none", padding: 0, margin: 0, cursor: "pointer", zIndex: 1 }}
         />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {/* (catalogue-card-overflow fix) — .enc-card has no overflow:hidden,
+            so this row overflowing its card's own width doesn't clip —
+            it visually spills onto whatever sits next to it in the grid
+            (the card to the right), which is what made the bookmark
+            button look like it had drifted onto the neighboring card at
+            iPad-Mini-adjacent widths. minWidth:0 + truncation on the
+            category label lets it shrink first (rarely needed — these
+            are short words); flexWrap + flexShrink:0 on the
+            Enrolled/bookmark group is the fallback so that group drops to
+            its own line instead of pushing past the card's edge when
+            there truly isn't room for both groups on one line. */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", rowGap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
             <CategoryDot color={c.color} />
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{c.category}</span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.category}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {isEnrolled && <span className="enc-badge" style={{ background: "var(--success-tint)", color: "var(--success)" }}>Enrolled</span>}
             {/* #258 — real button (was a bare clickable icon); aria-label
                 reflects current saved state, same reasoning as the
@@ -209,7 +222,15 @@ export function CatalogueScreen({
         <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 10 }}>{c.provider}</div>
         <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 16, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.blurb}</div>
         <hr className="enc-hairline" style={{ margin: "0 0 12px" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* (catalogue-card-overflow fix) — Stars + "Xh · Level" side by
+            side had no room to spare at iPad-Mini-adjacent card widths in
+            the 3-column grid (a longer level like "Intermediate" was
+            usually the tipping point) and, same as the row above,
+            .enc-card doesn't clip overflow — it spilled onto the card to
+            the right instead. flexWrap lets the meta text drop to its own
+            line under the stars when it doesn't fit, rather than
+            overflowing the card. */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", rowGap: 4 }}>
           <Stars rating={c.rating} />
           <span style={{ fontSize: 12, color: "var(--slate-light)", fontFamily: "var(--font-mono)" }}>{c.hours}h · {c.level}</span>
         </div>
@@ -395,13 +416,20 @@ export function CatalogueScreen({
           <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 14 }}>
             Guided, multi-course sequences curated by trainers.
           </div>
+          {/* (catalogue-paths-width fix) — a path card's title only gets
+              two lines before clamping (see renderPathCard), and at
+              3 columns each card's share of the width was tight enough
+              that longer titles were clamping/truncating noticeably
+              early. Dropped to 2 columns (from sm up, same as before)
+              instead of 3, giving each card meaningfully more width for
+              its name — matches the skeleton below so there's no shift. */}
           {pathsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 18 }}>
               {Array.from({ length: LEARNING_PATHS_LIMIT }).map((_, i) => renderPathCardSkeleton(i))}
             </div>
           ) : learningPaths.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 18 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 18 }}>
                 {visiblePaths.map(renderPathCard)}
               </div>
               {learningPaths.length > LEARNING_PATHS_LIMIT && (
