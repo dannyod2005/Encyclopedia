@@ -118,9 +118,26 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
           for logged-in visitors), and was being discovered/fetched late
           because it sits behind the JS bundle with no priority hint —
           see the index.html preload comment for the other half of this
-          fix. */}
-      <img src="/logo-icon-web.png" alt="Encyclopedia" width={28} height={24} className="block sm:hidden" style={{ height: 24, width: 28, flexShrink: 0 }} fetchPriority="high" />
-      <img src="/logo-full-web.png" alt="Encyclopedia" width={133} height={24} className="hidden sm:block" style={{ height: 24, width: 133, flexShrink: 0 }} fetchPriority="high" />
+          fix.
+          (perf: #480) — <picture>+WebP wrapping both: Lighthouse's
+          "improve image delivery" audit flagged ~46 KiB of avoidable
+          download size here — logo-full-web.png/logo-icon-web.png were
+          raster copies sized for their largest usage across the app
+          (up to 666x120), displayed nowhere near that size. Regenerated
+          via frontend/scripts/optimize-logo-assets.mjs at 2x their real
+          max render size; PNG fallback kept as the same filename (so
+          nothing else referencing these paths needs to change) for
+          browsers without WebP support. fetchPriority carries over to
+          the fallback <img> — that's the element the browser actually
+          measures/paints, same as before this wrap. */}
+      <picture>
+        <source srcSet="/logo-icon-web.webp" type="image/webp" />
+        <img src="/logo-icon-web.png" alt="Encyclopedia" width={28} height={24} className="block sm:hidden" style={{ height: 24, width: 28, flexShrink: 0 }} fetchPriority="high" />
+      </picture>
+      <picture>
+        <source srcSet="/logo-full-web.webp" type="image/webp" />
+        <img src="/logo-full-web.png" alt="Encyclopedia" width={133} height={24} className="hidden sm:block" style={{ height: 24, width: 133, flexShrink: 0 }} fetchPriority="high" />
+      </picture>
       {/* #385 — reverted to plain --line: the blue tint tried here read
           as a washed-out gray rather than a deliberate blue (a 1px hairline
           is too thin/translucent to carry visible hue against white), and
