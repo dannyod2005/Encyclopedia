@@ -191,9 +191,13 @@ export function AppSidebar({ screen, onGo, role, onLogout, user, goal = null, mo
               original #2B1E06 alongside --gold's revert to its warm
               value — see .enc-btn-gold's comment in global.css for the
               same pairing and its contrast ratio. */}
-          <div style={{ width: 30, height: 30, borderRadius: 99, background: "var(--gold)", color: "#2B1E06", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>{initials}</div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-fg)" }}>{displayName}</div>
+          <div style={{ width: 30, height: 30, borderRadius: 99, background: "var(--gold)", color: "#2B1E06", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{initials}</div>
+          {/* (mobile-overflow fix) — minWidth:0 lets this column shrink
+              instead of the row overflowing; overflowWrap on the name
+              below breaks a long unspaced display name instead of
+              stretching the sidebar. */}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-fg)", overflowWrap: "break-word" }}>{displayName}</div>
             {/* #107 — goal is null until a learner picks one via the
                 onboarding modal (or if they skipped it); falls back to a
                 generic label rather than showing nothing here, since a

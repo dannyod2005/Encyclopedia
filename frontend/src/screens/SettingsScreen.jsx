@@ -2,7 +2,7 @@ import { useState } from "react";
 import { User, Lock, Eye, EyeOff, Trophy } from "lucide-react";
 
 import { getDisplayName } from "../lib/userDisplay";
-import { iconButtonHitArea } from "../components/common/Primitives";
+import { iconButtonHitArea, CharCounter } from "../components/common/Primitives";
 
 // #296 — the original 150/300/450/600/900 presets (and the 300 default
 // below) were calibrated on the old flat per-action point values
@@ -167,6 +167,7 @@ export function SettingsScreen({
                 maxLength={80}
               />
             </div>
+            <CharCounter length={name.length} max={80} />
             {/* #349 — wrapper stays mounted (aria-live regions only get
                 picked up by a screen reader if they already exist in the
                 DOM before their content changes) so success/error text

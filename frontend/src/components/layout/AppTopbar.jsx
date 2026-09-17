@@ -291,15 +291,20 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
                         <Icon size={13} color="var(--blue-dark)" />
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
+                        {/* (mobile-overflow fix) — actorName/excerpt/
+                            moduleTitle/courseTitle are all user-typed
+                            content (a display name, a forum post, or a
+                            trainer's module/course title) with no
+                            guaranteed break point. */}
                         {n.type === "forum_reply" && (
                           <>
-                            <div style={{ fontSize: 12.5, fontWeight: 600 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, overflowWrap: "break-word" }}>
                               {n.actorName} replied to your post
                             </div>
-                            <div style={{ fontSize: 12, color: "var(--slate)", marginTop: 2, lineHeight: 1.4 }}>
+                            <div style={{ fontSize: 12, color: "var(--slate)", marginTop: 2, lineHeight: 1.4, overflowWrap: "break-word" }}>
                               {n.excerpt}
                             </div>
-                            <div style={{ fontSize: 11, color: "var(--slate-light)", marginTop: 4 }}>
+                            <div style={{ fontSize: 11, color: "var(--slate-light)", marginTop: 4, overflowWrap: "break-word" }}>
                               {n.moduleTitle} · {n.courseTitle}
                             </div>
                           </>
@@ -315,7 +320,7 @@ export function AppTopbar({ title, onMenuClick, notifications = [], unreadCount 
                           </>
                         )}
                         {n.type === "course_completed" && (
-                          <div style={{ fontSize: 12.5, fontWeight: 600 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, overflowWrap: "break-word" }}>
                             You completed {n.courseTitle}!
                           </div>
                         )}

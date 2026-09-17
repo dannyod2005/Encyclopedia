@@ -126,12 +126,48 @@ export function ScreenMessage({ variant = "empty", message, onRetry, padding = 4
   );
 }
 
+// (char-counter) — shared "X characters left" readout for every field
+// carrying a MaxLength cap (course title/blurb, module/credit/FAQ text,
+// learning path title/description, provider name, review text, forum
+// posts, quiz question/option/answer text, notes). Discord-style: stays
+// hidden until the field is actually getting close to its cap, then
+// counts down. It never goes negative here — every field it's attached
+// to also carries the browser's native `maxLength` attribute, which
+// already stops the user from typing past the limit, so 0 is the true
+// floor and doubles as the "you've hit the limit" state (shown in
+// coral). `threshold` is auto-scaled off `max` (15% of it, clamped to
+// 15-100 chars) so a 150-char title and a 5000-char answer both start
+// warning at a sensible point rather than sharing one fixed number.
+export function CharCounter({ length, max }) {
+  const remaining = max - length;
+  const threshold = Math.min(100, Math.max(15, Math.round(max * 0.15)));
+  if (remaining > threshold) return null;
+  const atLimit = remaining <= 0;
+  return (
+    <div
+      style={{
+        fontSize: 11.5,
+        textAlign: "right",
+        marginTop: 4,
+        color: atLimit ? "var(--coral)" : "var(--slate-light)",
+        fontWeight: atLimit ? 600 : 400,
+      }}
+    >
+      {atLimit ? "Character limit reached" : `${remaining} character${remaining === 1 ? "" : "s"} left`}
+    </div>
+  );
+}
+
 export function PageHeader({ title, subtitle }) {
   if (!title && !subtitle) return null;
   return (
     <div style={{ marginBottom: 22 }}>
       {title && (
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 30, margin: subtitle ? "0 0 6px" : 0 }}>
+        // (mobile-overflow fix) — HomeScreen interpolates the user's own
+        // display name into this title ("Good to see you, {firstName}."),
+        // so an unusually long single name needs to break onto another
+        // line instead of overflowing the page width on narrow screens.
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 30, margin: subtitle ? "0 0 6px" : 0, overflowWrap: "break-word" }}>
           {title}
         </h1>
       )}

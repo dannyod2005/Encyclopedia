@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -14,8 +15,10 @@ export class CreateModuleDto {
   @IsUUID()
   id?: string;
 
+  // (maxlength-constraints) — 150, same "title" tier as CreateCourseDto.
   @IsString()
   @MinLength(1)
+  @MaxLength(150)
   title: string;
 
   @IsOptional()

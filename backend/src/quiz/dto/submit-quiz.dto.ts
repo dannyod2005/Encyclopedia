@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -22,9 +23,14 @@ class QuizAnswerDto {
   @IsUUID()
   optionId?: string;
 
+  // (maxlength-constraints) — 250, matching UpsertQuestionDto's
+  // acceptableAnswers: a learner's short-answer response is graded
+  // against those same short keyword/phrase strings, so it carries the
+  // same cap rather than the old, looser 300 "short string" tier.
   @IsOptional()
   @IsString()
   @MinLength(1)
+  @MaxLength(250)
   answerText?: string;
 }
 

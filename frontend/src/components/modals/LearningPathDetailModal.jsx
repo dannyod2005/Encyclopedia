@@ -44,13 +44,16 @@ export function LearningPathDetailModal({ path, onClose, onEnrol, onGoToDashboar
         aria-labelledby="enc-path-modal-title"
         tabIndex={-1}
       >
+        {/* (mobile-overflow fix) — minWidth:0 lets this side of the header
+            row shrink; overflowWrap on the title below breaks an
+            unbroken run of characters instead of widening the modal. */}
         <div style={{ padding: "24px 28px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
               <Milestone size={14} color="var(--gold-dark)" />
               <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Learning path · {visiblePath.courses.length} courses</span>
             </div>
-            <h2 id="enc-path-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0 }}>{visiblePath.title}</h2>
+            <h2 id="enc-path-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0, overflowWrap: "break-word" }}>{visiblePath.title}</h2>
           </div>
           {/* #258 — real button (was a bare clickable icon). */}
           <button
@@ -65,7 +68,7 @@ export function LearningPathDetailModal({ path, onClose, onEnrol, onGoToDashboar
 
         <div style={{ padding: "20px 28px" }}>
           {visiblePath.description && (
-            <p style={{ fontSize: 14.5, color: "var(--ink-70)", lineHeight: 1.6, marginBottom: 22 }}>{visiblePath.description}</p>
+            <p style={{ fontSize: 14.5, color: "var(--ink-70)", lineHeight: 1.6, marginBottom: 22, overflowWrap: "break-word" }}>{visiblePath.description}</p>
           )}
 
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--slate-light)", marginBottom: 10 }}>Courses, in order</div>
@@ -79,10 +82,10 @@ export function LearningPathDetailModal({ path, onClose, onEnrol, onGoToDashboar
                 disabled={!onOpenCourse}
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", width: "100%", textAlign: "left", font: "inherit", background: "none", border: "none", borderBottom: i < visiblePath.courses.length - 1 ? "1px solid var(--line)" : "none", cursor: onOpenCourse ? "pointer" : "default" }}
               >
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20 }}>{String(i + 1).padStart(2, "0")}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{c.title}</div>
-                  <div style={{ fontSize: 12, color: "var(--slate-light)" }}>{c.provider} · {c.hours}h</div>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, overflowWrap: "break-word" }}>{c.title}</div>
+                  <div style={{ fontSize: 12, color: "var(--slate-light)", overflowWrap: "break-word" }}>{c.provider} · {c.hours}h</div>
                 </div>
               </button>
             ))}

@@ -4,6 +4,7 @@ import { PlayCircle, CheckCircle2, XCircle, ChevronLeft, Star, AlertTriangle, X 
 
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { computeCourseGradePct } from "../lib/courseGrade";
+import { CharCounter } from "../components/common/Primitives";
 
 // #240/#254 — a module's quiz score has to clear this to count as
 // "passed." Purely a comparison bar for display/nudging, never a gate on
@@ -574,7 +575,14 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
           <div style={{ width: 28, height: 28, borderRadius: 99, background: "var(--gold-tint)", color: "var(--gold-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
             {(p.author.name || "?")[0]}
           </div>
-          <div style={{ flex: 1 }}>
+          {/* (forum-overflow fix) — minWidth:0 overrides the flex item's
+              default min-width:auto, which otherwise sizes this box (and
+              everything above it, up through the page's grid column) to
+              fit its content's intrinsic width. A long unbroken string in
+              p.content below has no natural break points, so without this
+              the whole left column — and the video sized off its width —
+              stretched to match it. */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>
               {p.author.name || "Anonymous"}
               {p.edited && (
@@ -588,7 +596,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   style={{ width: "100%", minHeight: 48, border: "1px solid var(--line)", borderRadius: 8, padding: 10, fontFamily: "var(--font-body)", fontSize: 13.5, resize: "vertical", marginBottom: 8 }}
+                  maxLength={2000}
                 />
+                <CharCounter length={editContent.length} max={2000} />
                 {editingError && <div style={{ fontSize: 12, color: "var(--coral)", marginBottom: 8 }}>{editingError}</div>}
                 <button
                   className="enc-btn enc-btn-gold"
@@ -606,7 +616,12 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 </span>
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: "var(--slate)" }}>{p.content}</div>
+              // (forum-overflow fix) — overflow-wrap tells the browser it
+              // can break inside a run of characters that has no spaces
+              // (like a repeated "TestTest..." string) instead of treating
+              // it as one unbreakable word and growing the box to fit it
+              // on a single line.
+              <div style={{ fontSize: 13, color: "var(--slate)", overflowWrap: "break-word" }}>{p.content}</div>
             )}
 
             {!isEditing && (
@@ -644,7 +659,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder={`Reply to ${p.author.name || "this post"}…`}
                   style={{ width: "100%", minHeight: 48, border: "1px solid var(--line)", borderRadius: 8, padding: 10, fontFamily: "var(--font-body)", fontSize: 13.5, resize: "vertical", marginBottom: 8 }}
+                  maxLength={2000}
                 />
+                <CharCounter length={replyContent.length} max={2000} />
                 {postingError && <div style={{ fontSize: 12, color: "var(--coral)", marginBottom: 8 }}>{postingError}</div>}
                 <button
                   className="enc-btn enc-btn-gold"
@@ -724,7 +741,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                       pure star rating (the only option before #228) has
                       no reviewText and this stays hidden. */}
                   {enrollment.reviewText && (
-                    <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--paper)", borderRadius: 8, fontSize: 13, color: "var(--ink-70)", textAlign: "left" }}>
+                    <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--paper)", borderRadius: 8, fontSize: 13, color: "var(--ink-70)", textAlign: "left", overflowWrap: "break-word" }}>
                       “{enrollment.reviewText}”
                     </div>
                   )}
@@ -764,7 +781,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                     disabled={ratingSubmitting}
                     placeholder="Leave a comment (optional)"
                     style={{ width: "100%", minHeight: 60, marginTop: 12, border: "1px solid var(--line)", borderRadius: 8, padding: 10, fontFamily: "var(--font-body)", fontSize: 13.5, resize: "vertical" }}
+                    maxLength={1000}
                   />
+                  <CharCounter length={reviewDraft.length} max={1000} />
                   {ratingSubmitting && (
                     <div style={{ fontSize: 12, color: "var(--slate-light)", marginTop: 8 }}>Saving…</div>
                   )}
@@ -782,10 +801,20 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
       // where #334 widens the page itself, so the freed-up space actually
       // goes to the progress/grades cards instead of just the left column.
       <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] min-[1440px]:grid-cols-[1fr_360px]" style={{ gap: 22 }}>
-        <div>
+        {/* (forum-overflow fix) — same root cause as the Dashboard grid
+            fix: a grid item's min-width defaults to auto (shrink-to-fit
+            its content), so unbroken text deep inside the forum panel
+            below could force this 1fr column — and the video sized off
+            its width — wider than the viewport. minWidth:0 lets it
+            actually respect the 1fr track instead of growing to fit. */}
+        <div style={{ minWidth: 0 }}>
           <div className="enc-card" style={{ padding: "12px 16px", marginBottom: 14 }}>
             <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Module {activeModule + 1} of {modules.length}</div>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>{currentModule.title}</div>
+            {/* (mobile-overflow fix) — same class of bug as the forum post
+                fix: a module title with no spaces has no natural break
+                point, so without this it can widen the card (and the
+                grid column it sits in) past the viewport on mobile. */}
+            <div style={{ fontSize: 15, fontWeight: 600, overflowWrap: "break-word" }}>{currentModule.title}</div>
           </div>
 
           {currentModule.videoUrl ? (
@@ -804,7 +833,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               <PlayCircle size={52} color="var(--gold)" />
             </div>
           )}
-          <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 18 }}>
+          <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 18, overflowWrap: "break-word" }}>
             {currentModule.videoUrl ? currentModule.title : `12:40 · ${currentModule.title}`}
           </div>
 
@@ -831,7 +860,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
               which replays the enc-tab-panel fade defined in global.css. */}
           <div key={tab} className="enc-tab-panel">
           {tab === "video" && (
-            <p style={{ fontSize: 14, color: "var(--slate)", lineHeight: 1.6 }}>
+            <p style={{ fontSize: 14, color: "var(--slate)", lineHeight: 1.6, overflowWrap: "break-word" }}>
               This module covers {currentModule.title.toLowerCase()}. Follow along in the video, then apply it in the short exercise before moving to the quiz.
             </p>
           )}
@@ -846,7 +875,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 // #350 — outline:none removed so keyboard focus is
                 // visible (global.css's input:focus-visible rule).
                 style={{ width: "100%", minHeight: 120, border: "none", fontFamily: "var(--font-body)", fontSize: 13.5, resize: "vertical", background: "transparent" }}
+                maxLength={5000}
               />
+              <CharCounter length={noteContent.length} max={5000} />
               {/* (461 follow-up) — all four states here are a single short
                   line inside a fixed-height caption row, so the text swap
                   itself was never a real CLS source — kept as plain text
@@ -928,7 +959,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                     const resultForQuestion = quizResult?.results.find((r) => r.questionId === q.id);
                     return (
                       <div key={q.id} style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 8 }}>{i + 1}. {q.question}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 8, overflowWrap: "break-word" }}>{i + 1}. {q.question}</div>
                         {q.type === "short_answer" ? (
                           <div>
                             <input
@@ -937,6 +968,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                               onChange={(e) => selectAnswer(q.id, e.target.value)}
                               disabled={!!quizResult}
                               placeholder="Type your answer…"
+                              maxLength={250}
                               // #350 — outline:none removed so keyboard
                               // focus is visible (global.css's
                               // input:focus-visible rule).
@@ -947,11 +979,12 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                                 borderRadius: 8, padding: "8px 10px",
                               }}
                             />
+                            {!quizResult && <CharCounter length={(selectedAnswers[q.id] ?? "").length} max={250} />}
                             {resultForQuestion && (
-                              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--slate-light)", marginTop: 6 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--slate-light)", marginTop: 6, overflowWrap: "break-word" }}>
                                 {resultForQuestion.isCorrect
-                                  ? <CheckCircle2 size={13} color="var(--success)" />
-                                  : <XCircle size={13} color="var(--coral)" />}
+                                  ? <CheckCircle2 size={13} color="var(--success)" style={{ flexShrink: 0 }} />
+                                  : <XCircle size={13} color="var(--coral)" style={{ flexShrink: 0 }} />}
                                 {resultForQuestion.isCorrect
                                   ? "Correct"
                                   : `Accepted answer${resultForQuestion.acceptableAnswers.length > 1 ? "s" : ""}: ${resultForQuestion.acceptableAnswers.join(", ")}`}
@@ -983,6 +1016,12 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                                     fontSize: 12.5, border: `1px solid ${borderColor}`, background: bg,
                                     borderRadius: 8, padding: "6px 12px", cursor: quizResult ? "default" : "pointer",
                                     display: "flex", alignItems: "center", gap: 5,
+                                    // (mobile-overflow fix) — an option with no spaces
+                                    // has no natural break point; maxWidth caps how
+                                    // wide a single chip can get and overflowWrap lets
+                                    // it wrap internally instead of forcing the row
+                                    // (and the page) wider.
+                                    maxWidth: "100%", overflowWrap: "break-word",
                                   }}
                                 >
                                   {resultForQuestion && isCorrectAnswer && <CheckCircle2 size={13} color="var(--success)" />}
@@ -1052,7 +1091,9 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                       onChange={(e) => setNewPostContent(e.target.value)}
                       placeholder="Ask a question or share a thought…"
                       style={{ width: "100%", minHeight: 60, border: "1px solid var(--line)", borderRadius: 8, padding: 10, fontFamily: "var(--font-body)", fontSize: 13.5, resize: "vertical", marginBottom: 8 }}
+                      maxLength={2000}
                     />
+                    <CharCounter length={newPostContent.length} max={2000} />
                     {postingError && <div style={{ fontSize: 12, color: "var(--coral)", marginBottom: 8 }}>{postingError}</div>}
                     <button
                       className="enc-btn enc-btn-gold"
@@ -1090,7 +1131,12 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
           </button>
         </div>
 
-        <div>
+        {/* (mobile-overflow fix) — same minWidth:0 fix as the left column
+            above: at the grid-cols-1 (mobile) breakpoint this becomes its
+            own full-width row, so without this it's just as exposed to
+            the "unbroken text forces the grid wider than the viewport"
+            bug as the left column was. */}
+        <div style={{ minWidth: 0 }}>
           {/* #335 — larger card padding + a bigger, bolder progress
               percentage give this rail more visual weight now that #334
               frees up extra width for it. */}
@@ -1111,7 +1157,11 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                   background: i === activeModule ? "var(--gold-tint)" : "transparent",
                 }}>
                   {i < completedCount ? <CheckCircle2 size={15} color="var(--success)" /> : i === activeModule ? <PlayCircle size={15} color="var(--gold-dark)" /> : <span style={{ width: 15, height: 15, borderRadius: 99, border: "1.5px solid var(--line)", flexShrink: 0 }} />}
-                  <span style={{ fontSize: 13, fontWeight: i === activeModule ? 600 : 400 }}>{m.title}</span>
+                  {/* (mobile-overflow fix) — same class of bug as the other
+                      module-title spot above: an unbroken module title can
+                      widen this row (and the right-rail column) past the
+                      viewport on mobile without this. */}
+                  <span style={{ fontSize: 13, fontWeight: i === activeModule ? 600 : 400, overflowWrap: "break-word", minWidth: 0 }}>{m.title}</span>
                 </div>
               ))}
             </div>
@@ -1248,7 +1298,7 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                 <X size={18} color="var(--slate)" />
               </button>
             </div>
-            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20 }}>
+            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20, overflowWrap: "break-word" }}>
               {/* #426 — previously said "your progress will reset if you
                   enrol again", which overpromised a full wipe: quiz
                   answers/grades and notes were never actually deleted on
@@ -1257,7 +1307,10 @@ export function LearningScreen({ course, enrollment, onSaveProgress, onSubmitRat
                   even after "resetting." Now that EnrollmentsService.create
                   also resumes progress from that same history on re-enrol,
                   this copy describes what genuinely happens instead of what
-                  it used to (mistakenly) imply. */}
+                  it used to (mistakenly) imply.
+                  (mobile-overflow fix) — overflowWrap added above so an
+                  unbroken course title can't force this modal wider than
+                  the viewport. */}
               You'll be removed from <strong>{course.title}</strong>. Your quiz answers, grades and notes are kept — if you enrol again, you'll pick up where you left off.
             </div>
             {unenrollError && (
