@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { CharCounter } from "../common/Primitives";
 
 // #105 — same "always mounted, sometimes null" shape as CourseDetailModal:
 // this component doesn't unmount, it just returns null once `mode` clears.
@@ -247,9 +248,20 @@ export function AuthModal({ mode, onClose, onSubmit }) {
               <label style={label} htmlFor="enc-name">Full name</label>
               <div style={inputWrap}>
                 <User size={15} color="var(--slate-light)" style={{ position: "absolute", left: 13, top: 12 }} />
-                <input id="enc-name" className="enc-input" placeholder="Jordan Lee" autoComplete="name"
+                {/* (maxlength-constraints) — 80, matching UpdateNameDto's
+                    account-name cap (the same field, reached later from
+                    Settings): this was previously unrestricted, unlike
+                    every other user-inputted field in the app, so an
+                    absurdly long signup name could break layouts
+                    everywhere the display name renders (sidebar,
+                    leaderboard, notifications, forum posts...). Checked
+                    against every seeded account name, the longest of
+                    which ("Nguyễn Thị Lan Anh") is ~19 characters — 80
+                    leaves generous room for real full names. */}
+                <input id="enc-name" className="enc-input" placeholder="Jordan Lee" autoComplete="name" maxLength={80}
                   value={values.name} onChange={(e) => update("name", e.target.value)} />
               </div>
+              <CharCounter length={values.name.length} max={80} />
               {touched && !nameValid && <div style={errorText}>Enter your name.</div>}
             </div>
           )}

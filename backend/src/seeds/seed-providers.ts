@@ -1,12 +1,29 @@
 // src/seeds/seed-providers.ts
 //
-// #146 — creates a handful of Provider records and gives
-// RequireCourseOwnerGuard real data to enforce against, by linking:
-//   - the #145 seeded trainers to providers (a mix of owners, a plain
-//     member, and at least one trainer with no provider at all), and
-//   - the #109 seeded courses to those same providers via
-//     courses.owner_id / courses.provider_id, matched against the
-//     course's existing (plain-text) `provider` field.
+// #146 — creates Provider records and gives RequireCourseOwnerGuard real
+// data to enforce against, by linking:
+//   - the seeded trainers to providers (owners and members), and
+//   - the seeded courses to those same providers via courses.owner_id /
+//     courses.provider_id, matched against the course's existing
+//     (plain-text) `provider` field.
+//
+// #500 — rewritten for the full reseed: every one of the 9 #500 trainers
+// (3 per track) now belongs to exactly one team, and every one of the 40
+// #109/#500 courses ends up owned by a real Provider. Each PROVIDER_PLAN
+// entry represents one real team (one Provider row, one owner, 0+
+// members) and can cover MULTIPLE course-provider text groups via
+// `courseProviderNames` — e.g. the Technical track only has 3 trainers
+// but 5 distinct provider names already baked into seed-courses.ts
+// (Anthropic Academy, Dept. of Data Science, Encyclopedia Web Guild,
+// Encyclopedia DevOps Guild, Encyclopedia Security Lab), so one team's
+// owner ends up covering two of those groups rather than inventing a
+// 4th/5th trainer per track. This also sidesteps a real constraint:
+// profiles.provider_id is a single scalar (see Profile entity's own
+// comment — "at most one provider per trainer" is a deliberate v1
+// limit), so a trainer can only ever appear in ONE plan entry's
+// owner/members — listing the same person across two entries would have
+// the second UPDATE silently clobber the first with no error. Every
+// trainer below appears exactly once for exactly that reason.
 //
 // Depends on #145 having already run (npm run seed:accounts) — this
 // script looks up the seeded trainers by the email addresses defined
@@ -40,51 +57,75 @@ const INVITE_CODE_LENGTH = 8;
 const MAX_GENERATION_ATTEMPTS = 5;
 
 interface ProviderPlan {
-  // Must exactly match the `provider` text already set on courses in
-  // seed-courses.ts (#109) — that's how seeded courses get linked to
-  // this provider. Also becomes the new Provider row's name.
+  // The new Provider row's name and the name shown in its invite-code
+  // card. Doesn't have to equal every course's plain-text `provider`
+  // field it owns — see courseProviderNames below.
   name: string;
   ownerEmail: string;
   memberEmails: string[];
+  // Every course whose `provider` text column matches ANY of these
+  // strings gets owner_id/provider_id stamped to this team. Almost
+  // always a single-element array (the Provider's own name); a few
+  // teams below cover more than one of seed-courses.ts's original
+  // provider-name groups so every track's 3 trainers can own every one
+  // of that track's courses without inventing extra accounts.
+  courseProviderNames: string[];
 }
 
-// 3 of the 8 provider names used across the #109 course set, chosen to
-// cover all three catalogue categories (Business, Leadership,
-// Technical) and to give a meaningful number of courses to each ("Encyclopedia
-// Business School" and "Global Leadership Institute" are the two
-// largest groups in seed-courses.ts). The other 5 provider-name groups
-// (Anthropic Academy, Dept. of Data Science, Encyclopedia DevOps Guild,
-// Encyclopedia Security Lab, Encyclopedia Growth Academy) are left unlinked —
-// #146 only asks for "a handful" (2-3), not full coverage.
-//
-// Of the 5 trainers seeded in #145: 3 own a provider, 1 is a plain
-// member (not owner) of one, and 1 (phuong.do@encyclopedia.example — Đỗ
-// Thị Phương) is deliberately left with no provider at all, per #146's
-// "at least one trainer with no provider" requirement.
+// #500 — one team per track-trainer, covering every course in every
+// track (unlike #146's original 3-of-8 "a handful" scope). 7 real teams
+// total: 3 Technical, 2 Business, 2 Leadership — fewer teams than
+// trainers in Technical only because that track's 3 trainers have to
+// stretch across 5 pre-existing course-provider-name groups (see the
+// file-header comment); Business and Leadership both split 1 team per
+// 1-2 trainers with real membership.
 const PROVIDER_PLAN: ProviderPlan[] = [
+  // ---------------- Technical (3 teams / 3 trainers) ----------------
   {
-    name: 'Encyclopedia Business School',
+    name: 'Anthropic Academy',
     ownerEmail: 'huy.dang@encyclopedia.example', // Đặng Quốc Huy
-    memberEmails: ['ngoc.hoang@encyclopedia.example'], // Hoàng Thị Ngọc
-  },
-  {
-    name: 'Global Leadership Institute',
-    ownerEmail: 'tuan.bui@encyclopedia.example', // Bùi Văn Tuấn
     memberEmails: [],
+    courseProviderNames: ['Anthropic Academy', 'Dept. of Data Science'],
   },
   {
     name: 'Encyclopedia Web Guild',
-    ownerEmail: 'duc.ngo@encyclopedia.example', // Ngô Minh Đức
+    ownerEmail: 'ngoc.hoang@encyclopedia.example', // Hoàng Thị Ngọc
     memberEmails: [],
+    courseProviderNames: ['Encyclopedia Web Guild'],
+  },
+  {
+    name: 'Encyclopedia DevOps Guild',
+    ownerEmail: 'hang.trinh@encyclopedia.example', // Trịnh Thị Hằng
+    memberEmails: [],
+    courseProviderNames: ['Encyclopedia DevOps Guild', 'Encyclopedia Security Lab'],
+  },
+  // ---------------- Business (2 teams / 3 trainers) ----------------
+  {
+    name: 'Encyclopedia Business School',
+    ownerEmail: 'tuan.bui@encyclopedia.example', // Bùi Văn Tuấn
+    memberEmails: ['phuong.do@encyclopedia.example'], // Đỗ Thị Phương
+    courseProviderNames: ['Encyclopedia Business School'],
+  },
+  {
+    name: 'Encyclopedia Growth Academy',
+    ownerEmail: 'long.phan@encyclopedia.example', // Phan Văn Long
+    memberEmails: [],
+    courseProviderNames: ['Encyclopedia Growth Academy'],
+  },
+  // ---------------- Leadership (2 teams / 3 trainers) ----------------
+  {
+    name: 'Global Leadership Institute',
+    ownerEmail: 'duc.ngo@encyclopedia.example', // Ngô Minh Đức
+    memberEmails: ['son.dinh@encyclopedia.example'], // Đinh Văn Sơn
+    courseProviderNames: ['Global Leadership Institute'],
+  },
+  {
+    name: 'Encyclopedia Leadership Academy',
+    ownerEmail: 'kimngan.ly@encyclopedia.example', // Lý Thị Kim Ngân
+    memberEmails: [],
+    courseProviderNames: ['Encyclopedia Leadership Academy'],
   },
 ];
-
-// phuong.do@encyclopedia.example (Đỗ Thị Phương) — intentionally not
-// referenced in PROVIDER_PLAN above. Explicitly nulled out below
-// rather than just "never touched", so re-running this script after
-// any manual testing (e.g. someone joined her to a provider by hand)
-// puts her back in the "no provider" state #146 asks for.
-const UNLINKED_TRAINER_EMAILS = ['phuong.do@encyclopedia.example'];
 
 async function listAllAuthUsers(
   supabaseAdmin: SupabaseClient,
@@ -199,24 +240,19 @@ async function main() {
     );
 
     const result = await AppDataSource.query<{ count: string }[]>(
-      `UPDATE "courses" SET owner_id = $1, provider_id = $2 WHERE provider = $3 RETURNING id`,
-      [ownerId, provider.id, plan.name],
+      `UPDATE "courses" SET owner_id = $1, provider_id = $2 WHERE provider = ANY($3::text[]) RETURNING id`,
+      [ownerId, provider.id, plan.courseProviderNames],
     );
     console.log(
-      `  Assigned owner_id/provider_id on ${result.length} course(s) with provider = "${plan.name}".`,
+      `  Assigned owner_id/provider_id on ${result.length} course(s) matching provider in [${plan.courseProviderNames.join(', ')}].`,
     );
   }
 
-  const unlinkedIds = UNLINKED_TRAINER_EMAILS.map((email) =>
-    idByEmail.get(email.toLowerCase())!,
-  );
-  await AppDataSource.query(
-    `UPDATE "profiles" SET provider_id = NULL WHERE id = ANY($1::uuid[])`,
-    [unlinkedIds],
-  );
-  console.log(
-    `\nConfirmed ${unlinkedIds.length} trainer(s) have no provider: ${UNLINKED_TRAINER_EMAILS.join(', ')}.`,
-  );
+  // #500 — every trainer is now on a real team (unlike #146's original
+  // "at least one trainer with no provider" edge case), so there's no
+  // unlinked-trainer set to reconcile here anymore. That empty-state is
+  // still exercisable in the live app any time — join a fresh trainer
+  // signup and don't create/join a provider.
 
   console.log('\nDone.');
   await AppDataSource.destroy();

@@ -2,7 +2,22 @@
 //
 // #145 — replaces ad-hoc test accounts with ~5 learner and ~5 trainer
 // accounts using names recognisable to a Vietnamese audience, for demo
-// use. Accounts are created via the Supabase Admin API
+// use.
+//
+// #500 — expanded to 15 learners + 9 trainers (5 + 3 per track), each
+// carrying a `track` matching one of Course.category's three values
+// ('Technical' | 'Business' | 'Leadership' — already exactly the three
+// catalogue pathways, no separate concept needed). `track` is this
+// account's chosen pathway, not a hard restriction: seed-activity.ts
+// enrols every learner mostly in their own track's courses (per #500's
+// "signed up to a handful of courses in their own chosen pathway"), and
+// makes each trainer an owner/member of a Provider (see
+// seed-providers.ts) scoped to that same track. Every original #145
+// account keeps its exact name/email (so re-running this after a partial
+// #145-era seed stays idempotent) — only new accounts were added, plus a
+// `track` assignment on all of them.
+//
+// Accounts are created via the Supabase Admin API
 // (auth.admin.createUser), NOT by inserting into `profiles` directly —
 // that's deliberate: the `handle_new_user` trigger (see migration
 // 1785815653079-AddProfileCreationTrigger) is what populates the
@@ -42,10 +57,15 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import ws from 'ws';
 import { AppDataSource } from '../data-source';
 
+export type Track = 'Technical' | 'Business' | 'Leadership';
+
 export interface SeedAccount {
   name: string;
   email: string;
   role: 'trainer' | 'learner';
+  // #500 — this account's chosen pathway; matches Course.category exactly
+  // (see the file-header comment above).
+  track: Track;
 }
 
 // Vietnamese-recognisable full names, per #145. Emails use the
@@ -57,57 +77,155 @@ export interface SeedAccount {
 // Exported so #146 (seed-providers.ts) can look up the same trainer
 // accounts by email instead of hand-copying this list a second time.
 export const ACCOUNTS: SeedAccount[] = [
-  // Learners
+  // ---------------- Learners — Technical (5) ----------------
   {
     name: 'Nguyễn Thị Lan Anh',
     email: 'lananh.nguyen@encyclopedia.example',
     role: 'learner',
+    track: 'Technical',
   },
   {
     name: 'Trần Văn Minh',
     email: 'minh.tran@encyclopedia.example',
     role: 'learner',
+    track: 'Technical',
   },
+  {
+    name: 'Nguyễn Văn Khoa',
+    email: 'khoa.nguyen@encyclopedia.example',
+    role: 'learner',
+    track: 'Technical',
+  },
+  {
+    name: 'Trần Thị Bích',
+    email: 'bich.tran@encyclopedia.example',
+    role: 'learner',
+    track: 'Technical',
+  },
+  {
+    name: 'Lê Văn Phúc',
+    email: 'phuc.le@encyclopedia.example',
+    role: 'learner',
+    track: 'Technical',
+  },
+  // ---------------- Learners — Business (5) ----------------
   {
     name: 'Phạm Thị Mai',
     email: 'mai.pham@encyclopedia.example',
     role: 'learner',
+    track: 'Business',
   },
   {
     name: 'Lê Hoàng Nam',
     email: 'nam.le@encyclopedia.example',
     role: 'learner',
+    track: 'Business',
   },
+  {
+    name: 'Phạm Văn Đạt',
+    email: 'dat.pham@encyclopedia.example',
+    role: 'learner',
+    track: 'Business',
+  },
+  {
+    name: 'Vũ Thị Ngọc Anh',
+    email: 'ngocanh.vu@encyclopedia.example',
+    role: 'learner',
+    track: 'Business',
+  },
+  {
+    name: 'Hoàng Văn Thịnh',
+    email: 'thinh.hoang@encyclopedia.example',
+    role: 'learner',
+    track: 'Business',
+  },
+  // ---------------- Learners — Leadership (5) ----------------
   {
     name: 'Vũ Thị Thu Hà',
     email: 'thuha.vu@encyclopedia.example',
     role: 'learner',
+    track: 'Leadership',
   },
-  // Trainers
+  {
+    name: 'Đặng Thị Thảo',
+    email: 'thao.dang@encyclopedia.example',
+    role: 'learner',
+    track: 'Leadership',
+  },
+  {
+    name: 'Bùi Văn Hiếu',
+    email: 'hieu.bui@encyclopedia.example',
+    role: 'learner',
+    track: 'Leadership',
+  },
+  {
+    name: 'Ngô Thị Hương',
+    email: 'huong.ngo@encyclopedia.example',
+    role: 'learner',
+    track: 'Leadership',
+  },
+  {
+    name: 'Đỗ Văn Kiên',
+    email: 'kien.do@encyclopedia.example',
+    role: 'learner',
+    track: 'Leadership',
+  },
+  // ---------------- Trainers — Technical (3) ----------------
   {
     name: 'Đặng Quốc Huy',
     email: 'huy.dang@encyclopedia.example',
     role: 'trainer',
+    track: 'Technical',
   },
   {
     name: 'Hoàng Thị Ngọc',
     email: 'ngoc.hoang@encyclopedia.example',
     role: 'trainer',
+    track: 'Technical',
   },
+  {
+    name: 'Trịnh Thị Hằng',
+    email: 'hang.trinh@encyclopedia.example',
+    role: 'trainer',
+    track: 'Technical',
+  },
+  // ---------------- Trainers — Business (3) ----------------
   {
     name: 'Bùi Văn Tuấn',
     email: 'tuan.bui@encyclopedia.example',
     role: 'trainer',
+    track: 'Business',
   },
   {
     name: 'Đỗ Thị Phương',
     email: 'phuong.do@encyclopedia.example',
     role: 'trainer',
+    track: 'Business',
   },
+  {
+    name: 'Phan Văn Long',
+    email: 'long.phan@encyclopedia.example',
+    role: 'trainer',
+    track: 'Business',
+  },
+  // ---------------- Trainers — Leadership (3) ----------------
   {
     name: 'Ngô Minh Đức',
     email: 'duc.ngo@encyclopedia.example',
     role: 'trainer',
+    track: 'Leadership',
+  },
+  {
+    name: 'Lý Thị Kim Ngân',
+    email: 'kimngan.ly@encyclopedia.example',
+    role: 'trainer',
+    track: 'Leadership',
+  },
+  {
+    name: 'Đinh Văn Sơn',
+    email: 'son.dinh@encyclopedia.example',
+    role: 'trainer',
+    track: 'Leadership',
   },
 ];
 
@@ -115,6 +233,7 @@ interface AccountResult {
   name: string;
   email: string;
   role: string;
+  track: Track;
   password: string | null; // null when skipped (account already existed)
   status: 'created' | 'skipped (already exists)';
 }
@@ -192,6 +311,7 @@ async function main() {
         name: account.name,
         email: account.email,
         role: account.role,
+        track: account.track,
         password: null,
         status: 'skipped (already exists)',
       });
@@ -220,6 +340,7 @@ async function main() {
       name: account.name,
       email: account.email,
       role: account.role,
+      track: account.track,
       password,
       status: 'created',
     });
@@ -265,8 +386,8 @@ async function main() {
     '',
     ...results.map((r) =>
       r.status === 'created'
-        ? `${r.role.padEnd(8)} ${r.name.padEnd(20)} ${r.email.padEnd(30)} ${r.password}`
-        : `${r.role.padEnd(8)} ${r.name.padEnd(20)} ${r.email.padEnd(30)} (already existed — password not available)`,
+        ? `${r.role.padEnd(8)} ${r.track.padEnd(11)} ${r.name.padEnd(20)} ${r.email.padEnd(30)} ${r.password}`
+        : `${r.role.padEnd(8)} ${r.track.padEnd(11)} ${r.name.padEnd(20)} ${r.email.padEnd(30)} (already existed — password not available)`,
     ),
     '',
   ];

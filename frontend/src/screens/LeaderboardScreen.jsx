@@ -193,7 +193,12 @@ export function LeaderboardScreen({ onFetchLeaderboard }) {
                     {e.rank}
                   </div>
                   {medal ? <Trophy size={medal.size} color={medal.color} /> : <div style={{ width: 15 }} />}
-                  <div style={{ flex: 1, fontSize: medal ? 14.5 : 13.5, fontWeight: e.isSelf ? 700 : 600 }}>
+                  {/* (mobile-overflow fix) — a learner's display name is
+                      user-set at signup and could be long/unspaced;
+                      minWidth:0 lets this column shrink and overflowWrap
+                      lets the name itself break instead of pushing the
+                      points column off the row. */}
+                  <div style={{ flex: 1, minWidth: 0, fontSize: medal ? 14.5 : 13.5, fontWeight: e.isSelf ? 700 : 600, overflowWrap: "break-word" }}>
                     {e.name}{e.isSelf ? " (you)" : ""}
                   </div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--slate)" }}>

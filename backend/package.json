@@ -26,7 +26,10 @@
     "seed:courses": "ts-node -r tsconfig-paths/register src/seeds/seed-courses.ts",
     "seed:accounts": "ts-node -r tsconfig-paths/register src/seeds/seed-accounts.ts",
     "seed:providers": "ts-node -r tsconfig-paths/register src/seeds/seed-providers.ts",
+    "seed:learning-paths": "ts-node -r tsconfig-paths/register src/seeds/seed-learning-paths.ts",
     "seed:forum-posts": "ts-node -r tsconfig-paths/register src/seeds/seed-forum-posts.ts",
+    "seed:activity": "ts-node -r tsconfig-paths/register src/seeds/seed-activity.ts",
+    "seed:all": "npm run seed:accounts && npm run seed:courses && npm run seed:providers && npm run seed:learning-paths && npm run seed:forum-posts && npm run seed:activity",
     "wipe:test-data": "ts-node -r tsconfig-paths/register src/scripts/wipe-test-data.ts"
   },
   "dependencies": {

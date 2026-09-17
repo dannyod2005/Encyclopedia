@@ -5,19 +5,27 @@
 // (not synthetic/system posts) so the forum reads like genuine
 // activity rather than obviously-fake placeholder text.
 //
-// Threading: each module gets exactly one top-level post (a learner
-// question, parent_post_id = NULL) and one reply (a trainer answer,
-// parent_post_id = the question's id) — see ForumPost's self-referential
-// parent_post_id column (backend/src/forum/entities/forum-post.entity.ts).
-// That's the "handful" scoped here; more organic threads can be added
-// later without conflicting with this seed.
+// Threading: each module gets one top-level post (a learner question,
+// parent_post_id = NULL) plus a trainer answer and one or two more
+// replies (parent_post_id = the question's id) — see ForumPost's
+// self-referential parent_post_id column
+// (backend/src/forum/entities/forum-post.entity.ts).
 //
-// Author assignment: round-robins across the 5 seeded learners (as the
-// question author) and 5 seeded trainers (as the reply author) in
+// #500 — the trainer-answer-only thread from #147 read as fairly thin
+// activity once every course/module actually had one (the "up the
+// activity on every page" ask), so every thread now also gets a
+// generic-but-plausible learner follow-up reply, plus a ~50% chance of a
+// second trainer follow-up tip — see FOLLOWUP_LEARNER_REPLIES/
+// FOLLOWUP_TRAINER_REPLIES below. These are reused across every module
+// (same "real copy, not bespoke per module" tradeoff as seed-courses.ts's
+// CATEGORY_FAQS) rather than hand-writing ~320 more bespoke messages.
+//
+// Author assignment: round-robins across the #500 seeded learners (as
+// the question + follow-up author) and trainers (as the reply author) in
 // course/module order, rather than trying to match each course's
-// content-provider to a specific trainer — simpler, and every seeded
-// trainer ends up with forum activity regardless of provider linkage
-// from #146.
+// content-provider/track to a specific trainer — simpler, and every
+// seeded trainer ends up with forum activity regardless of provider
+// linkage from #146/#500.
 //
 // Depends on #145 (npm run seed:accounts) having already run — trainer
 // and learner profiles are looked up by name via the ACCOUNTS list
@@ -960,6 +968,27 @@ const FORUM_CONTENT: Record<string, { question: string; answer: string }> = {
   },
 };
 
+// #500 — generic-but-plausible follow-up replies, reused across every
+// module's thread to add a second and (sometimes) third reply without
+// hand-writing bespoke content per module. Deliberately short and
+// content-free enough to read naturally as a reply to ANY of the
+// questions in FORUM_CONTENT above, since the pairing is randomized
+// rather than matched by topic.
+const FOLLOWUP_LEARNER_REPLIES = [
+  'This was exactly what I needed too, thanks for asking!',
+  'Ran into the same thing — glad this got answered.',
+  'Bookmarking this thread, it comes up a lot.',
+  "Good question, I was wondering the same going into this module.",
+  'This cleared it up for me as well, appreciate the explanation.',
+  "Wish I'd seen this before I got stuck on the same thing.",
+];
+const FOLLOWUP_TRAINER_REPLIES = [
+  "One more tip: it's worth revisiting this once you've done the module's exercise, it clicks a lot faster in context.",
+  'Good follow-up question above — happy to go deeper on this in office hours if anyone wants to.',
+  "This trips people up a lot at this stage, so don't worry if it takes a second pass to fully land.",
+  "Also worth checking the module's linked resources if you want more detail than we cover in the video.",
+];
+
 interface ModuleRow {
   module_id: string;
   module_title: string;
@@ -1024,6 +1053,11 @@ async function main() {
 
     const learnerId = learners[i % learners.length];
     const trainerId = trainers[(i + 2) % trainers.length];
+    // #500 — a different learner than the one who asked, for the
+    // follow-up reply below, so it doesn't read as someone replying to
+    // their own question.
+    const followupLearnerId = learners[(i + 1) % learners.length];
+    const followupTrainerId = trainers[(i + 3) % trainers.length];
 
     const [{ id: questionId }] = await AppDataSource.query<{ id: string }[]>(
       `INSERT INTO "forum_posts" (module_id, user_id, parent_post_id, content)
@@ -1036,6 +1070,33 @@ async function main() {
        VALUES ($1, $2, $3, $4)`,
       [row.module_id, trainerId, questionId, content.answer],
     );
+
+    // #500 — "up the activity on every page": every thread also gets a
+    // learner follow-up reply, and about half get a second trainer
+    // follow-up tip too, instead of stopping at a single Q&A pair.
+    await AppDataSource.query(
+      `INSERT INTO "forum_posts" (module_id, user_id, parent_post_id, content)
+       VALUES ($1, $2, $3, $4)`,
+      [
+        row.module_id,
+        followupLearnerId,
+        questionId,
+        FOLLOWUP_LEARNER_REPLIES[i % FOLLOWUP_LEARNER_REPLIES.length],
+      ],
+    );
+
+    if (i % 2 === 0) {
+      await AppDataSource.query(
+        `INSERT INTO "forum_posts" (module_id, user_id, parent_post_id, content)
+         VALUES ($1, $2, $3, $4)`,
+        [
+          row.module_id,
+          followupTrainerId,
+          questionId,
+          FOLLOWUP_TRAINER_REPLIES[i % FOLLOWUP_TRAINER_REPLIES.length],
+        ],
+      );
+    }
 
     seeded++;
   }

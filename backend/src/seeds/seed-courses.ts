@@ -11,17 +11,19 @@
 //     (per the issue), so these are a curated pool of long-standing public
 //     talks/tutorials reused across modules, loosely matched by category
 //     (tutorial content for Technical, talks for Business/Leadership).
-//   - Only the FIRST module of every course gets a quiz here (2 questions
-//     each) — enough to satisfy "most/all courses have quiz questions" at
-//     the course level and prove the feature works across the whole
-//     catalogue, but NOT full per-module coverage. Populating every
-//     remaining module's quiz is deliberately left to #100, which was
-//     scoped as the dedicated follow-up for exactly that.
+//   - Every module of every course gets a quiz (2 questions each) — #100
+//     filled in the remaining per-module coverage that this file originally
+//     left to a follow-up (only the first module of each course had one at
+//     first).
 //   - FAQs moved from one generic PLACEHOLDER pair (shared by literally
 //     every course) to three category-specific pairs, reused within each
 //     category. Still reused rather than fully unique per course — real,
 //     non-generic copy, just not bespoke per course, which felt like the
 //     right effort/benefit line for 40 courses.
+//   - #500 — every course also carries a handful of `skills` tags (see
+//     Course.skills, #226) and is wired to a real Provider row by
+//     seed-providers.ts matching on the `provider` free-text field below —
+//     see that script's PROVIDER_PLAN for the full trainer/team layout.
 import 'dotenv/config';
 import { AppDataSource } from '../data-source';
 import { Course } from '../courses/entities/course.entity';
@@ -58,6 +60,12 @@ interface SeedCourse {
   blurb: string;
   modules: SeedModule[];
   credits: string[];
+  // #500 — free-text skill tags (see Course.skills, #226). Every course in
+  // this reseed carries a few, so skill chips actually render across the
+  // whole catalogue (Catalogue search/filter, CourseDetailModal, the
+  // learner skills-profile card) instead of only on courses a trainer
+  // happened to tag by hand after the fact.
+  skills: string[];
 }
 
 function embed(id: string): string {
@@ -181,6 +189,17 @@ const PROVIDER_CREDITS: Record<string, string[]> = {
     'Curriculum & instruction: Global Leadership Institute faculty',
     'Frameworks drawn from published leadership and organizational psychology research, cited in-course',
   ],
+  // #500 — a second Leadership-track provider (previously these 3 courses
+  // were mistakenly tagged with the Business-track 'Encyclopedia Business
+  // School' provider despite being category: 'Leadership' — almost
+  // certainly a copy-paste artifact from the adjacent Business section of
+  // this file. Splitting them out into their own provider, rather than
+  // folding them into Global Leadership Institute, gives the Leadership
+  // track a second real team too, same as every other track.
+  'Encyclopedia Leadership Academy': [
+    'Curriculum & instruction: Encyclopedia Leadership Academy faculty',
+    'Frameworks drawn from published leadership research, cited in-course',
+  ],
 };
 
 function q(question: string, options: [string, boolean][]): SeedQuizQuestion {
@@ -194,6 +213,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   // ---------------- TECHNICAL (14) ----------------
   {
     title: 'AI Engineering with Claude',
+    skills: ['Claude API', 'Prompt Engineering', 'RAG', 'Tool Use', 'AI Agents'],
     provider: 'Anthropic Academy',
     category: 'Technical',
     level: 'Intermediate',
@@ -315,6 +335,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Python for Everybody',
+    skills: ['Python', 'Data Structures', 'REST APIs', 'SQL'],
     provider: 'Dept. of Data Science',
     category: 'Technical',
     level: 'Beginner',
@@ -430,6 +451,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Data Visualization with Python',
+    skills: ['Python', 'Matplotlib', 'Seaborn', 'Data Storytelling'],
     provider: 'Dept. of Data Science',
     category: 'Technical',
     level: 'Intermediate',
@@ -524,6 +546,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'JavaScript Fundamentals',
+    skills: ['JavaScript', 'DOM', 'ES6', 'Debugging'],
     provider: 'Encyclopedia Web Guild',
     category: 'Technical',
     level: 'Beginner',
@@ -617,6 +640,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Modern Web Development with React',
+    skills: ['React', 'JSX', 'Hooks', 'Routing'],
     provider: 'Encyclopedia Web Guild',
     category: 'Technical',
     level: 'Intermediate',
@@ -704,6 +728,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Introduction to SQL & Databases',
+    skills: ['SQL', 'Relational Databases', 'Joins', 'Query Optimization'],
     provider: 'Dept. of Data Science',
     category: 'Technical',
     level: 'Beginner',
@@ -796,6 +821,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Cloud Computing Foundations (AWS)',
+    skills: ['AWS', 'Cloud Architecture', 'Networking', 'Cloud Security'],
     provider: 'Encyclopedia DevOps Guild',
     category: 'Technical',
     level: 'Beginner',
@@ -889,6 +915,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'DevOps & CI/CD Pipelines',
+    skills: ['CI/CD', 'DevOps', 'Automated Testing', 'Deployment'],
     provider: 'Encyclopedia DevOps Guild',
     category: 'Technical',
     level: 'Intermediate',
@@ -985,6 +1012,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Machine Learning Foundations',
+    skills: ['Machine Learning', 'Python', 'Model Evaluation', 'Statistics'],
     provider: 'Dept. of Data Science',
     category: 'Technical',
     level: 'Intermediate',
@@ -1078,6 +1106,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Cybersecurity Essentials',
+    skills: ['Cybersecurity', 'Authentication', 'Web Security', 'Incident Response'],
     provider: 'Encyclopedia Security Lab',
     category: 'Technical',
     level: 'Beginner',
@@ -1174,6 +1203,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Git & Version Control for Teams',
+    skills: ['Git', 'GitHub', 'Code Review', 'Branching Strategy'],
     provider: 'Encyclopedia DevOps Guild',
     category: 'Technical',
     level: 'Beginner',
@@ -1270,6 +1300,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Backend Engineering with Node.js',
+    skills: ['Node.js', 'Express', 'REST APIs', 'Databases'],
     provider: 'Encyclopedia Web Guild',
     category: 'Technical',
     level: 'Intermediate',
@@ -1369,6 +1400,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Mobile App Development with Flutter',
+    skills: ['Flutter', 'Dart', 'Mobile UI', 'App Publishing'],
     provider: 'Encyclopedia Web Guild',
     category: 'Technical',
     level: 'Intermediate',
@@ -1471,6 +1503,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'API Design & REST Fundamentals',
+    skills: ['REST APIs', 'API Design', 'HTTP', 'Documentation'],
     provider: 'Encyclopedia Web Guild',
     category: 'Technical',
     level: 'Beginner',
@@ -1572,6 +1605,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   // ---------------- BUSINESS (13) ----------------
   {
     title: 'Product Analytics Fundamentals',
+    skills: ['Product Analytics', 'A/B Testing', 'Metrics', 'Data Analysis'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Beginner',
@@ -1669,6 +1703,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Negotiation Essentials',
+    skills: ['Negotiation', 'Communication', 'Persuasion'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Beginner',
@@ -1748,6 +1783,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Financial Literacy for Managers',
+    skills: ['Financial Literacy', 'Budgeting', 'P&L Analysis', 'Cash Flow'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Beginner',
@@ -1841,6 +1877,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Marketing Strategy Foundations',
+    skills: ['Marketing Strategy', 'Positioning', 'Channel Strategy'],
     provider: 'Encyclopedia Growth Academy',
     category: 'Business',
     level: 'Beginner',
@@ -1937,6 +1974,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Agile Project Management',
+    skills: ['Agile', 'Scrum', 'Sprint Planning', 'Project Management'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Intermediate',
@@ -2033,6 +2071,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Business Writing That Gets Results',
+    skills: ['Business Writing', 'Communication', 'Persuasive Writing'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Beginner',
@@ -2104,6 +2143,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Introduction to Digital Marketing',
+    skills: ['Digital Marketing', 'SEO', 'Paid Advertising', 'Email Marketing'],
     provider: 'Encyclopedia Growth Academy',
     category: 'Business',
     level: 'Beginner',
@@ -2200,6 +2240,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Sales Fundamentals',
+    skills: ['Sales', 'Negotiation', 'Objection Handling', 'Closing Techniques'],
     provider: 'Encyclopedia Growth Academy',
     category: 'Business',
     level: 'Beginner',
@@ -2296,6 +2337,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Customer Success Strategy',
+    skills: ['Customer Success', 'Retention', 'Onboarding', 'Account Management'],
     provider: 'Encyclopedia Growth Academy',
     category: 'Business',
     level: 'Intermediate',
@@ -2398,6 +2440,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Business Model Design',
+    skills: ['Business Strategy', 'Business Model Canvas', 'Revenue Models'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Intermediate',
@@ -2493,6 +2536,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Data-Driven Decision Making',
+    skills: ['Data Analysis', 'Decision Making', 'Statistics', 'Metrics'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Intermediate',
@@ -2598,6 +2642,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Supply Chain Fundamentals',
+    skills: ['Supply Chain', 'Inventory Management', 'Logistics'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Beginner',
@@ -2691,6 +2736,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Entrepreneurship Essentials',
+    skills: ['Entrepreneurship', 'MVP', 'Fundraising', 'Product-Market Fit'],
     provider: 'Encyclopedia Business School',
     category: 'Business',
     level: 'Beginner',
@@ -2788,7 +2834,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   // ---------------- LEADERSHIP (13) ----------------
   {
     title: 'Leading High-Performing Teams',
-    provider: 'Encyclopedia Business School',
+    provider: 'Encyclopedia Leadership Academy',
     category: 'Leadership',
     level: 'Advanced',
     hours: 8,
@@ -2881,13 +2927,15 @@ const SAMPLE_COURSES: SeedCourse[] = [
       },
     ],
     credits: [
-      'Curriculum & instruction: Encyclopedia Business School faculty',
+      'Curriculum & instruction: Encyclopedia Leadership Academy faculty',
       'Frameworks drawn from published leadership research, cited in-course',
       "Role-play scenarios developed with Encyclopedia's coaching partners",
     ],
+    skills: ['Leadership', 'Delegation', 'Feedback', 'Team Management'],
   },
   {
     title: 'Coaching & Mentoring Skills',
+    skills: ['Coaching', 'Mentoring', 'Active Listening'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Intermediate',
@@ -2981,6 +3029,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Conflict Resolution at Work',
+    skills: ['Conflict Resolution', 'De-escalation', 'Facilitation'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Intermediate',
@@ -3086,6 +3135,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Strategic Thinking for Leaders',
+    skills: ['Strategic Thinking', 'Systems Thinking', 'Prioritization'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Advanced',
@@ -3194,6 +3244,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Emotional Intelligence at Work',
+    skills: ['Emotional Intelligence', 'Self-Awareness', 'Empathy'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Beginner',
@@ -3299,7 +3350,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Change Management Essentials',
-    provider: 'Encyclopedia Business School',
+    provider: 'Encyclopedia Leadership Academy',
     category: 'Leadership',
     level: 'Intermediate',
     hours: 8,
@@ -3397,10 +3448,12 @@ const SAMPLE_COURSES: SeedCourse[] = [
         ],
       },
     ],
-    credits: PROVIDER_CREDITS['Encyclopedia Business School'],
+    credits: PROVIDER_CREDITS['Encyclopedia Leadership Academy'],
+    skills: ['Change Management', 'Communication', 'Organizational Behavior'],
   },
   {
     title: 'Building Inclusive Teams',
+    skills: ['Diversity & Inclusion', 'Inclusive Hiring', 'Psychological Safety'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Intermediate',
@@ -3508,6 +3561,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Public Speaking & Executive Presence',
+    skills: ['Public Speaking', 'Executive Presence', 'Communication'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Intermediate',
@@ -3607,7 +3661,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Time Management for Leaders',
-    provider: 'Encyclopedia Business School',
+    provider: 'Encyclopedia Leadership Academy',
     category: 'Leadership',
     level: 'Beginner',
     hours: 5,
@@ -3704,10 +3758,12 @@ const SAMPLE_COURSES: SeedCourse[] = [
         ],
       },
     ],
-    credits: PROVIDER_CREDITS['Encyclopedia Business School'],
+    credits: PROVIDER_CREDITS['Encyclopedia Leadership Academy'],
+    skills: ['Time Management', 'Prioritization', 'Delegation'],
   },
   {
     title: 'Giving and Receiving Feedback',
+    skills: ['Feedback', 'Communication', 'Coaching'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Beginner',
@@ -3813,6 +3869,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Leading Remote & Hybrid Teams',
+    skills: ['Remote Leadership', 'Virtual Meetings', 'Team Building'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Intermediate',
@@ -3918,6 +3975,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Decision-Making Under Uncertainty',
+    skills: ['Decision Making', 'Risk Management', 'Critical Thinking'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Advanced',
@@ -4032,6 +4090,7 @@ const SAMPLE_COURSES: SeedCourse[] = [
   },
   {
     title: 'Building a Coaching Culture',
+    skills: ['Coaching Culture', 'Leadership Development', 'Organizational Culture'],
     provider: 'Global Leadership Institute',
     category: 'Leadership',
     level: 'Advanced',
@@ -4185,6 +4244,7 @@ async function seedCourseWithRetry(
           learners: sample.learners,
           color: sample.color,
           blurb: sample.blurb,
+          skills: sample.skills,
         }),
       );
 

@@ -62,7 +62,9 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
       <button type="button" onClick={onBack} style={{ font: "inherit", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--slate)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 14 }}>
         <ChevronLeft size={15} /> Back to Trainer studio
       </button>
-      <div style={{ fontSize: 19, fontFamily: "var(--font-display)", fontWeight: 600, marginBottom: 4 }}>
+      {/* (mobile-overflow fix) — a course title with no natural break
+          point has no spaces to wrap at otherwise. */}
+      <div style={{ fontSize: 19, fontFamily: "var(--font-display)", fontWeight: 600, marginBottom: 4, overflowWrap: "break-word" }}>
         {course.title || "(untitled course)"}
       </div>
       <div style={{ fontSize: 13, color: "var(--slate)", marginBottom: 20 }}>Learner progress and quiz performance for this course.</div>
@@ -141,14 +143,20 @@ export function CourseAnalyticsView({ course, onBack, onFetchAnalytics }) {
                 <div key={l.enrollmentId} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < analytics.learners.length - 1 ? "1px solid var(--line)" : "none" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                      {l.name}
+                      {/* (mobile-overflow fix) — a bare text node inside
+                          this flex row (needed for the inactive/behind-
+                          pace badges beside it) doesn't reliably shrink
+                          or break like plain text; giving the name its
+                          own flex item with minWidth:0 fixes it (same
+                          issue as the skill-tag chip fix elsewhere). */}
+                      <span style={{ minWidth: 0, overflowWrap: "break-word" }}>{l.name}</span>
                       {l.flags.inactive && (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--slate)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 100, padding: "2px 8px" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--slate)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 100, padding: "2px 8px", flexShrink: 0 }}>
                           <Clock size={10} /> Inactive
                         </span>
                       )}
                       {l.flags.behindPace && (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--coral)", background: "var(--coral-tint)", borderRadius: 100, padding: "2px 8px" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "var(--coral)", background: "var(--coral-tint)", borderRadius: 100, padding: "2px 8px", flexShrink: 0 }}>
                           <AlertTriangle size={10} /> Behind pace
                         </span>
                       )}

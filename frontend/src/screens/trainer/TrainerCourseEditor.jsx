@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, BookMarked, Plus, Trash2, Save, Video, ChevronDown, ChevronUp, HelpCircle, X, Clock } from "lucide-react";
 
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { CharCounter } from "../../components/common/Primitives";
 
 const TRAINER_CATEGORIES = ["Technical", "Business", "Leadership"];
 const TRAINER_LEVELS = ["Beginner", "Intermediate", "Advanced"];
@@ -740,7 +741,8 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
           <div style={field}>
             <label style={label}>Title</label>
-            <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="Course title" />
+            <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="Course title" maxLength={100} />
+            <CharCounter length={draft.title.length} max={100} />
           </div>
           <div style={field}>
             <label style={label}>Provider</label>
@@ -771,7 +773,11 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
           </div>
           <div style={field}>
             <label style={label}>Hours</label>
-            <input style={rowInput} type="number" min={0} step={HOURS_STEP} value={draft.hours} onChange={(e) => set("hours", e.target.value)} />
+            {/* (hours-upperbound) — max=100 matches the backend's @Max(100)
+                on CreateCourseDto.hours; see that decorator's comment for
+                why (unbounded hours let a trainer mint arbitrary
+                leaderboard points). */}
+            <input style={rowInput} type="number" min={0} max={100} step={HOURS_STEP} value={draft.hours} onChange={(e) => set("hours", e.target.value)} />
           </div>
           <div style={field}>
             <label style={label}>Accent color</label>
@@ -837,7 +843,8 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
 
         <div style={field}>
           <label style={label}>Summary</label>
-          <textarea style={{ ...rowInput, minHeight: 70, resize: "vertical" }} value={draft.blurb} onChange={(e) => set("blurb", e.target.value)} placeholder="One or two sentences a learner sees on the catalogue card." />
+          <textarea style={{ ...rowInput, minHeight: 70, resize: "vertical" }} value={draft.blurb} onChange={(e) => set("blurb", e.target.value)} placeholder="One or two sentences a learner sees on the catalogue card." maxLength={300} />
+          <CharCounter length={draft.blurb.length} max={300} />
         </div>
         <div>
           <label style={label}>Skill tags</label>
@@ -845,15 +852,32 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             {draft.skills.map((s, i) => (
               <span
                 key={`${s}-${i}`}
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 10px" }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 10px",
+                  // (mobile-overflow fix) — maxWidth caps how wide one chip
+                  // can grow and minWidth:0 lets it actually shrink inside
+                  // the flex-wrap row instead of pushing it past the
+                  // viewport.
+                  maxWidth: "100%", minWidth: 0,
+                }}
               >
-                {s}
+                {/* (mobile-overflow fix) — a bare text node inside an
+                    inline-flex row (like this chip, needed to lay the
+                    delete button out beside it) doesn't reliably shrink
+                    or break the way plain inline text does — it's why
+                    this chip still overflowed on a long unspaced skill
+                    even with overflowWrap set on the outer span (compare
+                    the read-only chip in CourseDetailModal, a plain
+                    non-flex <span>, which didn't have this problem).
+                    Giving the text its own flex item with minWidth:0
+                    fixes it. */}
+                <span style={{ flex: 1, minWidth: 0, overflowWrap: "break-word" }}>{s}</span>
                 {/* #258 — real button (was a bare clickable icon). */}
                 <button
                   type="button"
                   aria-label={`Remove skill ${s}`}
                   onClick={() => removeSkill(i)}
-                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", lineHeight: 0 }}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", lineHeight: 0, flexShrink: 0 }}
                 >
                   <X size={12} />
                 </button>
@@ -867,7 +891,9 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
             onKeyDown={handleSkillInputKeyDown}
             onBlur={() => addSkill(skillInput)}
             placeholder="Type a skill and press Enter (e.g. Git, SQL, Negotiation)"
+            maxLength={100}
           />
+          <CharCounter length={skillInput.length} max={100} />
         </div>
       </div>
 
@@ -890,7 +916,10 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                       md makes better use of the room; still stacks below
                       md, same as before. */}
                   <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8 }}>
-                    <input style={rowInput} value={m.title} onChange={(e) => setModule(i, "title", e.target.value)} placeholder="Module title" />
+                    <div>
+                      <input style={rowInput} value={m.title} onChange={(e) => setModule(i, "title", e.target.value)} placeholder="Module title" maxLength={150} />
+                      <CharCounter length={m.title.length} max={150} />
+                    </div>
                     <input style={rowInput} value={m.videoUrl || ""} onChange={(e) => setModule(i, "videoUrl", e.target.value)}
                       placeholder="Video embed URL (e.g. https://www.youtube.com/embed/...)" />
                   </div>
@@ -964,12 +993,16 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                                 Tailwind classes instead. */}
                             <div className="flex flex-col sm:flex-row" style={{ gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
                               <div className="flex w-full sm:contents" style={{ gap: 8, alignItems: "center" }}>
-                                <input
-                                  style={rowInput}
-                                  value={q.question}
-                                  onChange={(e) => setQuestionText(quizKey(m), qIndex, e.target.value)}
-                                  placeholder={`Question ${qIndex + 1}`}
-                                />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <input
+                                    style={rowInput}
+                                    value={q.question}
+                                    onChange={(e) => setQuestionText(quizKey(m), qIndex, e.target.value)}
+                                    placeholder={`Question ${qIndex + 1}`}
+                                    maxLength={250}
+                                  />
+                                  <CharCounter length={q.question.length} max={250} />
+                                </div>
                                 {/* #258 — real button (was a bare clickable icon). */}
                                 <button
                                   type="button"
@@ -996,12 +1029,16 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                               <>
                                 {q.acceptableAnswers.map((a, aIndex) => (
                                   <div key={aIndex} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, marginLeft: 12 }}>
-                                    <input
-                                      style={{ ...rowInput, flex: 1 }}
-                                      value={a}
-                                      onChange={(e) => setAcceptableAnswer(quizKey(m), qIndex, aIndex, e.target.value)}
-                                      placeholder={`Acceptable answer ${aIndex + 1}`}
-                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <input
+                                        style={rowInput}
+                                        value={a}
+                                        onChange={(e) => setAcceptableAnswer(quizKey(m), qIndex, aIndex, e.target.value)}
+                                        placeholder={`Acceptable answer ${aIndex + 1}`}
+                                        maxLength={250}
+                                      />
+                                      <CharCounter length={a.length} max={250} />
+                                    </div>
                                     {/* #258 — real button (was a bare clickable icon). */}
                                     <button
                                       type="button"
@@ -1031,12 +1068,16 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                                       onChange={() => setCorrectOption(quizKey(m), qIndex, oIndex)}
                                       title="Mark as correct answer"
                                     />
-                                    <input
-                                      style={{ ...rowInput, flex: 1 }}
-                                      value={o.optionText}
-                                      onChange={(e) => setOptionText(quizKey(m), qIndex, oIndex, e.target.value)}
-                                      placeholder={`Option ${oIndex + 1}`}
-                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <input
+                                        style={rowInput}
+                                        value={o.optionText}
+                                        onChange={(e) => setOptionText(quizKey(m), qIndex, oIndex, e.target.value)}
+                                        placeholder={`Option ${oIndex + 1}`}
+                                        maxLength={250}
+                                      />
+                                      <CharCounter length={o.optionText.length} max={250} />
+                                    </div>
                                     {/* #258 — real button (was a bare clickable icon). */}
                                     <button
                                       type="button"
@@ -1097,8 +1138,14 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                 stacked full-width fields got uncomfortably wide at the
                 page's new 1080px base. */}
             <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8, flex: 1 }}>
-              <input style={rowInput} value={f.question} onChange={(e) => setFaq(i, "question", e.target.value)} placeholder="Question" />
-              <input style={rowInput} value={f.answer} onChange={(e) => setFaq(i, "answer", e.target.value)} placeholder="Answer" />
+              <div>
+                <input style={rowInput} value={f.question} onChange={(e) => setFaq(i, "question", e.target.value)} placeholder="Question" maxLength={150} />
+                <CharCounter length={f.question.length} max={150} />
+              </div>
+              <div>
+                <input style={rowInput} value={f.answer} onChange={(e) => setFaq(i, "answer", e.target.value)} placeholder="Answer" maxLength={500} />
+                <CharCounter length={f.answer.length} max={500} />
+              </div>
             </div>
             {/* #258 — real button (was a bare clickable icon). */}
             <button
@@ -1125,7 +1172,10 @@ export function TrainerCourseEditor({ course, onCancel, onSave, onFetchQuizForEd
                 natural second field to pair with like the module/FAQ
                 rows above, so it's capped at a reading-line width
                 instead of stretching to the page's full 1080px. */}
-            <input style={{ ...rowInput, maxWidth: 640 }} value={c.line} onChange={(e) => setCredit(i, e.target.value)} placeholder="e.g. Curriculum & instruction: ..." />
+            <div style={{ flex: 1, minWidth: 0, maxWidth: 640 }}>
+              <input style={rowInput} value={c.line} onChange={(e) => setCredit(i, e.target.value)} placeholder="e.g. Curriculum & instruction: ..." maxLength={300} />
+              <CharCounter length={c.line.length} max={300} />
+            </div>
             {/* #258 — real button (was a bare clickable icon). */}
             <button
               type="button"
