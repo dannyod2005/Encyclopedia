@@ -550,8 +550,12 @@ export function TrainerScreen({
                 <div key={c.id} className="gap-2 sm:gap-3.5" style={{ display: "flex", alignItems: "center", padding: "14px 18px", borderBottom: i < visibleCourses.length - 1 ? "1px solid var(--line)" : "none" }}>
                   <CategoryDot color={c.color} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{c.title || "(untitled course)"}</div>
-                    <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{c.provider} · {c.modules.length} modules · {c.hours}h</div>
+                    {/* (mobile-overflow fix) — an unbroken course title
+                        (no spaces) has no natural break point; the row's
+                        minWidth:0 above lets the row shrink, but without
+                        this the text itself still overflows past it. */}
+                    <div style={{ fontSize: 14, fontWeight: 600, overflowWrap: "break-word" }}>{c.title || "(untitled course)"}</div>
+                    <div style={{ fontSize: 12.5, color: "var(--slate-light)", overflowWrap: "break-word" }}>{c.provider} · {c.modules.length} modules · {c.hours}h</div>
                   </div>
                   {canEditCourse(c) ? (
                     // (phone-buttons fix) — 3 side-by-side labelled
@@ -673,7 +677,8 @@ export function TrainerScreen({
                      hide (icon + aria-label only) below sm. */
                   <div key={p.id} className="gap-2 sm:gap-3.5" style={{ display: "flex", alignItems: "center", padding: "14px 18px", borderBottom: i < paths.length - 1 ? "1px solid var(--line)" : "none" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{p.title || "(untitled path)"}</div>
+                      {/* (mobile-overflow fix) — same as the course row title above. */}
+                      <div style={{ fontSize: 14, fontWeight: 600, overflowWrap: "break-word" }}>{p.title || "(untitled path)"}</div>
                       <div style={{ fontSize: 12.5, color: "var(--slate-light)" }}>{p.courses.length} courses</div>
                     </div>
                     {canEditPath(p) ? (
@@ -756,7 +761,11 @@ export function TrainerScreen({
                 <X size={18} color="var(--slate)" />
               </button>
             </div>
-            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20 }}>
+            {/* (mobile-overflow fix) — an untitled-course fallback aside,
+                this wraps a trainer-typed title with no natural break
+                point (e.g. one long unspaced word), which would otherwise
+                force this 400px modal wider than the viewport on mobile. */}
+            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20, overflowWrap: "break-word" }}>
               This removes <strong>{deletingCourse.title || "(untitled course)"}</strong> from the catalogue. Learners already enrolled keep their progress and access — this can't be undone from the catalogue side, so double-check before continuing.
             </div>
             {deleteError && (
@@ -807,7 +816,8 @@ export function TrainerScreen({
                 <X size={18} color="var(--slate)" />
               </button>
             </div>
-            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20 }}>
+            {/* (mobile-overflow fix) — same fix as the delete-course modal above. */}
+            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20, overflowWrap: "break-word" }}>
               This removes <strong>{deletingPath.title || "(untitled path)"}</strong> from the catalogue. Learners already enrolled keep their course progress and access — this can't be undone from the catalogue side, so double-check before continuing.
             </div>
             {deletePathError && (

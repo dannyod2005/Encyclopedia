@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Check, Copy, RefreshCw, LogOut, X, Crown } from "lucide-react";
 
 import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { ScreenMessage } from "../../components/common/Primitives";
+import { ScreenMessage, CharCounter } from "../../components/common/Primitives";
 
 const field = { marginBottom: 16 };
 const label = { display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--ink)", marginBottom: 6 };
@@ -198,7 +198,9 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="e.g. Encyclopedia Business School"
               disabled={creating}
+              maxLength={80}
             />
+            <CharCounter length={createName.length} max={80} />
           </div>
           {createError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 12 }}>{createError}</div>}
           <button className="enc-btn enc-btn-gold" type="submit" disabled={creating || !createName.trim()}>
@@ -234,16 +236,19 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
 
   return (
     <div className="enc-card" style={{ padding: 20, maxWidth: 640 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
-        <div>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{provider.name}</div>
+      {/* (mobile-overflow fix) — minWidth:0 lets this side shrink;
+          overflowWrap on the provider name below breaks an unbroken run
+          of characters instead of widening the card. */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, overflowWrap: "break-word" }}>{provider.name}</div>
           <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginTop: 2 }}>
             {provider.members.length} member{provider.members.length === 1 ? "" : "s"}
           </div>
         </div>
         <button
           className="enc-btn enc-btn-ghost"
-          style={{ color: "var(--coral)" }}
+          style={{ color: "var(--coral)", flexShrink: 0 }}
           onClick={() => { setConfirmingLeave(true); setLeaveError(null); }}
         >
           <LogOut size={14} /> Leave
@@ -283,9 +288,11 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
                 fontSize: 13,
               }}
             >
-              <span style={{ flex: 1 }}>{m.name || "(unnamed)"}{m.id === currentUserId ? " (you)" : ""}</span>
+              {/* (mobile-overflow fix) — a member's display name is
+                  user-set at signup and could be long/unspaced. */}
+              <span style={{ flex: 1, minWidth: 0, overflowWrap: "break-word" }}>{m.name || "(unnamed)"}{m.id === currentUserId ? " (you)" : ""}</span>
               {m.isOwner && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, color: "var(--gold)", fontWeight: 600 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, color: "var(--gold)", fontWeight: 600, flexShrink: 0 }}>
                   <Crown size={12} /> Owner
                 </span>
               )}
@@ -333,7 +340,10 @@ export function TeamTab({ onFetchProvider, onCreateProvider, onJoinProvider, onR
                 <X size={18} color="var(--slate)" />
               </button>
             </div>
-            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20 }}>
+            {/* (mobile-overflow fix) — same as the Trainer Studio
+                delete-confirm modals: an unbroken provider name can
+                otherwise force this modal wider than the viewport. */}
+            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20, overflowWrap: "break-word" }}>
               You'll lose shared edit access to courses scoped to <strong>{provider.name}</strong>. Courses you personally own are unaffected.
             </div>
             {leaveError && <div style={{ fontSize: 12.5, color: "var(--coral)", marginBottom: 14 }}>{leaveError}</div>}

@@ -218,9 +218,12 @@ export function CatalogueScreen({
             line-clamped to the skeleton's assumed 1/2-line shape below, so
             a longer real title/blurb can't grow this card (and its grid
             row) taller than what the loading state reserved. */}
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.title}</div>
-        <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 10 }}>{c.provider}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 16, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.blurb}</div>
+        {/* (mobile-overflow fix) — overflowWrap so an unbroken word can't
+            overflow the card on the clamped line before the clamp itself
+            applies. */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{c.title}</div>
+        <div style={{ fontSize: 12.5, color: "var(--slate-light)", marginBottom: 10, overflowWrap: "break-word" }}>{c.provider}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 16, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{c.blurb}</div>
         <hr className="enc-hairline" style={{ margin: "0 0 12px" }} />
         {/* (catalogue-card-overflow fix) — Stars + "Xh · Level" side by
             side had no room to spare at iPad-Mini-adjacent card widths in
@@ -316,8 +319,9 @@ export function CatalogueScreen({
             layout-shift audit flagged exactly this (the hr divider right
             after this section moving once real path data replaced the
             skeleton). */}
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.title}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</div>
+        {/* (mobile-overflow fix) — same overflowWrap addition as the course card above. */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{p.title}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, flex: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{p.description}</div>
       </button>
     );
   }

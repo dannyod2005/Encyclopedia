@@ -746,7 +746,9 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                 {skillsLearned.map((s) => (
                   <span
                     key={s}
-                    style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 10px" }}
+                    // (mobile-overflow fix) — same skill-chip treatment as
+                    // the trainer editor/course modal.
+                    style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 10px", maxWidth: "100%", overflowWrap: "break-word" }}
                   >
                     {s}
                   </span>
@@ -773,9 +775,9 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {pathEnrollments.map((pe) => (
                   <div key={pe.id}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{pe.title}</span>
-                      {pe.status === "complete" && <CheckCircle2 size={14} color="var(--success)" />}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, gap: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, overflowWrap: "break-word" }}>{pe.title}</span>
+                      {pe.status === "complete" && <CheckCircle2 size={14} color="var(--success)" style={{ flexShrink: 0 }} />}
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--slate-light)", marginBottom: 6 }}>
                       {pe.completedCount} of {pe.totalCount} course{pe.totalCount === 1 ? "" : "s"} complete
@@ -822,10 +824,10 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                     <button
                       type="button"
                       onClick={() => onOpenCourse(c)}
-                      style={{ flex: 1, textAlign: "left", font: "inherit", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                      style={{ flex: 1, minWidth: 0, textAlign: "left", font: "inherit", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                     >
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{c.title}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--slate-light)" }}>{c.provider}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, overflowWrap: "break-word" }}>{c.title}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--slate-light)", overflowWrap: "break-word" }}>{c.provider}</div>
                     </button>
                     {/* #258 — real button (was a bare clickable icon);
                         every course in this list is already saved, so the
@@ -898,7 +900,11 @@ export function DashboardScreen({ enrolled, badges = [], badgesLoading = false, 
                 <X size={18} color="var(--slate)" />
               </button>
             </div>
-            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20 }}>
+            {/* (mobile-overflow fix) — same as the Trainer Studio
+                delete-confirm modals: a course title with no natural
+                break point can otherwise force this modal wider than
+                the viewport on mobile. */}
+            <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, marginBottom: 20, overflowWrap: "break-word" }}>
               Your progress on <strong>{retakingCourse.title}</strong> will reset to start it again. Your existing quiz answers and notes stay in place unless you retake each quiz individually, and you'll lose access to the current certificate until you complete the course again.
             </div>
             {retakeError && (

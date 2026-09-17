@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronUp, ChevronDown, Milestone, Plus, Save, Trash2 } from "lucide-react";
+import { CharCounter } from "../../components/common/Primitives";
 
 // #224 — a learning path never authors its own content: it only ever
 // references existing Courses (see the backend's LearningPathCourse join),
@@ -97,11 +98,13 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 14 }}>Path details</div>
         <div style={field}>
           <label style={label}>Title</label>
-          <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. New Hire Onboarding" />
+          <input style={rowInput} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. New Hire Onboarding" maxLength={100} />
+          <CharCounter length={draft.title.length} max={100} />
         </div>
         <div>
           <label style={label}>Description</label>
-          <textarea style={{ ...rowInput, minHeight: 70, resize: "vertical" }} value={draft.description} onChange={(e) => set("description", e.target.value)} placeholder="One or two sentences describing what this path prepares a learner for." />
+          <textarea style={{ ...rowInput, minHeight: 70, resize: "vertical" }} value={draft.description} onChange={(e) => set("description", e.target.value)} placeholder="One or two sentences describing what this path prepares a learner for." maxLength={300} />
+          <CharCounter length={draft.description.length} max={300} />
         </div>
       </div>
 
@@ -121,8 +124,11 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
           const c = courses.find((x) => x.id === courseId);
           return (
             <div key={courseId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < draft.courseIds.length - 1 ? "1px solid var(--line)" : "none" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20 }}>{String(i + 1).padStart(2, "0")}</span>
-              <span style={{ flex: 1, fontSize: 14 }}>{c ? c.title : "(course no longer available)"}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+              {/* (mobile-overflow fix) — minWidth:0 lets this shrink and
+                  overflowWrap lets an unbroken course title break instead
+                  of pushing the move/remove buttons off the row. */}
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14, overflowWrap: "break-word" }}>{c ? c.title : "(course no longer available)"}</span>
               {/* #258 — real buttons (were bare clickable icons). First/last
                   items now use native `disabled` instead of a color/cursor
                   "looks disabled" hack — excludes them from tab order and
@@ -132,7 +138,7 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
                 aria-label={`Move ${c ? c.title : "course"} up`}
                 disabled={i === 0}
                 onClick={() => moveCourse(i, -1)}
-                style={{ background: "none", border: "none", padding: 0, cursor: i === 0 ? "not-allowed" : "pointer", display: "inline-flex", lineHeight: 0 }}
+                style={{ background: "none", border: "none", padding: 0, cursor: i === 0 ? "not-allowed" : "pointer", display: "inline-flex", lineHeight: 0, flexShrink: 0 }}
               >
                 <ChevronUp size={15} color={i === 0 ? "var(--line)" : "var(--slate-light)"} />
               </button>
@@ -141,7 +147,7 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
                 aria-label={`Move ${c ? c.title : "course"} down`}
                 disabled={i === draft.courseIds.length - 1}
                 onClick={() => moveCourse(i, 1)}
-                style={{ background: "none", border: "none", padding: 0, cursor: i === draft.courseIds.length - 1 ? "not-allowed" : "pointer", display: "inline-flex", lineHeight: 0 }}
+                style={{ background: "none", border: "none", padding: 0, cursor: i === draft.courseIds.length - 1 ? "not-allowed" : "pointer", display: "inline-flex", lineHeight: 0, flexShrink: 0 }}
               >
                 <ChevronDown size={15} color={i === draft.courseIds.length - 1 ? "var(--line)" : "var(--slate-light)"} />
               </button>
@@ -149,7 +155,7 @@ export function LearningPathEditor({ path, courses, onCancel, onSave }) {
                 type="button"
                 aria-label={`Remove ${c ? c.title : "course"} from path`}
                 onClick={() => removeCourse(i)}
-                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", lineHeight: 0 }}
+                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", lineHeight: 0, flexShrink: 0 }}
               >
                 <Trash2 size={15} color="var(--slate-light)" />
               </button>

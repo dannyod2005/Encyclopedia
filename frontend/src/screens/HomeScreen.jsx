@@ -182,8 +182,12 @@ export function HomeScreen({
             skeleton-to-real-card height itself being unreliable. Clamping
             both to the same line counts makes card height deterministic
             regardless of copy length. */}
-        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.title}</div>
-        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.blurb}</div>
+        {/* (mobile-overflow fix) — line-clamp only truncates after N
+            lines; without overflowWrap, an unbroken run of characters
+            (no spaces) still overflows the card's width on the first
+            line before the clamp ever kicks in. */}
+        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{c.title}</div>
+        <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{c.blurb}</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Stars rating={c.rating} />
           <span style={{ fontSize: 12, color: "var(--slate-light)" }}>{c.hours}h</span>
@@ -303,7 +307,13 @@ export function HomeScreen({
           width; vertical stays inline. */}
       <section className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] enc-outer-pad" style={{ maxWidth: 1160, margin: "0 auto", paddingTop: 64, paddingBottom: 40, gap: 48, alignItems: "center" }}>
         {loggedIn ? (
-          <div>
+          // (mobile-overflow fix) — this is a CSS grid column (the
+          // section above is `grid-cols-[1.1fr_0.9fr]`), and grid items
+          // default to min-width:auto, which lets an unbreakable word in
+          // the PageHeader title below force the column wider than its
+          // 1.1fr track instead of respecting overflow-wrap. minWidth:0
+          // is what actually lets the break-word rule take effect.
+          <div style={{ minWidth: 0 }}>
             <span className="enc-badge" style={{ background: "var(--gold-tint)", color: "var(--gold-dark)" }}>Welcome back</span>
             {/* #213 — was a 46px hero h1, noticeably larger than
                 Catalogue's 30px title or Dashboard's (formerly
@@ -412,7 +422,7 @@ export function HomeScreen({
                       at (see the sidebar-breakpoint fix) could crowd the
                       chevron/edge rather than wrapping the title. */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{e.course?.title ?? "Untitled course"}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, overflowWrap: "break-word" }}>{e.course?.title ?? "Untitled course"}</div>
                     <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
                       {Math.round(e.progress * (e.course?.modules?.length ?? 0))} of {e.course?.modules?.length ?? 0} modules
                     </div>
@@ -471,8 +481,8 @@ export function HomeScreen({
                 {/* (home-continue-card fix) — same minWidth:0 as the
                     logged-in branch above. */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>{c.title}</div>
-                  <div style={{ fontSize: 12, color: "var(--slate-light)" }}>{c.provider}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, overflowWrap: "break-word" }}>{c.title}</div>
+                  <div style={{ fontSize: 12, color: "var(--slate-light)", overflowWrap: "break-word" }}>{c.provider}</div>
                 </div>
                 <ChevronRight size={15} color="var(--slate-light)" />
               </button>
@@ -617,9 +627,12 @@ export function HomeScreen({
                             however many lines its text needs, growing the
                             card taller than renderPathCardSkeleton's fixed
                             shape assumes. */}
-                        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.title}</div>
+                        {/* (mobile-overflow fix) — overflowWrap so an
+                            unbroken word doesn't overflow the card on the
+                            clamped line before the clamp can even apply. */}
+                        <div style={{ fontSize: 15.5, fontWeight: 600, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{p.title}</div>
                         {p.description && (
-                          <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</div>
+                          <div style={{ fontSize: 13, color: "var(--slate)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "break-word" }}>{p.description}</div>
                         )}
                         <div style={{ fontSize: 12, color: "var(--slate-light)" }}>
                           {(p.courses ?? []).length} course{(p.courses ?? []).length === 1 ? "" : "s"}

@@ -83,14 +83,18 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
         aria-labelledby="enc-course-modal-title"
         tabIndex={-1}
       >
+        {/* (mobile-overflow fix) — minWidth:0 lets this side of the header
+            row shrink instead of pushing the close button out; the
+            overflowWrap on the title/provider below is what actually
+            breaks an unbroken run of characters once it's forced to. */}
         <div style={{ padding: "24px 28px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
               <CategoryDot color={visibleCourse.color} />
               <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--slate-light)", textTransform: "uppercase", letterSpacing: "0.03em" }}>{visibleCourse.category} · {visibleCourse.level}</span>
             </div>
-            <h2 id="enc-course-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0 }}>{visibleCourse.title}</h2>
-            <div style={{ fontSize: 13, color: "var(--slate-light)", marginTop: 4 }}>{visibleCourse.provider}</div>
+            <h2 id="enc-course-modal-title" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, margin: 0, overflowWrap: "break-word" }}>{visibleCourse.title}</h2>
+            <div style={{ fontSize: 13, color: "var(--slate-light)", marginTop: 4, overflowWrap: "break-word" }}>{visibleCourse.provider}</div>
           </div>
           {/* #258 — real button (was a bare clickable icon). */}
           <button
@@ -123,14 +127,14 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
                       <span style={{ fontSize: 13, fontWeight: 600 }}>{r.authorName}</span>
                       <Stars rating={r.rating} />
                     </div>
-                    <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5 }}>{r.reviewText}</div>
+                    <div style={{ fontSize: 13.5, color: "var(--slate)", lineHeight: 1.5, overflowWrap: "break-word" }}>{r.reviewText}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <p style={{ fontSize: 14.5, color: "var(--ink-70)", lineHeight: 1.6, marginBottom: 22 }}>{visibleCourse.blurb}</p>
+          <p style={{ fontSize: 14.5, color: "var(--ink-70)", lineHeight: 1.6, marginBottom: 22, overflowWrap: "break-word" }}>{visibleCourse.blurb}</p>
 
           {/* #226 — same "only render once non-empty" convention as the
               reviews block above: most courses will eventually have
@@ -140,7 +144,10 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
               {visibleCourse.skills.map((s, i) => (
                 <span
                   key={i}
-                  style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 10px" }}
+                  // (mobile-overflow fix) — same skill-chip fix as the
+                  // trainer editor: caps how wide one chip can grow and
+                  // lets it shrink/wrap instead of pushing past the modal.
+                  style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 10px", maxWidth: "100%", minWidth: 0, overflowWrap: "break-word" }}
                 >
                   {s}
                 </span>
@@ -152,8 +159,8 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
           <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 22 }}>
             {modules.map((m, i) => (
               <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < modules.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20 }}>{String(i + 1).padStart(2, "0")}</span>
-                <span style={{ fontSize: 14 }}>{m.title}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--slate-light)", width: 20, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+                <span style={{ fontSize: 14, flex: 1, minWidth: 0, overflowWrap: "break-word" }}>{m.title}</span>
               </div>
             ))}
           </div>
@@ -171,8 +178,8 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
                 ]
             ).map((item, i) => (
               <div key={item.id ?? i}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 3 }}>{item.question}</div>
-                <div style={{ fontSize: 13.5, color: "var(--slate)", marginBottom: 12 }}>{item.answer}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 3, overflowWrap: "break-word" }}>{item.question}</div>
+                <div style={{ fontSize: 13.5, color: "var(--slate)", marginBottom: 12, overflowWrap: "break-word" }}>{item.answer}</div>
               </div>
             ))}
           </div>
@@ -185,7 +192,7 @@ export function CourseDetailModal({ course, onClose, onEnrol, onGoToDashboard, i
             {credits.map((c, i) => (
               <li key={c.id} style={{ display: "flex", gap: 8, fontSize: 13, color: "var(--slate)", lineHeight: 1.55, padding: "5px 0", borderBottom: i < credits.length - 1 ? "1px solid var(--line)" : "none" }}>
                 <span style={{ color: "var(--gold-dark)", flexShrink: 0 }}>·</span>
-                <span>{c.line}</span>
+                <span style={{ flex: 1, minWidth: 0, overflowWrap: "break-word" }}>{c.line}</span>
               </li>
             ))}
           </ul>

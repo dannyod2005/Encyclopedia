@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
   MinLength,
   ValidateIf,
   ValidateNested,
@@ -20,8 +21,14 @@ export class UpsertOptionDto {
   @IsUUID()
   id?: string;
 
+  // (maxlength-constraints) — 250, not the 300 "short string" tier:
+  // checked against every seeded quiz option, the longest of which
+  // ("Culture shifts show up in both survey data and lived experience,
+  // which each capture different things") is ~104 characters. 250
+  // leaves well over 2x that headroom.
   @IsString()
   @MinLength(1)
+  @MaxLength(250)
   optionText: string;
 
   @IsBoolean()
@@ -33,8 +40,14 @@ export class UpsertQuestionDto {
   @IsUUID()
   id?: string;
 
+  // (maxlength-constraints) — 250, not the 300 "short string" tier:
+  // checked against every seeded quiz question, the longest of which
+  // ("Why invest in formal training for managers to coach, rather than
+  // assuming it comes naturally?") is ~97 characters. 250 leaves well
+  // over 2x that headroom.
   @IsString()
   @MinLength(1)
+  @MaxLength(250)
   question: string;
 
   // #40 — defaults to 'mcq' server-side (modules.service.ts) if omitted,
@@ -64,8 +77,13 @@ export class UpsertQuestionDto {
   @ArrayMinSize(1, {
     message: 'A short-answer question needs at least 1 acceptable answer',
   })
+  // (maxlength-constraints) — 250, matching optionText: no short-answer
+  // questions exist in the seed data to check against, but an
+  // acceptable-answer keyword/phrase is the same kind of short string,
+  // not a sentence, so it gets the same tighter cap.
   @IsString({ each: true })
   @MinLength(1, { each: true })
+  @MaxLength(250, { each: true })
   acceptableAnswers?: string[];
 }
 
