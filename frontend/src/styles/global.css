@@ -17,15 +17,6 @@ html, body {
   min-height: 100%;
   background: var(--paper);
   margin: 0;
-  /* #446 — reserve the vertical scrollbar's width up front. Without this,
-     a short initial paint (before real data loads) has no scrollbar, then
-     once content pushes the page taller than the viewport a scrollbar
-     appears, shrinking the usable width by ~15-17px. Everything that
-     reacts to viewport width (the centered .enc-page-scaled content, the
-     sticky sidebar, the topbar) then recomputes position at once — a
-     small, hard-to-see shift, but one that spans almost the entire page
-     height, which is why it scores so high on Lighthouse's CLS metric. */
-  scrollbar-gutter: stable;
   /* #105 — stop the vertical rubber-band overscroll from revealing the
      browser's default (non-ink) background past the top/bottom edge of
      the page on mobile; the sticky topbar loses its "always there" feel
@@ -49,6 +40,46 @@ html, body {
      browser's native scrollbar arrows. Reverted back to this plain #105
      rule; the cosmetic seam is a genuine browser-level limitation, not
      an unsolved page bug — don't re-attempt a page-CSS fix here. */
+}
+
+/* #446/#499 — reserve the vertical scrollbar's width up front, on `html`
+   only (not `body`, even though the shared rule above targets both —
+   this one has to be scoped to whichever single element is the real
+   scrolling box). Without this, a short initial paint (before real data
+   loads) has no scrollbar, then once content pushes the page taller
+   than the viewport a scrollbar appears, shrinking the usable width by
+   ~15-17px. Everything that reacts to viewport width (the centered
+   .enc-page-scaled content, the sticky sidebar, the topbar) then
+   recomputes position at once — a small, hard-to-see shift, but one
+   that spans almost the entire page height, which is why it scores so
+   high on Lighthouse's CLS metric.
+   #499 — this was `scrollbar-gutter: stable` on the combined `html,
+   body` rule above, which caused two separate problems. First: it
+   reserves the space unconditionally but only ever *paints* it when a
+   real scrollbar is actually rendered — on a page short enough that
+   nothing scrolls, the reserved strip stayed empty, showing the page's
+   own background (--paper) peeking out past AppTopbar/Footer's
+   differently-colored (--paper-2) full-width bar, which read as a gap
+   on the right edge. Switching to `overflow-y: scroll` (the older,
+   blunter technique #446 replaced) fixes that — it forces the browser
+   to always render a real scrollbar track on every page, so the gutter
+   is always genuinely occupied by native scrollbar chrome rather than
+   an empty reserved strip.
+   Second, worse bug: applying that fix to the *combined* `html, body`
+   selector gave both elements their own independent `overflow-y:
+   scroll`, and — since `body`'s min-height:100% can still make it a
+   valid scrolling box in its own right, nested inside html's — Chrome
+   rendered two real, separate scrollbar tracks side by side (one for
+   html's own scroll, one for body's). Scoping this to `html` alone
+   makes it the only element that ever establishes its own scrolling
+   box, so there's exactly one scrollbar again.
+   (On an overlay-scrollbar system, e.g. macOS with trackpad gestures,
+   neither the old nor the new property reserves any layout space at
+   all — overlay scrollbars float on top without affecting box width —
+   so this class of bug, and #446's original CLS shift, simply doesn't
+   occur there either way.) */
+html {
+  overflow-y: scroll;
 }
 
 #root {
